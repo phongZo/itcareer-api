@@ -1,0 +1,35 @@
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+*.log
+
+### NetBeans ###
+/nbproject/private/
+/build/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# project ignore
+source/user-base-auth/application-production.properties
+source/user-base-auth/deploy_ec2.sh
+source/user-base-auth/execute_jar_on_vm.sh
+source/user-base-auth/target
+source/user-base-auth/logs
+source/user-base-auth/.idea
+source/user-base-auth/*.iml
