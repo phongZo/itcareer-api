@@ -3,11 +3,10 @@ package com.base.auth.mapper;
 import com.base.auth.dto.account.AccountAutoCompleteDto;
 import com.base.auth.dto.account.AccountDto;
 import com.base.auth.dto.account.ProfileAccountDto;
-import com.base.auth.form.user.SignUpUserForm;
-import com.base.auth.form.user.UpdateProfileUserForm;
-import com.base.auth.form.user.UpdateUserForm;
+import com.base.auth.form.student.SignUpStudentForm;
+import com.base.auth.form.student.UpdateProfileStudentForm;
+import com.base.auth.form.student.UpdateStudentForm;
 import com.base.auth.model.Account;
-import com.base.auth.model.User;
 import org.mapstruct.*;
 
 import java.util.List;
@@ -45,12 +44,12 @@ public interface AccountMapper {
     @Mapping(source = "email", target = "email")
     @Mapping(source = "fullName", target = "fullName")
     @BeanMapping(ignoreByDefault = true)
-    Account fromSignUpUserToAccount(SignUpUserForm signUpUserForm);
+    Account fromSignUpStudentToAccount(SignUpStudentForm signUpStudentForm);
 
     @Mapping(source = "fullName",target = "fullName")
     @Mapping(source = "avatarPath",target = "avatarPath")
     @BeanMapping(ignoreByDefault = true)
-    void fromUpdateUserFormToEntity(UpdateUserForm updateUserForm, @MappingTarget Account account );
+    void fromUpdateStudentFormToEntity(UpdateStudentForm updateStudentForm, @MappingTarget Account account );
 
     @Mapping(source = "kind", target = "kind")
     @Mapping(source = "username", target = "username")
@@ -65,5 +64,5 @@ public interface AccountMapper {
     @Mapping(source = "fullname", target = "fullName")
     @Mapping(source = "avatarPath", target = "avatarPath")
     @BeanMapping(ignoreByDefault = true)
-    void fromUpdateProfileUserFormToEntity(UpdateProfileUserForm updateProfileUserForm, @MappingTarget Account account);
+    void fromUpdateProfileStudentFormToEntity(UpdateProfileStudentForm updateProfileStudentForm, @MappingTarget Account account);
 }

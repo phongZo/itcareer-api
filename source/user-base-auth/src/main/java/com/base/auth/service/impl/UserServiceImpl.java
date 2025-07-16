@@ -7,7 +7,6 @@ import com.base.auth.jwt.UserBaseJwt;
 import com.base.auth.model.Account;
 import com.base.auth.repository.AccountRepository;
 import com.base.auth.repository.GroupRepository;
-import com.base.auth.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -50,9 +49,6 @@ public class UserServiceImpl implements UserDetailsService {
 
     @Autowired
     private GroupRepository groupRepository;
-
-    @Autowired
-    private UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String userId) {
