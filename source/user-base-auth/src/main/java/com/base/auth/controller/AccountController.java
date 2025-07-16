@@ -51,10 +51,7 @@ public class AccountController extends ABasicController{
     UserBaseApiService userBaseApiService;
 
     @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    AddressRepository addressRepository;
+    StudentRepository studentRepository;
 
     @PostMapping(value = "/create_admin", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ACC_C_AD')")
@@ -157,8 +154,7 @@ public class AccountController extends ABasicController{
         }
         //delete avatar file
         userBaseApiService.deleteFile(account.getAvatarPath());
-        addressRepository.deleteAllByAccountId(id);
-        userRepository.deleteAllByAccountId(id);
+        studentRepository.deleteAllByAccountId(id);
         accountRepository.deleteById(id);
         apiMessageDto.setMessage("Delete Account success");
         return apiMessageDto;

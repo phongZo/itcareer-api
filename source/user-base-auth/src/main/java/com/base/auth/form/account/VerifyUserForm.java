@@ -1,4 +1,4 @@
-package com.base.auth.form.user;
+package com.base.auth.form.account;
 
 import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotEmpty;

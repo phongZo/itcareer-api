@@ -1,11 +1,13 @@
-package com.base.auth.form.user;
+package com.base.auth.form.student;
 
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Date;
 import lombok.Data;
 
 @Data
-public class UpdateProfileUserForm {
+@ApiModel
+public class UpdateProfileStudentForm {
   @ApiModelProperty(name = "username")
   private String username;
   @ApiModelProperty(name = "fullname")
