@@ -16,6 +16,7 @@ public class UserBaseConstant {
 
     public static final Integer STATUS_ACTIVE = 1;
     public static final Integer STATUS_PENDING = 0;
+    public static final Integer STATUS_WAITING_APPROVE = 2;
     public static final Integer STATUS_LOCK = -1;
     public static final Integer STATUS_DELETE = -2;
 
