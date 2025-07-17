@@ -41,8 +41,9 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
                         "/api/auth/activate/resend", "/api/auth/pwd", "/api/auth/logout", "/actuator/**").permitAll()
                 .antMatchers( "/v1/customer/register").permitAll()
                 .antMatchers("/v1/service/detail/**").permitAll()
-                .antMatchers("/v1/student/signup","/v1/student/verify","/v1/student/resend-verify").permitAll()
-                .antMatchers("/v1/account/request_forget_password", "/v1/account/forget_password").permitAll()
+                .antMatchers("/v1/student/signup", "/v1/student/verify").permitAll()
+                .antMatchers("/v1/educator/signup", "/v1/educator/verify").permitAll()
+                .antMatchers("/v1/account/request_forget_password", "/v1/account/forget_password", "/v1/account/resend-verify").permitAll()
                 .antMatchers("/**").authenticated()
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and().exceptionHandling().accessDeniedHandler(new OAuth2AccessDeniedHandler());

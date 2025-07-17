@@ -2,6 +2,9 @@ package com.base.auth.controller;
 
 import com.base.auth.constant.UserBaseConstant;
 import com.base.auth.jwt.UserBaseJwt;
+import com.base.auth.model.Account;
+import com.base.auth.service.CommonAsyncService;
+import com.base.auth.service.UserBaseApiService;
 import com.base.auth.service.impl.UserServiceImpl;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,6 +26,9 @@ import org.springframework.web.multipart.MultipartFile;
 public class ABasicController {
     @Autowired
     private UserServiceImpl userService;
+
+    @Autowired
+    private UserBaseApiService userBaseApiService;
 
     public long getCurrentUser(){
         UserBaseJwt userBaseJwt = userService.getAddInfoFromToken();
@@ -64,5 +70,31 @@ public class ABasicController {
             }
         }
         return null;
+    }
+
+    protected void sendVerifyAccount(Account user){
+        String subject = "Xác thực tài khoản";
+        String html = "<div style=\"font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px; background-color: #f9f9f9;\">" +
+            "<h2 style=\"color: #2c3e50; text-align: center;\">Chào bạn!</h2>" +
+            "<p style=\"font-size: 16px; line-height: 1.6;\">Bạn đã đăng ký tài khoản thành công. Mã OTP của bạn là:</p>" +
+            "<p style=\"font-size: 18px; font-weight: bold; text-align: center; color: #e74c3c; background-color: #fff; border: 1px dashed #e74c3c; padding: 10px; border-radius: 4px;\">" + user.getResetPwdCode() + "</p>" +
+            "<p style=\"font-size: 16px; line-height: 1.6;\">Vui lòng nhập mã này vào trang xác thực để kích hoạt tài khoản.</p>" +
+            "<p style=\"font-size: 16px; line-height: 1.6; color: #555;\">Mã OTP có hiệu lực trong <strong>5 phút</strong>.</p>" +
+            "<p style=\"font-size: 14px; color: #999; font-style: italic;\">Nếu bạn không thực hiện hành động này, hãy bỏ qua email này.</p>" +
+            "</div>";
+        userBaseApiService.sendEmail(user.getEmail(), html, subject, true);
+    }
+
+    protected void reSendVerifyAccount(Account user){
+        String subject = "Xác thực tài khoản";
+        String html = "<div style=\"font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px; background-color: #f9f9f9;\">" +
+            "<h2 style=\"color: #2c3e50; text-align: center;\">Chào bạn!</h2>" +
+            "<p style=\"font-size: 16px; line-height: 1.6;\">Bạn vừa yêu cầu gửi lại mã OTP. Mã mới của bạn là:</p>" +
+            "<p style=\"font-size: 18px; font-weight: bold; text-align: center; color: #e74c3c; background-color: #fff; border: 1px dashed #e74c3c; padding: 10px; border-radius: 4px;\">" + user.getResetPwdCode() + "</p>" +
+            "<p style=\"font-size: 16px; line-height: 1.6;\">Vui lòng nhập mã này vào trang xác thực để kích hoạt tài khoản.</p>" +
+            "<p style=\"font-size: 16px; line-height: 1.6; color: #555;\">Mã OTP có hiệu lực trong <strong>5 phút</strong>.</p>" +
+            "<p style=\"font-size: 14px; color: #999; font-style: italic;\">Nếu bạn không thực hiện hành động này, hãy bỏ qua email này.</p>" +
+            "</div>";
+        userBaseApiService.sendEmail(user.getEmail(), html, subject, true);
     }
 }

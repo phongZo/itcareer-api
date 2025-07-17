@@ -5,6 +5,8 @@
             <column name="id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="db_user_base_studentPK"/>
             </column>
+            <column name="birthday" type="datetime"/>
+            <column name="account_id" type="BIGINT"/>
             <column name="created_by" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
@@ -20,8 +22,6 @@
             <column name="status" type="INT">
                 <constraints nullable="false"/>
             </column>
-            <column name="birthday" type="datetime"/>
-            <column name="account_id" type="BIGINT"/>
         </createTable>
     </changeSet>
     <changeSet author="Authentication" id="1752631908084-2">

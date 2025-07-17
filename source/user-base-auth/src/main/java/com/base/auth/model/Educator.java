@@ -14,11 +14,11 @@ import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(name = "db_user_base_student")
+@Table(name = "db_user_base_educator")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-public class Student{
+public class Educator{
   @Id
   @GenericGenerator(name = "idGenerator", strategy = "com.base.auth.service.id.IdGenerator")
   @GeneratedValue(generator = "idGenerator")

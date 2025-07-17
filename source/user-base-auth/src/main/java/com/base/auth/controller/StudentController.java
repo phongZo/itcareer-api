@@ -79,9 +79,6 @@ public class StudentController extends ABasicController{
   @Autowired
   private UserBaseApiService userBaseApiService;
 
-  @Autowired
-  private CommonAsyncService commonAsyncService;
-
   @PostMapping(value = "/signup", produces= MediaType.APPLICATION_JSON_VALUE)
   public ApiMessageDto<OtpDto> create(@Valid @RequestBody SignUpStudentForm signUpStudentForm, BindingResult bindingResult)
   {
@@ -119,7 +116,6 @@ public class StudentController extends ABasicController{
     Student student = new Student();
     student.setAccount(account);
     student.setBirthday(signUpStudentForm.getBirthday());
-    student.setStatus(UserBaseConstant.STATUS_PENDING);
     studentRepository.save(student);
 
     sendVerifyAccount(account);
@@ -145,7 +141,7 @@ public class StudentController extends ABasicController{
     responseListDto.setTotalElements(listStudent.getTotalElements());
 
     apiMessageDto.setData(responseListDto);
-    apiMessageDto.setMessage("Get list user success");
+    apiMessageDto.setMessage("Get list student success");
     return apiMessageDto;
   }
 
@@ -251,7 +247,7 @@ public class StudentController extends ABasicController{
   {
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Student student = studentRepository.findById(id).orElseThrow(()
-    -> new NotFoundException("User not found", ErrorCode.USER_ERROR_NOT_FOUND));
+    -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
 
     Account account = accountRepository.findById(student.getAccount().getId()).orElseThrow(()
     -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
@@ -276,7 +272,7 @@ public class StudentController extends ABasicController{
     Account account = accountRepository.findById(getCurrentUser()).orElseThrow(
         () -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
     Student student = studentRepository.findByAccountId(account.getId()).orElseThrow(
-        () -> new NotFoundException("user not found", ErrorCode.USER_ERROR_NOT_FOUND));
+        () -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
     ProfileStudentDto studentDto = studentMapper.fromStudentToProfileDto(student);
     apiMessageDto.setData(studentDto);
     apiMessageDto.setMessage("Get profile success");
@@ -290,7 +286,7 @@ public class StudentController extends ABasicController{
     Account currentAccount = accountRepository.findById(getCurrentUser()).orElseThrow(() ->
         new NotFoundException("account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
     Student currentUser = studentRepository.findByAccountId(currentAccount.getId()).orElseThrow(() ->
-        new NotFoundException("user not found", ErrorCode.USER_ERROR_NOT_FOUND));
+        new NotFoundException("student not found", ErrorCode.USER_ERROR_NOT_FOUND));
 
     if (StringUtils.isNotBlank(updateStudentForm.getUsername())){
       if (!Objects.equals(currentAccount.getUsername(), updateStudentForm.getUsername())){
@@ -331,6 +327,10 @@ public class StudentController extends ABasicController{
       throw new NotFoundException("account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
     }
 
+    if (!Objects.equals(UserBaseConstant.STATUS_PENDING, account.getStatus())){
+      throw new BadRequestException("student cannot be verified", ErrorCode.USER_ERROR_VERIFY_FAILED);
+    }
+
     if(account.getAttemptCode() >= UserBaseConstant.MAX_ATTEMPT_FORGET_PWD){
       account.setStatus(UserBaseConstant.STATUS_LOCK);
       throw new BadRequestException("account has been locked", ErrorCode.ACCOUNT_ERROR_LOCKED);
@@ -353,71 +353,7 @@ public class StudentController extends ABasicController{
     account.setAttemptCode(null);
     account.setStatus(UserBaseConstant.STATUS_ACTIVE);
     accountRepository.save(account);
-
-    Student student = studentRepository.findByAccountId(id).orElseThrow(()
-    -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
-    student.setStatus(UserBaseConstant.STATUS_ACTIVE);
-    if (!UserBaseConstant.STATUS_ACTIVE.equals(account.getStatus())){
-      student.setStatus(UserBaseConstant.STATUS_LOCK);
-    }
-    studentRepository.save(student);
     apiMessageDto.setMessage("verify account student success");
     return apiMessageDto;
-  }
-
-  @PostMapping(value = "/resend-verify", produces = MediaType.APPLICATION_JSON_VALUE)
-  public ApiMessageDto<OtpDto> resendVerification(@Valid @RequestBody RequestEmailForm emailForm, BindingResult bindingResult){
-    ApiMessageDto<OtpDto> apiMessageDto = new ApiMessageDto<>();
-
-    Account account = accountRepository.findAccountByEmail(emailForm.getEmail());
-    if (account == null) {
-      throw new NotFoundException("account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
-    }
-
-    Student student = studentRepository.findByAccountId(account.getId()).orElseThrow(()
-    -> new NotFoundException("user not found", ErrorCode.USER_ERROR_NOT_FOUND));
-
-    String otp = userBaseApiService.getRequestOTP();
-    account.setAttemptCode(0);
-    account.setResetPwdCode(otp);
-    account.setResetPwdTime(new Date());
-    accountRepository.save(account);
-
-    reSendVerifyAccount(account);
-
-    OtpDto otpDto = new OtpDto();
-    String hash = AESUtils.encrypt (account.getId()+";"+otp, true);
-    otpDto.setIdHash(hash);
-
-    apiMessageDto.setResult(true);
-    apiMessageDto.setData(otpDto);
-    apiMessageDto.setMessage("resend verify email success");
-    return apiMessageDto;
-  }
-
-  private void sendVerifyAccount(Account user){
-    String subject = "Xác thực tài khoản";
-    String html = "<div style=\"font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px; background-color: #f9f9f9;\">" +
-        "<h2 style=\"color: #2c3e50; text-align: center;\">Chào bạn!</h2>" +
-        "<p style=\"font-size: 16px; line-height: 1.6;\">Bạn đã đăng ký tài khoản thành công. Mã OTP của bạn là:</p>" +
-        "<p style=\"font-size: 18px; font-weight: bold; text-align: center; color: #e74c3c; background-color: #fff; border: 1px dashed #e74c3c; padding: 10px; border-radius: 4px;\">" + user.getResetPwdCode() + "</p>" +
-        "<p style=\"font-size: 16px; line-height: 1.6;\">Vui lòng nhập mã này vào trang xác thực để kích hoạt tài khoản.</p>" +
-        "<p style=\"font-size: 16px; line-height: 1.6; color: #555;\">Mã OTP có hiệu lực trong <strong>5 phút</strong>.</p>" +
-        "<p style=\"font-size: 14px; color: #999; font-style: italic;\">Nếu bạn không thực hiện hành động này, hãy bỏ qua email này.</p>" +
-        "</div>";
-    userBaseApiService.sendEmail(user.getEmail(), html, subject, true);
-  }
-
-  private void reSendVerifyAccount(Account user){
-    String subject = "Xác thực tài khoản";
-    String html = "<div style=\"font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px; background-color: #f9f9f9;\">" +
-        "<h2 style=\"color: #2c3e50; text-align: center;\">Chào bạn!</h2>" +
-        "<p style=\"font-size: 16px; line-height: 1.6;\">Bạn vừa yêu cầu gửi lại mã OTP. Mã mới của bạn là:</p>" +
-        "<p style=\"font-size: 18px; font-weight: bold; text-align: center; color: #e74c3c; background-color: #fff; border: 1px dashed #e74c3c; padding: 10px; border-radius: 4px;\">" + user.getResetPwdCode() + "</p>" +
-        "<p style=\"font-size: 16px; line-height: 1.6;\">Vui lòng nhập mã này vào trang xác thực để kích hoạt tài khoản.</p>" +
-        "<p style=\"font-size: 16px; line-height: 1.6; color: #555;\">Mã OTP có hiệu lực trong <strong>5 phút</strong>.</p>" +
-        "<p style=\"font-size: 14px; color: #999; font-style: italic;\">Nếu bạn không thực hiện hành động này, hãy bỏ qua email này.</p>" +
-        "</div>";
-    userBaseApiService.sendEmail(user.getEmail(), html, subject, true);
   }
 }

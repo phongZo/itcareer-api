@@ -2,9 +2,11 @@ package com.base.auth.controller;
 
 
 import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.account.AccountDto;
 import com.base.auth.dto.account.OtpDto;
 import com.base.auth.dto.account.RequestEmailForm;
+import com.base.auth.exception.NotFoundException;
 import com.base.auth.form.account.CreateAccountAdminForm;
 import com.base.auth.form.account.ForgetPasswordForm;
 import com.base.auth.form.account.UpdateAccountAdminForm;
@@ -52,6 +54,9 @@ public class AccountController extends ABasicController{
 
     @Autowired
     StudentRepository studentRepository;
+
+    @Autowired
+    EducatorRepository educatorRepository;
 
     @PostMapping(value = "/create_admin", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ACC_C_AD')")
@@ -281,6 +286,33 @@ public class AccountController extends ABasicController{
         apiMessageDto.setResult(true);
         apiMessageDto.setMessage("Change password success.");
         return  apiMessageDto;
+    }
+
+    @PostMapping(value = "/resend-verify", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ApiMessageDto<OtpDto> resendVerification(@Valid @RequestBody RequestEmailForm emailForm, BindingResult bindingResult){
+        ApiMessageDto<OtpDto> apiMessageDto = new ApiMessageDto<>();
+
+        Account account = accountRepository.findAccountByEmail(emailForm.getEmail());
+        if (account == null) {
+            throw new NotFoundException("account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
+        }
+
+        String otp = userBaseApiService.getRequestOTP();
+        account.setAttemptCode(0);
+        account.setResetPwdCode(otp);
+        account.setResetPwdTime(new Date());
+        accountRepository.save(account);
+
+        reSendVerifyAccount(account);
+
+        OtpDto otpDto = new OtpDto();
+        String hash = AESUtils.encrypt (account.getId()+";"+otp, true);
+        otpDto.setIdHash(hash);
+
+        apiMessageDto.setResult(true);
+        apiMessageDto.setData(otpDto);
+        apiMessageDto.setMessage("resend verify email success");
+        return apiMessageDto;
     }
 
     private void sendForgetPassword(Account user){

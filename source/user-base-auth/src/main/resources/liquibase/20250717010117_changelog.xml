@@ -1,0 +1,61 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="Authentication" id="1752714086039-1">
+        <createTable tableName="db_user_base_educator">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="db_user_base_educatorPK"/>
+            </column>
+            <column name="birthday" type="datetime"/>
+            <column name="account_id" type="BIGINT"/>
+            <column name="created_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="Authentication" id="1752714086039-2">
+        <addForeignKeyConstraint baseColumnNames="account_id" baseTableName="db_user_base_educator" constraintName="FK428kfil5nf3fy6ku93e3ltdcw" deferrable="false" initiallyDeferred="false" referencedColumnNames="id" referencedTableName="db_user_base_account" validate="true"/>
+    </changeSet>
+
+    <changeSet author="Authentication" id="1752720167935-7">
+        <dropColumn columnName="created_by" tableName="db_user_base_educator"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1752720167935-8">
+        <dropColumn columnName="created_by" tableName="db_user_base_student"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1752720167935-9">
+        <dropColumn columnName="created_date" tableName="db_user_base_educator"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1752720167935-10">
+        <dropColumn columnName="created_date" tableName="db_user_base_student"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1752720167935-11">
+        <dropColumn columnName="modified_by" tableName="db_user_base_educator"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1752720167935-12">
+        <dropColumn columnName="modified_by" tableName="db_user_base_student"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1752720167935-13">
+        <dropColumn columnName="modified_date" tableName="db_user_base_educator"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1752720167935-14">
+        <dropColumn columnName="modified_date" tableName="db_user_base_student"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1752720167935-15">
+        <dropColumn columnName="status" tableName="db_user_base_educator"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1752720167935-16">
+        <dropColumn columnName="status" tableName="db_user_base_student"/>
+    </changeSet>
+</databaseChangeLog>
