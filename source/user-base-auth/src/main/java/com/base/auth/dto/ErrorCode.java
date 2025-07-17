@@ -94,6 +94,8 @@ public class ErrorCode {
     public static final String USER_ERROR_NOT_FOUND = "ERROR-USER-0001";
     public static final String USER_ERROR_LOGIN_FAILED = "ERROR-USER-0002";
     public static final String USER_ERROR_VERIFY_FAILED = "ERROR-USER-0003";
+    public static final String USER_ERROR_NOT_APPROVE = "ERROR-USER-0004";
+    public static final String USER_ERROR_NOT_REJECT = "ERROR-USER-0005";
 
     /**
      * Starting error code DATABASE_ERROR

@@ -7,16 +7,13 @@ import com.base.auth.dto.account.AccountDto;
 import com.base.auth.dto.account.OtpDto;
 import com.base.auth.dto.account.RequestEmailForm;
 import com.base.auth.exception.NotFoundException;
-import com.base.auth.form.account.ApproveEducator;
 import com.base.auth.form.account.CreateAccountAdminForm;
 import com.base.auth.form.account.ForgetPasswordForm;
 import com.base.auth.form.account.UpdateAccountAdminForm;
 import com.base.auth.form.account.UpdateProfileAdminForm;
 import com.base.auth.mapper.AccountMapper;
 import com.base.auth.model.Account;
-import com.base.auth.model.Educator;
 import com.base.auth.model.Group;
-import com.base.auth.model.Student;
 import com.base.auth.repository.*;
 import com.base.auth.service.UserBaseApiService;
 import com.base.auth.utils.AESUtils;
@@ -289,24 +286,6 @@ public class AccountController extends ABasicController{
         apiMessageDto.setResult(true);
         apiMessageDto.setMessage("Change password success.");
         return  apiMessageDto;
-    }
-
-    @PutMapping(value = "/approve", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('ACC_AP')")
-    public ApiMessageDto<String> approveAccountEducator(@Valid @RequestBody ApproveEducator approveEducator, BindingResult bindingResult){
-        ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
-        Educator educator = educatorRepository.findById(approveEducator.getId()).orElseThrow(()
-        -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
-
-        Account account = accountRepository.findById(educator.getAccount().getId()).orElseThrow(()
-        -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
-
-        account.setStatus(approveEducator.getStatus());
-        accountRepository.save(account);
-        educator.setStatus(approveEducator.getStatus());
-        educatorRepository.save(educator);
-        apiMessageDto.setMessage("Approve educator success");
-        return apiMessageDto;
     }
 
     @PostMapping(value = "/resend-verify", produces = MediaType.APPLICATION_JSON_VALUE)

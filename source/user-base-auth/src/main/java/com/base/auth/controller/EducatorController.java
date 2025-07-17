@@ -49,6 +49,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -114,7 +115,6 @@ public class EducatorController extends ABasicController{
     Educator educator = new Educator();
     educator.setAccount(account);
     educator.setBirthday(signUpEducatorForm.getBirthday());
-    educator.setStatus(UserBaseConstant.STATUS_PENDING);
     educatorRepository.save(educator);
 
     sendVerifyAccount(account);
@@ -327,6 +327,10 @@ public class EducatorController extends ABasicController{
       throw new NotFoundException("account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
     }
 
+    if (!Objects.equals(UserBaseConstant.STATUS_PENDING, account.getStatus())){
+      throw new BadRequestException("student cannot be verified", ErrorCode.USER_ERROR_VERIFY_FAILED);
+    }
+
     if(account.getAttemptCode() >= UserBaseConstant.MAX_ATTEMPT_FORGET_PWD){
       account.setStatus(UserBaseConstant.STATUS_LOCK);
       throw new BadRequestException("account has been locked", ErrorCode.ACCOUNT_ERROR_LOCKED);
@@ -349,15 +353,47 @@ public class EducatorController extends ABasicController{
     account.setAttemptCode(null);
     account.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
     accountRepository.save(account);
-
-    Educator educator = educatorRepository.findByAccountId(id).orElseThrow(()
-        -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
-    educator.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
-    if (!UserBaseConstant.STATUS_ACTIVE.equals(account.getStatus()) && !UserBaseConstant.STATUS_WAITING_APPROVE.equals(account.getStatus())){
-      educator.setStatus(UserBaseConstant.STATUS_LOCK);
-    }
-    educatorRepository.save(educator);
     apiMessageDto.setMessage("verify account educator success. Please wait for approval");
+    return apiMessageDto;
+  }
+
+  @PutMapping(value = "/approve", produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasRole('ED_AP')")
+  public ApiMessageDto<String> approveAccountEducator(@RequestParam("id") Long id, BindingResult bindingResult){
+    ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
+    Educator educator = educatorRepository.findById(id).orElseThrow(()
+        -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
+
+    Account account = accountRepository.findById(educator.getAccount().getId()).orElseThrow(()
+        -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
+
+    if (!Objects.equals(UserBaseConstant.STATUS_WAITING_APPROVE, account.getStatus())){
+      throw new BadRequestException("Educator cannot be approved", ErrorCode.USER_ERROR_NOT_APPROVE);
+    }
+
+    account.setStatus(UserBaseConstant.STATUS_ACTIVE);
+    accountRepository.save(account);
+    apiMessageDto.setMessage("Approve educator success");
+    return apiMessageDto;
+  }
+
+  @PutMapping(value = "/reject", produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasRole('ED_RJ')")
+  public ApiMessageDto<String> rejectAccountEducator(@RequestParam("id") Long id, BindingResult bindingResult){
+    ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
+    Educator educator = educatorRepository.findById(id).orElseThrow(()
+        -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
+
+    Account account = accountRepository.findById(educator.getAccount().getId()).orElseThrow(()
+        -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
+
+    if (!Objects.equals(UserBaseConstant.STATUS_WAITING_APPROVE, account.getStatus())){
+      throw new BadRequestException("Educator cannot be rejected", ErrorCode.USER_ERROR_NOT_REJECT);
+    }
+
+    account.setStatus(UserBaseConstant.STATUS_REJECT);
+    accountRepository.save(account);
+    apiMessageDto.setMessage("Reject educator success");
     return apiMessageDto;
   }
 }

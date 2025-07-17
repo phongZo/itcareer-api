@@ -116,7 +116,6 @@ public class StudentController extends ABasicController{
     Student student = new Student();
     student.setAccount(account);
     student.setBirthday(signUpStudentForm.getBirthday());
-    student.setStatus(UserBaseConstant.STATUS_PENDING);
     studentRepository.save(student);
 
     sendVerifyAccount(account);
@@ -328,6 +327,10 @@ public class StudentController extends ABasicController{
       throw new NotFoundException("account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
     }
 
+    if (!Objects.equals(UserBaseConstant.STATUS_PENDING, account.getStatus())){
+      throw new BadRequestException("student cannot be verified", ErrorCode.USER_ERROR_VERIFY_FAILED);
+    }
+
     if(account.getAttemptCode() >= UserBaseConstant.MAX_ATTEMPT_FORGET_PWD){
       account.setStatus(UserBaseConstant.STATUS_LOCK);
       throw new BadRequestException("account has been locked", ErrorCode.ACCOUNT_ERROR_LOCKED);
@@ -350,14 +353,6 @@ public class StudentController extends ABasicController{
     account.setAttemptCode(null);
     account.setStatus(UserBaseConstant.STATUS_ACTIVE);
     accountRepository.save(account);
-
-    Student student = studentRepository.findByAccountId(id).orElseThrow(()
-    -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
-    student.setStatus(UserBaseConstant.STATUS_ACTIVE);
-    if (!UserBaseConstant.STATUS_ACTIVE.equals(account.getStatus())){
-      student.setStatus(UserBaseConstant.STATUS_LOCK);
-    }
-    studentRepository.save(student);
     apiMessageDto.setMessage("verify account student success");
     return apiMessageDto;
   }

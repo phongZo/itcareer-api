@@ -18,7 +18,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-public class Educator extends Auditable<String>{
+public class Educator{
   @Id
   @GenericGenerator(name = "idGenerator", strategy = "com.base.auth.service.id.IdGenerator")
   @GeneratedValue(generator = "idGenerator")
