@@ -11,6 +11,7 @@ import com.base.auth.dto.educator.ProfileEducatorDto;
 import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
 import com.base.auth.form.account.VerifyUserForm;
+import com.base.auth.form.educator.RequestEducatorIdForm;
 import com.base.auth.form.educator.SignUpEducatorForm;
 import com.base.auth.form.educator.UpdateEducatorForm;
 import com.base.auth.form.educator.UpdateProfileEducatorForm;
@@ -328,7 +329,7 @@ public class EducatorController extends ABasicController{
     }
 
     if (!Objects.equals(UserBaseConstant.STATUS_PENDING, account.getStatus())){
-      throw new BadRequestException("student cannot be verified", ErrorCode.USER_ERROR_VERIFY_FAILED);
+      throw new BadRequestException("educator cannot be verified", ErrorCode.USER_ERROR_VERIFY_FAILED);
     }
 
     if(account.getAttemptCode() >= UserBaseConstant.MAX_ATTEMPT_FORGET_PWD){
@@ -359,9 +360,9 @@ public class EducatorController extends ABasicController{
 
   @PutMapping(value = "/approve", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('ED_AP')")
-  public ApiMessageDto<String> approveAccountEducator(@RequestParam("id") Long id, BindingResult bindingResult){
+  public ApiMessageDto<String> approveAccountEducator(@Valid @RequestBody RequestEducatorIdForm requestEducatorIdForm, BindingResult bindingResult){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
-    Educator educator = educatorRepository.findById(id).orElseThrow(()
+    Educator educator = educatorRepository.findById(requestEducatorIdForm.getId()).orElseThrow(()
         -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
 
     Account account = accountRepository.findById(educator.getAccount().getId()).orElseThrow(()
@@ -379,9 +380,9 @@ public class EducatorController extends ABasicController{
 
   @PutMapping(value = "/reject", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('ED_RJ')")
-  public ApiMessageDto<String> rejectAccountEducator(@RequestParam("id") Long id, BindingResult bindingResult){
+  public ApiMessageDto<String> rejectAccountEducator(@Valid @RequestBody RequestEducatorIdForm requestEducatorIdForm, BindingResult bindingResult){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
-    Educator educator = educatorRepository.findById(id).orElseThrow(()
+    Educator educator = educatorRepository.findById(requestEducatorIdForm.getId()).orElseThrow(()
         -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
 
     Account account = accountRepository.findById(educator.getAccount().getId()).orElseThrow(()
