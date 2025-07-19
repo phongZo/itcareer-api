@@ -96,6 +96,7 @@ public class ErrorCode {
     public static final String USER_ERROR_VERIFY_FAILED = "ERROR-USER-0003";
     public static final String USER_ERROR_NOT_APPROVE = "ERROR-USER-0004";
     public static final String USER_ERROR_NOT_REJECT = "ERROR-USER-0005";
+    public static final String USER_ERROR_NOT_EDUCATOR = "ERROR-USER-0006";
 
     /**
      * Starting error code DATABASE_ERROR
@@ -109,4 +110,21 @@ public class ErrorCode {
      */
     public static final String FILE_ERROR_UPLOAD_TYPE_INVALID = "ERROR-FILE-QUERY-0000";
     public static final String FILE_ERROR_UPLOAD_FORMAT_INVALID = "ERROR-FILE-QUERY-0001";
+
+    /**
+     * Starting error code Specialization
+     * */
+    public static final String SPECIALIZATION_ERROR_NOT_FOUND = "SPECIALIZATION-ERROR-0000";
+    public static final String SPECIALIZATION_ERROR_EXIST = "SPECIALIZATION-ERROR-0001";
+    public static final String SPECIALIZATION_ERROR_DELETE = "SPECIALIZATION-ERROR-0002";
+
+    /**
+     * Starting error code Simulation
+     * */
+    public static final String SIMULATION_ERROR_NOT_FOUND = "SPECIALIZATION-ERROR-0000";
+    public static final String SIMULATION_ERROR_EXIST = "SPECIALIZATION-ERROR-0001";
+    public static final String SIMULATION_ERROR_NOT_DELETE = "SPECIALIZATION-ERROR-0002";
+    public static final String SIMULATION_ERROR_APPROVE = "SPECIALIZATION-ERROR-0003";
+    public static final String SIMULATION_ERROR_NOT_AUTHORIZED = "SPECIALIZATION-ERROR-0004";
+    public static final String SIMULATION_ERROR_NOT_ACTIVE = "SPECIALIZATION-ERROR-0005";
 }

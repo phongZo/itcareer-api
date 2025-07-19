@@ -20,6 +20,7 @@ public class UserBaseConstant {
     public static final Integer STATUS_LOCK = -1;
     public static final Integer STATUS_REJECT = -2;
 
+
     public static final Integer NATION_KIND_PROVINCE = 1;
     public static final Integer NATION_KIND_DISTRICT = 2;
     public static final Integer NATION_KIND_COMMUNE = 3;
