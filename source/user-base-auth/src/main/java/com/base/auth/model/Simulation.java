@@ -26,7 +26,7 @@ public class Simulation extends Auditable<String>{
   private String overview;
   private String description;
   private Integer level;
-  private String totalEstimatedTime;
+  private String totalEstimatedTime = "0";
   private String imagePath;
   private String videoPath;
   private Float avgRating = 0F;

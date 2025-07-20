@@ -46,6 +46,7 @@ public interface SimulationMapper {
   @Named("fromEntityToSimulationDto")
   SimulationDto fromEntityToSimulationDto(Simulation simulation);
 
+  @Mapping(source = "id", target = "id")
   @Mapping(source = "title", target = "title")
   @Mapping(source = "overview", target = "overview")
   @Mapping(source = "description", target = "description")
