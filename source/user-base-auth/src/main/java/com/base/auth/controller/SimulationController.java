@@ -21,14 +21,12 @@ import com.base.auth.model.criteria.SimulationCriteria;
 import com.base.auth.repository.EducatorRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.SpecializationRepository;
-import com.base.auth.repository.StudentRepository;
 import java.util.List;
 import java.util.Objects;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -59,9 +57,6 @@ public class SimulationController extends ABasicController{
 
   @Autowired
   EducatorRepository educatorRepository;
-
-  @Autowired
-  StudentRepository studentRepository;
 
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('SI_C')")
@@ -108,10 +103,12 @@ public class SimulationController extends ABasicController{
     ApiMessageDto<SimulationDto> apiMessageDto = new ApiMessageDto<>();
     Simulation simulation = simulationRepository.findById(id).orElseThrow(() ->
         new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-    Specialization specialization = specializationRepository.findById(simulation.getSpecialization().getId()).orElseThrow(()
-    -> new NotFoundException("Specialization not found", ErrorCode.SPECIALIZATION_ERROR_NOT_FOUND));
-    Educator educator = educatorRepository.findById(simulation.getEducator().getId()).orElseThrow(()
-    -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
+    if (!specializationRepository.existsById(simulation.getSpecialization().getId())){
+      throw new NotFoundException("Specialization not found", ErrorCode.SPECIALIZATION_ERROR_NOT_FOUND);
+    }
+    if (!educatorRepository.existsById(simulation.getEducator().getId())){
+      throw new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND);
+    }
     SimulationDto simulationDto = simulationMapper.fromEntityToSimulationDto(simulation);
     apiMessageDto.setData(simulationDto);
     apiMessageDto.setMessage("Get success");
@@ -123,6 +120,9 @@ public class SimulationController extends ABasicController{
   public ApiMessageDto<ResponseListDto<List<SimulationAutoCompleteDto>>> getListForStudent(Pageable pageable){
     ApiMessageDto<ResponseListDto<List<SimulationAutoCompleteDto>>> apiMessageDto = new ApiMessageDto<>();
     ResponseListDto<List<SimulationAutoCompleteDto>> responseListDto = new ResponseListDto<>();
+    if (!studentRepository.existsByAccountId(getCurrentUser())){
+      throw new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND);
+    }
     Page<Simulation> simulations = simulationRepository.findAllByStatus(UserBaseConstant.STATUS_ACTIVE, pageable);
     responseListDto.setContent(simulationMapper.fromEntityToSimulationAutoCompleteDtoList(simulations.getContent()));
     responseListDto.setTotalElements(simulations.getTotalElements());
@@ -155,12 +155,12 @@ public class SimulationController extends ABasicController{
   @PreAuthorize("hasRole('SI_ST_V')")
   public ApiMessageDto<SimulationClientDto> getSimulationForStudent(@PathVariable("id") Long id){
     ApiMessageDto<SimulationClientDto> apiMessageDto = new ApiMessageDto<>();
-    if (!isStudent()){
+    if (!studentRepository.existsByAccountId(getCurrentUser())){
       throw new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND);
     }
     Simulation simulation = simulationRepository.findById(id).orElseThrow(()
         -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-    if (!isSpecialization(simulation.getSpecialization().getId())){
+    if (!specializationRepository.existsById(simulation.getSpecialization().getId())){
       throw new NotFoundException("Specialization not found", ErrorCode.SPECIALIZATION_ERROR_NOT_FOUND);
     }
     SimulationClientDto simulationDto = simulationMapper.fromEntityToSimulationClientDto(simulation);
@@ -174,11 +174,11 @@ public class SimulationController extends ABasicController{
   public ApiMessageDto<SimulationClientDto> getSimulationForEducator(@PathVariable("id") Long id){
     ApiMessageDto<SimulationClientDto> apiMessageDto = new ApiMessageDto<>();
     if (!isEducator()){
-      throw new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND);
+      throw new BadRequestException("User is not an educator", ErrorCode.USER_ERROR_NOT_EDUCATOR);
     }
     Simulation simulation = simulationRepository.findById(id).orElseThrow(()
     -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-    if (!isSpecialization(simulation.getSpecialization().getId())){
+    if (!specializationRepository.existsById(simulation.getSpecialization().getId())){
       throw new NotFoundException("Specialization not found", ErrorCode.SPECIALIZATION_ERROR_NOT_FOUND);
     }
     SimulationClientDto simulationDto = simulationMapper.fromEntityToSimulationClientDto(simulation);

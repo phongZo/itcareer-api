@@ -1,6 +1,8 @@
 package com.base.auth.controller;
 
 import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.dto.ErrorCode;
+import com.base.auth.exception.NotFoundException;
 import com.base.auth.jwt.UserBaseJwt;
 import com.base.auth.model.Account;
 import com.base.auth.model.Educator;
@@ -33,13 +35,7 @@ public class ABasicController {
     private UserServiceImpl userService;
 
     @Autowired
-    StudentRepository studentRepository;
-
-    @Autowired
     EducatorRepository educatorRepository;
-
-    @Autowired
-    SpecializationRepository specializationRepository;
 
     @Autowired
     private UserBaseApiService userBaseApiService;
@@ -86,22 +82,10 @@ public class ABasicController {
         return null;
     }
 
-    public Boolean isStudent(){
-        if (!studentRepository.existsByAccountId(getCurrentUser())){
-            return false;
-        }
-        return true;
-    }
-
     public Boolean isEducator(){
-        if (!educatorRepository.existsByAccountId(getCurrentUser())){
-            return false;
-        }
-        return true;
-    }
-
-    public Boolean isSpecialization(Long id){
-        if (!specializationRepository.existsById(id)){
+        Educator educator = educatorRepository.findByAccountId(getCurrentUser()).orElseThrow(()
+        -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
+        if (!Objects.equals(educator.getAccount().getKind(), UserBaseConstant.USER_KIND_EDUCATOR)){
             return false;
         }
         return true;
