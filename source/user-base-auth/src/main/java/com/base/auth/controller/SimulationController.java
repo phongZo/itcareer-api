@@ -5,6 +5,7 @@ import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.ErrorCode;
 import com.base.auth.dto.ResponseListDto;
 import com.base.auth.dto.simulation.SimulationAutoCompleteDto;
+import com.base.auth.dto.simulation.SimulationClientDto;
 import com.base.auth.dto.simulation.SimulationDto;
 import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
@@ -116,17 +117,12 @@ public class SimulationController extends ABasicController{
     apiMessageDto.setMessage("Get success");
     return apiMessageDto;
   }
-  
+
   @GetMapping(value = "/student-list", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('SI_ST_L')")
   public ApiMessageDto<ResponseListDto<List<SimulationAutoCompleteDto>>> getListForStudent(Pageable pageable){
     ApiMessageDto<ResponseListDto<List<SimulationAutoCompleteDto>>> apiMessageDto = new ApiMessageDto<>();
     ResponseListDto<List<SimulationAutoCompleteDto>> responseListDto = new ResponseListDto<>();
-    Student student = studentRepository.findByAccountId(getCurrentUser()).orElseThrow(()
-    -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
-    if (!Objects.equals(student.getAccount().getKind(), UserBaseConstant.USER_KIND_EDUCATOR)){
-      throw new BadRequestException("User is not an educator", ErrorCode.USER_ERROR_NOT_EDUCATOR);
-    }
     Page<Simulation> simulations = simulationRepository.findAllByStatus(UserBaseConstant.STATUS_ACTIVE, pageable);
     responseListDto.setContent(simulationMapper.fromEntityToSimulationAutoCompleteDtoList(simulations.getContent()));
     responseListDto.setTotalElements(simulations.getTotalElements());
@@ -157,32 +153,36 @@ public class SimulationController extends ABasicController{
 
   @GetMapping(value = "/student-get/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('SI_ST_V')")
-  public ApiMessageDto<SimulationAutoCompleteDto> getSimulationForStudent(@PathVariable("id") Long id){
-    ApiMessageDto<SimulationAutoCompleteDto> apiMessageDto = new ApiMessageDto<>();
-    Student student = studentRepository.findByAccountId(getCurrentUser()).orElseThrow(()
-        -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
+  public ApiMessageDto<SimulationClientDto> getSimulationForStudent(@PathVariable("id") Long id){
+    ApiMessageDto<SimulationClientDto> apiMessageDto = new ApiMessageDto<>();
+    if (!isStudent()){
+      throw new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND);
+    }
     Simulation simulation = simulationRepository.findById(id).orElseThrow(()
         -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-    Specialization specialization = specializationRepository.findById(simulation.getSpecialization().getId()).orElseThrow(()
-        -> new NotFoundException("Specialization not found", ErrorCode.SPECIALIZATION_ERROR_NOT_FOUND));
-    SimulationAutoCompleteDto simulationAutoCompleteDto = simulationMapper.fromEntityToSimulationAutoCompleteDto(simulation);
-    apiMessageDto.setData(simulationAutoCompleteDto);
+    if (!isSpecialization(simulation.getSpecialization().getId())){
+      throw new NotFoundException("Specialization not found", ErrorCode.SPECIALIZATION_ERROR_NOT_FOUND);
+    }
+    SimulationClientDto simulationDto = simulationMapper.fromEntityToSimulationClientDto(simulation);
+    apiMessageDto.setData(simulationDto);
     apiMessageDto.setMessage("Get success");
     return apiMessageDto;
   }
 
   @GetMapping(value = "/educator-get/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('SI_ED_V')")
-  public ApiMessageDto<SimulationAutoCompleteDto> getSimulationForEducator(@PathVariable("id") Long id){
-    ApiMessageDto<SimulationAutoCompleteDto> apiMessageDto = new ApiMessageDto<>();
-    Educator educator = educatorRepository.findByAccountId(getCurrentUser()).orElseThrow(()
-    -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
+  public ApiMessageDto<SimulationClientDto> getSimulationForEducator(@PathVariable("id") Long id){
+    ApiMessageDto<SimulationClientDto> apiMessageDto = new ApiMessageDto<>();
+    if (!isEducator()){
+      throw new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND);
+    }
     Simulation simulation = simulationRepository.findById(id).orElseThrow(()
     -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-    Specialization specialization = specializationRepository.findById(simulation.getSpecialization().getId()).orElseThrow(()
-    -> new NotFoundException("Specialization not found", ErrorCode.SPECIALIZATION_ERROR_NOT_FOUND));
-    SimulationAutoCompleteDto simulationAutoCompleteDto = simulationMapper.fromEntityToSimulationAutoCompleteDto(simulation);
-    apiMessageDto.setData(simulationAutoCompleteDto);
+    if (!isSpecialization(simulation.getSpecialization().getId())){
+      throw new NotFoundException("Specialization not found", ErrorCode.SPECIALIZATION_ERROR_NOT_FOUND);
+    }
+    SimulationClientDto simulationDto = simulationMapper.fromEntityToSimulationClientDto(simulation);
+    apiMessageDto.setData(simulationDto);
     apiMessageDto.setMessage("Get success");
     return apiMessageDto;
   }

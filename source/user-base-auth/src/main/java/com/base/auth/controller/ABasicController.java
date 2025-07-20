@@ -3,6 +3,11 @@ package com.base.auth.controller;
 import com.base.auth.constant.UserBaseConstant;
 import com.base.auth.jwt.UserBaseJwt;
 import com.base.auth.model.Account;
+import com.base.auth.model.Educator;
+import com.base.auth.model.Student;
+import com.base.auth.repository.EducatorRepository;
+import com.base.auth.repository.SpecializationRepository;
+import com.base.auth.repository.StudentRepository;
 import com.base.auth.service.CommonAsyncService;
 import com.base.auth.service.UserBaseApiService;
 import com.base.auth.service.impl.UserServiceImpl;
@@ -26,6 +31,15 @@ import org.springframework.web.multipart.MultipartFile;
 public class ABasicController {
     @Autowired
     private UserServiceImpl userService;
+
+    @Autowired
+    StudentRepository studentRepository;
+
+    @Autowired
+    EducatorRepository educatorRepository;
+
+    @Autowired
+    SpecializationRepository specializationRepository;
 
     @Autowired
     private UserBaseApiService userBaseApiService;
@@ -70,6 +84,27 @@ public class ABasicController {
             }
         }
         return null;
+    }
+
+    public Boolean isStudent(){
+        if (!studentRepository.existsByAccountId(getCurrentUser())){
+            return false;
+        }
+        return true;
+    }
+
+    public Boolean isEducator(){
+        if (!educatorRepository.existsByAccountId(getCurrentUser())){
+            return false;
+        }
+        return true;
+    }
+
+    public Boolean isSpecialization(Long id){
+        if (!specializationRepository.existsById(id)){
+            return false;
+        }
+        return true;
     }
 
     protected void sendVerifyAccount(Account user){

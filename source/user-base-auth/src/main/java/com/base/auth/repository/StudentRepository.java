@@ -15,4 +15,6 @@ public interface StudentRepository extends JpaRepository<Student, Long>, JpaSpec
   @Transactional
   @Modifying
   void deleteAllByAccountId(Long accountId);
+
+  boolean existsByAccountId(long currentUser);
 }
