@@ -16,6 +16,4 @@ public interface SimulationRepository extends JpaRepository<Simulation, Long>,
   Optional<Simulation> findByTitle(String title);
 
   Page<Simulation> findAllByStatus(Integer statusActive, Pageable pageable);
-
-  Page<Simulation> findAllByEducatorId(Long educatorId, Pageable pageable);
 }

@@ -38,6 +38,9 @@ public class ABasicController {
     EducatorRepository educatorRepository;
 
     @Autowired
+    StudentRepository studentRepository;
+
+    @Autowired
     private UserBaseApiService userBaseApiService;
 
     public long getCurrentUser(){
@@ -82,8 +85,17 @@ public class ABasicController {
         return null;
     }
 
+    public Boolean isStudent(){
+        Student student = studentRepository.findById(getCurrentUser()).orElseThrow(()
+        -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
+        if (!Objects.equals(student.getAccount().getKind(), UserBaseConstant.USER_KIND_STUDENT)){
+            return false;
+        }
+        return true;
+    }
+
     public Boolean isEducator(){
-        Educator educator = educatorRepository.findByAccountId(getCurrentUser()).orElseThrow(()
+        Educator educator = educatorRepository.findById(getCurrentUser()).orElseThrow(()
         -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
         if (!Objects.equals(educator.getAccount().getKind(), UserBaseConstant.USER_KIND_EDUCATOR)){
             return false;

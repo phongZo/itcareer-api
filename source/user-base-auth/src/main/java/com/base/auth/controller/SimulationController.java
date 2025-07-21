@@ -16,7 +16,6 @@ import com.base.auth.mapper.SimulationMapper;
 import com.base.auth.model.Educator;
 import com.base.auth.model.Simulation;
 import com.base.auth.model.Specialization;
-import com.base.auth.model.Student;
 import com.base.auth.model.criteria.SimulationCriteria;
 import com.base.auth.repository.EducatorRepository;
 import com.base.auth.repository.SimulationRepository;
@@ -62,7 +61,7 @@ public class SimulationController extends ABasicController{
   @PreAuthorize("hasRole('SI_C')")
   public ApiMessageDto<String> create(@Valid @RequestBody CreateSimulationForm createSimulationForm, BindingResult bindingResult){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
-    Educator educator = educatorRepository.findByAccountId(getCurrentUser()).orElseThrow(()
+    Educator educator = educatorRepository.findById(getCurrentUser()).orElseThrow(()
     -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
     if (!Objects.equals(educator.getAccount().getKind(), UserBaseConstant.USER_KIND_EDUCATOR)){
       throw new BadRequestException("User is not an educator", ErrorCode.USER_ERROR_NOT_EDUCATOR);
@@ -120,8 +119,8 @@ public class SimulationController extends ABasicController{
   public ApiMessageDto<ResponseListDto<List<SimulationAutoCompleteDto>>> getListForStudent(Pageable pageable){
     ApiMessageDto<ResponseListDto<List<SimulationAutoCompleteDto>>> apiMessageDto = new ApiMessageDto<>();
     ResponseListDto<List<SimulationAutoCompleteDto>> responseListDto = new ResponseListDto<>();
-    if (!studentRepository.existsByAccountId(getCurrentUser())){
-      throw new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND);
+    if (!isStudent()){
+      throw new BadRequestException("User is not a student", ErrorCode.USER_ERROR_NOT_STUDENT);
     }
     Page<Simulation> simulations = simulationRepository.findAllByStatus(UserBaseConstant.STATUS_ACTIVE, pageable);
     responseListDto.setContent(simulationMapper.fromEntityToSimulationAutoCompleteDtoList(simulations.getContent()));
@@ -134,15 +133,15 @@ public class SimulationController extends ABasicController{
 
   @GetMapping(value = "/educator-list", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('SI_ED_L')")
-  public ApiMessageDto<ResponseListDto<List<SimulationAutoCompleteDto>>> getListForEducator(Pageable pageable){
+  public ApiMessageDto<ResponseListDto<List<SimulationAutoCompleteDto>>> getListForEducator(
+      SimulationCriteria simulationCriteria, Pageable pageable){
     ApiMessageDto<ResponseListDto<List<SimulationAutoCompleteDto>>> apiMessageDto = new ApiMessageDto<>();
     ResponseListDto<List<SimulationAutoCompleteDto>> responseListDto = new ResponseListDto<>();
-    Educator educator = educatorRepository.findByAccountId(getCurrentUser()).orElseThrow(()
-        -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
-    if (!Objects.equals(educator.getAccount().getKind(), UserBaseConstant.USER_KIND_EDUCATOR)){
+    if (!isEducator()){
       throw new BadRequestException("User is not an educator", ErrorCode.USER_ERROR_NOT_EDUCATOR);
     }
-    Page<Simulation> simulations = simulationRepository.findAllByEducatorId(educator.getId(), pageable);
+    simulationCriteria.setEducatorId(getCurrentUser());
+    Page<Simulation> simulations = simulationRepository.findAll(simulationCriteria.getSpecification(), pageable);
     responseListDto.setContent(simulationMapper.fromEntityToSimulationAutoCompleteDtoList(simulations.getContent()));
     responseListDto.setTotalElements(simulations.getTotalElements());
     responseListDto.setTotalPages(simulations.getTotalPages());
@@ -155,8 +154,8 @@ public class SimulationController extends ABasicController{
   @PreAuthorize("hasRole('SI_ST_V')")
   public ApiMessageDto<SimulationClientDto> getSimulationForStudent(@PathVariable("id") Long id){
     ApiMessageDto<SimulationClientDto> apiMessageDto = new ApiMessageDto<>();
-    if (!studentRepository.existsByAccountId(getCurrentUser())){
-      throw new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND);
+    if (!isStudent()){
+      throw new BadRequestException("User is not a student", ErrorCode.USER_ERROR_NOT_STUDENT);
     }
     Simulation simulation = simulationRepository.findById(id).orElseThrow(()
         -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
@@ -191,7 +190,7 @@ public class SimulationController extends ABasicController{
   @PreAuthorize("hasRole('SI_U')")
   public ApiMessageDto<String> update(@Valid @RequestBody UpdateSimulationForm updateSimulationForm, BindingResult bindingResult){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
-    Educator educator = educatorRepository.findByAccountId(getCurrentUser()).orElseThrow(()
+    Educator educator = educatorRepository.findById(getCurrentUser()).orElseThrow(()
     -> new NotFoundException("Educator not found"));
     if (!Objects.equals(educator.getAccount().getKind(), UserBaseConstant.USER_KIND_EDUCATOR)){
       throw new BadRequestException("User is not an educator",ErrorCode.USER_ERROR_NOT_EDUCATOR);
@@ -249,6 +248,9 @@ public class SimulationController extends ABasicController{
   @PreAuthorize("hasRole('SI_E_RED')")
   public ApiMessageDto<String> requestDelete(@PathVariable("id") Long id){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
+    if (!isEducator()){
+      throw new BadRequestException("User is not an educator", ErrorCode.USER_ERROR_NOT_EDUCATOR);
+    }
     Simulation simulation = simulationRepository.findById(id).orElseThrow(()
         -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
     if (!Objects.equals(UserBaseConstant.STATUS_ACTIVE, simulation.getStatus())){

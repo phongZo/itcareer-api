@@ -26,5 +26,7 @@ public class AccountDto {
     private Date lastLogin;
     @ApiModelProperty(name = "avatar")
     private String avatar;
+    @ApiModelProperty(name = "status")
+    private Integer status;
     private Boolean isSuperAdmin;
 }

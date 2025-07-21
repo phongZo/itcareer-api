@@ -97,6 +97,7 @@ public class ErrorCode {
     public static final String USER_ERROR_NOT_APPROVE = "ERROR-USER-0004";
     public static final String USER_ERROR_NOT_REJECT = "ERROR-USER-0005";
     public static final String USER_ERROR_NOT_EDUCATOR = "ERROR-USER-0006";
+    public static final String USER_ERROR_NOT_STUDENT = "ERROR-USER-0007";
 
     /**
      * Starting error code DATABASE_ERROR

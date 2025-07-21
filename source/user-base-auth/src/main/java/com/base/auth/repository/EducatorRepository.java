@@ -9,6 +9,4 @@ public interface EducatorRepository extends JpaRepository<Educator, Long>,
     JpaSpecificationExecutor<Educator> {
 
   Optional<Educator> findByAccountId(Long accountId);
-
-  boolean existsByAccountId(long currentUser);
 }
