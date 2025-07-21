@@ -61,6 +61,8 @@ public class SimulationController extends ABasicController{
   @PreAuthorize("hasRole('SI_C')")
   public ApiMessageDto<String> create(@Valid @RequestBody CreateSimulationForm createSimulationForm, BindingResult bindingResult){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
+    Educator educator = educatorRepository.findById(getCurrentUser()).orElseThrow(()
+        -> new NotFoundException("Educator not found"));
     if (!isEducator()){
       throw new BadRequestException("User is not an educator", ErrorCode.USER_ERROR_NOT_FOUND);
     }
@@ -70,9 +72,6 @@ public class SimulationController extends ABasicController{
     if (simulation != null){
       throw new BadRequestException("Simulation already exist", ErrorCode.SIMULATION_ERROR_EXIST);
     }
-
-    Educator educator = new Educator();
-    educator.setId(getCurrentUser());
     simulation = simulationMapper.fromCreateSimulationFormToEntity(createSimulationForm);
     simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
     simulation.setSpecialization(specialization);
