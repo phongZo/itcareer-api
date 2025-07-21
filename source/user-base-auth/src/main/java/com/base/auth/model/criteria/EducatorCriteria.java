@@ -36,7 +36,8 @@ public class EducatorCriteria {
         }
         if(getStatus()!=null)
         {
-          predicates.add(cb.equal(root.get("status"),getStatus()));
+          Join<Educator, Account> joinAccount = root.join("account", JoinType.INNER);
+          predicates.add(cb.equal(joinAccount.get("status"),getStatus()));
         }
         if (!StringUtils.isBlank(getPhone()))
         {

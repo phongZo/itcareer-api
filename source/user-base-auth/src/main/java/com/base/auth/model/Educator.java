@@ -6,6 +6,7 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.MapsId;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import lombok.Getter;
@@ -20,11 +21,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Setter
 public class Educator{
   @Id
-  @GenericGenerator(name = "idGenerator", strategy = "com.base.auth.service.id.IdGenerator")
-  @GeneratedValue(generator = "idGenerator")
   private Long id;
   @OneToOne
-  @JoinColumn(name = "account_id")
+  @MapsId
+  @JoinColumn(name = "id")
   private Account account;
   private Date birthday;
 }

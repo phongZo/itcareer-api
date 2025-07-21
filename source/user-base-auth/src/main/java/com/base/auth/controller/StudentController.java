@@ -271,7 +271,7 @@ public class StudentController extends ABasicController{
     ApiMessageDto<ProfileStudentDto> apiMessageDto = new ApiMessageDto<>();
     Account account = accountRepository.findById(getCurrentUser()).orElseThrow(
         () -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
-    Student student = studentRepository.findByAccountId(account.getId()).orElseThrow(
+    Student student = studentRepository.findById(account.getId()).orElseThrow(
         () -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
     ProfileStudentDto studentDto = studentMapper.fromStudentToProfileDto(student);
     apiMessageDto.setData(studentDto);
@@ -285,7 +285,7 @@ public class StudentController extends ABasicController{
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Account currentAccount = accountRepository.findById(getCurrentUser()).orElseThrow(() ->
         new NotFoundException("account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
-    Student currentUser = studentRepository.findByAccountId(currentAccount.getId()).orElseThrow(() ->
+    Student currentUser = studentRepository.findById(currentAccount.getId()).orElseThrow(() ->
         new NotFoundException("student not found", ErrorCode.USER_ERROR_NOT_FOUND));
 
     if (StringUtils.isNotBlank(updateStudentForm.getUsername())){

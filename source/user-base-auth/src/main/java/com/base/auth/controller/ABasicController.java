@@ -1,8 +1,15 @@
 package com.base.auth.controller;
 
 import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.dto.ErrorCode;
+import com.base.auth.exception.NotFoundException;
 import com.base.auth.jwt.UserBaseJwt;
 import com.base.auth.model.Account;
+import com.base.auth.model.Educator;
+import com.base.auth.model.Student;
+import com.base.auth.repository.EducatorRepository;
+import com.base.auth.repository.SpecializationRepository;
+import com.base.auth.repository.StudentRepository;
 import com.base.auth.service.CommonAsyncService;
 import com.base.auth.service.UserBaseApiService;
 import com.base.auth.service.impl.UserServiceImpl;
@@ -26,6 +33,12 @@ import org.springframework.web.multipart.MultipartFile;
 public class ABasicController {
     @Autowired
     private UserServiceImpl userService;
+
+    @Autowired
+    EducatorRepository educatorRepository;
+
+    @Autowired
+    StudentRepository studentRepository;
 
     @Autowired
     private UserBaseApiService userBaseApiService;
@@ -70,6 +83,22 @@ public class ABasicController {
             }
         }
         return null;
+    }
+
+    public Boolean isStudent(){
+        UserBaseJwt userBaseJwt = userService.getAddInfoFromToken();
+        if(userBaseJwt !=null){
+            return Objects.equals(userBaseJwt.getUserKind(), UserBaseConstant.USER_KIND_STUDENT);
+        }
+        return false;
+    }
+
+    public Boolean isEducator(){
+        UserBaseJwt userBaseJwt = userService.getAddInfoFromToken();
+        if(userBaseJwt !=null){
+            return Objects.equals(userBaseJwt.getUserKind(), UserBaseConstant.USER_KIND_EDUCATOR);
+        }
+        return false;
     }
 
     protected void sendVerifyAccount(Account user){

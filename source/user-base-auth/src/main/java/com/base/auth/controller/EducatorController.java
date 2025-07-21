@@ -272,7 +272,7 @@ public class EducatorController extends ABasicController{
     ApiMessageDto<ProfileEducatorDto> apiMessageDto = new ApiMessageDto<>();
     Account account = accountRepository.findById(getCurrentUser()).orElseThrow(
         () -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
-    Educator educator = educatorRepository.findByAccountId(account.getId()).orElseThrow(
+    Educator educator = educatorRepository.findById(account.getId()).orElseThrow(
         () -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
     ProfileEducatorDto educatorDto = educatorMapper.fromEducatorToProfileDto(educator);
     apiMessageDto.setData(educatorDto);
@@ -286,7 +286,7 @@ public class EducatorController extends ABasicController{
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Account currentAccount = accountRepository.findById(getCurrentUser()).orElseThrow(() ->
         new NotFoundException("account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
-    Educator currentUser = educatorRepository.findByAccountId(currentAccount.getId()).orElseThrow(() ->
+    Educator currentUser = educatorRepository.findById(currentAccount.getId()).orElseThrow(() ->
         new NotFoundException("educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
 
     if (StringUtils.isNotBlank(updateEducatorForm.getUsername())){
