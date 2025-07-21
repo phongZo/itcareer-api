@@ -1,6 +1,6 @@
 package com.base.auth.mapper;
 
-import com.base.auth.dto.simulation.SimulationAutoCompleteDto;
+import com.base.auth.dto.simulation.SimulationDisplayDto;
 import com.base.auth.dto.simulation.SimulationClientDto;
 import com.base.auth.dto.simulation.SimulationDto;
 import com.base.auth.form.simulation.CreateSimulationForm;
@@ -50,8 +50,8 @@ public interface SimulationMapper {
   @Mapping(source = "id", target = "id")
   @Mapping(source = "title", target = "title")
   @BeanMapping(ignoreByDefault = true)
-  @Named("fromEntityToSimulationAutoCompleteDto")
-  SimulationAutoCompleteDto fromEntityToSimulationAutoCompleteDto(Simulation simulation);
+  @Named("fromEntityToSimulationDisplayDto")
+  SimulationDisplayDto fromEntityToSimulationDisplayDto(Simulation simulation);
 
   @Mapping(source = "title", target = "title")
   @Mapping(source = "overview", target = "overview")
@@ -71,8 +71,8 @@ public interface SimulationMapper {
   @IterableMapping(elementTargetType = SimulationDto.class, qualifiedByName = "fromEntityToSimulationDto")
   List<SimulationDto> fromEntityToSimulationDtoList(List<Simulation> simulations);
 
-  @IterableMapping(elementTargetType = SimulationAutoCompleteDto.class, qualifiedByName = "fromEntityToSimulationAutoCompleteDto")
-  List<SimulationAutoCompleteDto> fromEntityToSimulationAutoCompleteDtoList(List<Simulation> simulations);
+  @IterableMapping(elementTargetType = SimulationDisplayDto.class, qualifiedByName = "fromEntityToSimulationDisplayDto")
+  List<SimulationDisplayDto> fromEntityToSimulationDisplayDtoList(List<Simulation> simulations);
 
   @Mapping(source = "title", target = "title")
   @Mapping(source = "overview", target = "overview")

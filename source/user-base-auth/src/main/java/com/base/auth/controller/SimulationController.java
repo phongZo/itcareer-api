@@ -4,7 +4,7 @@ import com.base.auth.constant.UserBaseConstant;
 import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.ErrorCode;
 import com.base.auth.dto.ResponseListDto;
-import com.base.auth.dto.simulation.SimulationAutoCompleteDto;
+import com.base.auth.dto.simulation.SimulationDisplayDto;
 import com.base.auth.dto.simulation.SimulationClientDto;
 import com.base.auth.dto.simulation.SimulationDto;
 import com.base.auth.exception.BadRequestException;
@@ -116,14 +116,14 @@ public class SimulationController extends ABasicController{
 
   @GetMapping(value = "/student-list", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('SI_ST_L')")
-  public ApiMessageDto<ResponseListDto<List<SimulationAutoCompleteDto>>> getListForStudent(Pageable pageable){
-    ApiMessageDto<ResponseListDto<List<SimulationAutoCompleteDto>>> apiMessageDto = new ApiMessageDto<>();
-    ResponseListDto<List<SimulationAutoCompleteDto>> responseListDto = new ResponseListDto<>();
+  public ApiMessageDto<ResponseListDto<List<SimulationDisplayDto>>> getListForStudent(Pageable pageable){
+    ApiMessageDto<ResponseListDto<List<SimulationDisplayDto>>> apiMessageDto = new ApiMessageDto<>();
+    ResponseListDto<List<SimulationDisplayDto>> responseListDto = new ResponseListDto<>();
     if (!isStudent()){
       throw new BadRequestException("User is not a student", ErrorCode.USER_ERROR_NOT_STUDENT);
     }
     Page<Simulation> simulations = simulationRepository.findAllByStatus(UserBaseConstant.STATUS_ACTIVE, pageable);
-    responseListDto.setContent(simulationMapper.fromEntityToSimulationAutoCompleteDtoList(simulations.getContent()));
+    responseListDto.setContent(simulationMapper.fromEntityToSimulationDisplayDtoList(simulations.getContent()));
     responseListDto.setTotalElements(simulations.getTotalElements());
     responseListDto.setTotalPages(simulations.getTotalPages());
     apiMessageDto.setData(responseListDto);
@@ -133,16 +133,16 @@ public class SimulationController extends ABasicController{
 
   @GetMapping(value = "/educator-list", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('SI_ED_L')")
-  public ApiMessageDto<ResponseListDto<List<SimulationAutoCompleteDto>>> getListForEducator(
+  public ApiMessageDto<ResponseListDto<List<SimulationDisplayDto>>> getListForEducator(
       SimulationCriteria simulationCriteria, Pageable pageable){
-    ApiMessageDto<ResponseListDto<List<SimulationAutoCompleteDto>>> apiMessageDto = new ApiMessageDto<>();
-    ResponseListDto<List<SimulationAutoCompleteDto>> responseListDto = new ResponseListDto<>();
+    ApiMessageDto<ResponseListDto<List<SimulationDisplayDto>>> apiMessageDto = new ApiMessageDto<>();
+    ResponseListDto<List<SimulationDisplayDto>> responseListDto = new ResponseListDto<>();
     if (!isEducator()){
       throw new BadRequestException("User is not an educator", ErrorCode.USER_ERROR_NOT_EDUCATOR);
     }
     simulationCriteria.setEducatorId(getCurrentUser());
     Page<Simulation> simulations = simulationRepository.findAll(simulationCriteria.getSpecification(), pageable);
-    responseListDto.setContent(simulationMapper.fromEntityToSimulationAutoCompleteDtoList(simulations.getContent()));
+    responseListDto.setContent(simulationMapper.fromEntityToSimulationDisplayDtoList(simulations.getContent()));
     responseListDto.setTotalElements(simulations.getTotalElements());
     responseListDto.setTotalPages(simulations.getTotalPages());
     apiMessageDto.setData(responseListDto);
