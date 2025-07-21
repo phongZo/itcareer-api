@@ -61,17 +61,18 @@ public class SimulationController extends ABasicController{
   @PreAuthorize("hasRole('SI_C')")
   public ApiMessageDto<String> create(@Valid @RequestBody CreateSimulationForm createSimulationForm, BindingResult bindingResult){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
-    Educator educator = educatorRepository.findById(getCurrentUser()).orElseThrow(()
-    -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
-    if (!Objects.equals(educator.getAccount().getKind(), UserBaseConstant.USER_KIND_EDUCATOR)){
-      throw new BadRequestException("User is not an educator", ErrorCode.USER_ERROR_NOT_EDUCATOR);
+    if (!isEducator()){
+      throw new BadRequestException("User is not an educator", ErrorCode.USER_ERROR_NOT_FOUND);
     }
     Specialization specialization = specializationRepository.findById(createSimulationForm.getSpecializationId()).orElseThrow(()
     -> new NotFoundException("Specialization not found", ErrorCode.SPECIALIZATION_ERROR_NOT_FOUND));
-    Simulation simulation = simulationRepository.findByTitle(createSimulationForm.getTitle()).orElse(null);
-    if (simulation != null && !Objects.equals(simulation.getEducator().getId(), educator.getId())){
+    Simulation simulation = simulationRepository.findByTitleAndEducatorId(createSimulationForm.getTitle(), getCurrentUser()).orElse(null);
+    if (simulation != null){
       throw new BadRequestException("Simulation already exist", ErrorCode.SIMULATION_ERROR_EXIST);
     }
+
+    Educator educator = new Educator();
+    educator.setId(getCurrentUser());
     simulation = simulationMapper.fromCreateSimulationFormToEntity(createSimulationForm);
     simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
     simulation.setSpecialization(specialization);
@@ -190,14 +191,12 @@ public class SimulationController extends ABasicController{
   @PreAuthorize("hasRole('SI_U')")
   public ApiMessageDto<String> update(@Valid @RequestBody UpdateSimulationForm updateSimulationForm, BindingResult bindingResult){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
-    Educator educator = educatorRepository.findById(getCurrentUser()).orElseThrow(()
-    -> new NotFoundException("Educator not found"));
-    if (!Objects.equals(educator.getAccount().getKind(), UserBaseConstant.USER_KIND_EDUCATOR)){
-      throw new BadRequestException("User is not an educator",ErrorCode.USER_ERROR_NOT_EDUCATOR);
+    if (!isEducator()){
+      throw new BadRequestException("User is not an educator");
     }
     Simulation simulation = simulationRepository.findById(updateSimulationForm.getId()).orElseThrow(()
     -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-    if (!Objects.equals(simulation.getEducator().getId(), educator.getId())){
+    if (!Objects.equals(simulation.getEducator().getId(), getCurrentUser())){
       throw new BadRequestException("Simulation cannot be updated", ErrorCode.SIMULATION_ERROR_NOT_AUTHORIZED);
     }
     if (updateSimulationForm.getSpecializationId() != null && !Objects.equals(simulation.getSpecialization().getId(), updateSimulationForm.getSpecializationId())){

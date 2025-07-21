@@ -86,21 +86,19 @@ public class ABasicController {
     }
 
     public Boolean isStudent(){
-        Student student = studentRepository.findById(getCurrentUser()).orElseThrow(()
-        -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
-        if (!Objects.equals(student.getAccount().getKind(), UserBaseConstant.USER_KIND_STUDENT)){
-            return false;
+        UserBaseJwt userBaseJwt = userService.getAddInfoFromToken();
+        if(userBaseJwt !=null){
+            return Objects.equals(userBaseJwt.getUserKind(), UserBaseConstant.USER_KIND_STUDENT);
         }
-        return true;
+        return false;
     }
 
     public Boolean isEducator(){
-        Educator educator = educatorRepository.findById(getCurrentUser()).orElseThrow(()
-        -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
-        if (!Objects.equals(educator.getAccount().getKind(), UserBaseConstant.USER_KIND_EDUCATOR)){
-            return false;
+        UserBaseJwt userBaseJwt = userService.getAddInfoFromToken();
+        if(userBaseJwt !=null){
+            return Objects.equals(userBaseJwt.getUserKind(), UserBaseConstant.USER_KIND_EDUCATOR);
         }
-        return true;
+        return false;
     }
 
     protected void sendVerifyAccount(Account user){
