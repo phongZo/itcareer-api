@@ -1,0 +1,33 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:pro="http://www.liquibase.org/xml/ns/pro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+        <changeSet author="Authentication" id="1753319865876-1">
+        <dropColumn columnName="created_by" tableName="db_user_base_sub_task"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1753319865876-2">
+        <dropColumn columnName="created_by" tableName="db_user_base_task"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1753319865876-3">
+        <dropColumn columnName="created_date" tableName="db_user_base_sub_task"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1753319865876-4">
+        <dropColumn columnName="created_date" tableName="db_user_base_task"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1753319865876-5">
+        <dropColumn columnName="modified_by" tableName="db_user_base_sub_task"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1753319865876-6">
+        <dropColumn columnName="modified_by" tableName="db_user_base_task"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1753319865876-7">
+        <dropColumn columnName="modified_date" tableName="db_user_base_sub_task"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1753319865876-8">
+        <dropColumn columnName="modified_date" tableName="db_user_base_task"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1753319865876-9">
+        <dropColumn columnName="status" tableName="db_user_base_sub_task"/>
+    </changeSet>
+    <changeSet author="Authentication" id="1753319865876-10">
+        <dropColumn columnName="status" tableName="db_user_base_task"/>
+    </changeSet>
+</databaseChangeLog>

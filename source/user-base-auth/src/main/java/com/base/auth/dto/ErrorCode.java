@@ -122,10 +122,25 @@ public class ErrorCode {
     /**
      * Starting error code Simulation
      * */
-    public static final String SIMULATION_ERROR_NOT_FOUND = "SPECIALIZATION-ERROR-0000";
-    public static final String SIMULATION_ERROR_EXIST = "SPECIALIZATION-ERROR-0001";
-    public static final String SIMULATION_ERROR_NOT_DELETE = "SPECIALIZATION-ERROR-0002";
-    public static final String SIMULATION_ERROR_APPROVE = "SPECIALIZATION-ERROR-0003";
-    public static final String SIMULATION_ERROR_NOT_AUTHORIZED = "SPECIALIZATION-ERROR-0004";
-    public static final String SIMULATION_ERROR_NOT_ACTIVE = "SPECIALIZATION-ERROR-0005";
+    public static final String SIMULATION_ERROR_NOT_FOUND = "SIMULATION-ERROR-0000";
+    public static final String SIMULATION_ERROR_EXIST = "SIMULATION-ERROR-0001";
+    public static final String SIMULATION_ERROR_NOT_DELETE = "SIMULATION-ERROR-0002";
+    public static final String SIMULATION_ERROR_APPROVE = "SIMULATION-ERROR-0003";
+    public static final String SIMULATION_ERROR_NOT_AUTHORIZED = "SIMULATION-ERROR-0004";
+    public static final String SIMULATION_ERROR_NOT_ACTIVE = "SIMULATION-ERROR-0005";
+    public static final String SIMULATION_ERROR_NOT_GET = "SIMULATION-ERROR-0006";
+
+    /**
+     * Starting error code Task
+     * */
+    public static final String TASK_ERROR_NOT_FOUND = "TASK-ERROR-0000";
+    public static final String TASK_ERROR_EXIST = "TASK-ERROR-0001";
+    public static final String TASK_ERROR_NOT_DELETE = "TASK-ERROR-0002";
+
+    /**
+     * Starting error code SubTask
+     * */
+    public static final String SUBTASK_ERROR_NOT_FOUND = "SUBTASK-ERROR-0000";
+    public static final String SUBTASK_ERROR_EXIST = "SUBTASK-ERROR-0001";
+    public static final String SUBTASK_ERROR_NOT_DELETE = "SUBTASK-ERROR-0002";
 }
