@@ -16,10 +16,12 @@ import com.base.auth.mapper.SimulationMapper;
 import com.base.auth.model.Educator;
 import com.base.auth.model.Simulation;
 import com.base.auth.model.Specialization;
+import com.base.auth.model.Task;
 import com.base.auth.model.criteria.SimulationCriteria;
 import com.base.auth.repository.EducatorRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.SpecializationRepository;
+import com.base.auth.repository.TaskRepository;
 import java.util.List;
 import java.util.Objects;
 import javax.validation.Valid;
@@ -56,6 +58,9 @@ public class SimulationController extends ABasicController{
 
   @Autowired
   EducatorRepository educatorRepository;
+
+  @Autowired
+  TaskRepository taskRepository;
 
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('SI_C')")
@@ -220,7 +225,11 @@ public class SimulationController extends ABasicController{
     Simulation simulation = simulationRepository.findById(id).orElseThrow(()
     -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
     if (!Objects.equals(UserBaseConstant.STATUS_WAITING_APPROVE, simulation.getStatus())){
-      throw new BadRequestException("Simulation can not be deleted", ErrorCode.SIMULATION_ERROR_NOT_DELETE);
+      throw new BadRequestException("Simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_DELETE);
+    }
+    Task task = taskRepository.findFirstBySimulationId(id).orElse(null);
+    if (task != null){
+      throw new BadRequestException("Simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_DELETE);
     }
     simulationRepository.delete(simulation);
     apiMessageDto.setMessage("Approve delete simulation success");
