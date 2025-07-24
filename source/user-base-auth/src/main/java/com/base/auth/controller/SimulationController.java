@@ -233,11 +233,8 @@ public class SimulationController extends ABasicController{
     if (!Objects.equals(UserBaseConstant.STATUS_WAITING_APPROVE, simulation.getStatus())){
       throw new BadRequestException("Simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_DELETE);
     }
-    Task task = taskRepository.findBySimulationId(id).orElse(null);
-    if (task != null){
-      subTaskRepository.deleteByTaskId(task.getId());
-      taskRepository.delete(task);
-    }
+    subTaskRepository.deleteAllSubTaskBySimulationId(id);
+    taskRepository.deleteBySimulationId(id);
     simulationRepository.delete(simulation);
     apiMessageDto.setMessage("Approve delete simulation success");
     return apiMessageDto;

@@ -8,5 +8,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificationExecutor<Task> {
   Optional<Task> findByNameAndSimulationId(String name, Long simulationId);
 
-  Optional<Task> findBySimulationId(Long simulationId);
+  void deleteBySimulationId(Long id);
 }
