@@ -9,5 +9,5 @@ public interface SubTaskRepository extends JpaRepository<SubTask, Long>, JpaSpec
 
   Optional<SubTask> findByTitleAndTaskId(String title, Long taskId);
 
-  Optional<SubTask> findFirstByTaskId(Long taskId);
+  void deleteByTaskId(Long taskId);
 }

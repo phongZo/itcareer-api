@@ -20,6 +20,7 @@ import com.base.auth.repository.SubTaskRepository;
 import com.base.auth.repository.TaskRepository;
 import java.util.List;
 import java.util.Objects;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -105,8 +106,6 @@ public class TaskController extends ABasicController{
     if (!isStudent()){
       throw new BadRequestException("User is not student", ErrorCode.USER_ERROR_NOT_STUDENT);
     }
-    Simulation simulation = simulationRepository.findById(taskCriteria.getSimulationId()).orElseThrow(()
-    -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
     taskCriteria.setStatus(UserBaseConstant.STATUS_ACTIVE);
     Page<Task> tasks = taskRepository.findAll(taskCriteria.getSpecification(), pageable);
     responseListDto.setContent(taskMapper.fromEntityToTaskDisplayDtoList(tasks.getContent()));
@@ -126,8 +125,6 @@ public class TaskController extends ABasicController{
     if (!isEducator()){
       throw new BadRequestException("User is not educator", ErrorCode.USER_ERROR_NOT_EDUCATOR);
     }
-    Simulation simulation = simulationRepository.findById(taskCriteria.getSimulationId()).orElseThrow(()
-        -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
     taskCriteria.setEducatorId(getCurrentUser());
     Page<Task> tasks = taskRepository.findAll(taskCriteria.getSpecification(), pageable);
     responseListDto.setContent(taskMapper.fromEntityToTaskDisplayDtoList(tasks.getContent()));
@@ -174,19 +171,17 @@ public class TaskController extends ABasicController{
 
   @DeleteMapping(value = "/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('TA_D')")
+  @Transactional
   public ApiMessageDto<String> delete(@PathVariable("id") Long id){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Task task = taskRepository.findById(id).orElseThrow(()
     -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
-    SubTask subTask = subTaskRepository.findFirstByTaskId(id).orElse(null);
-    if (subTask != null){
-      throw new BadRequestException("Task cannot be deleted. Because subtask already exist", ErrorCode.TASK_ERROR_NOT_DELETE);
-    }
     Simulation simulation = simulationRepository.findById(task.getSimulation().getId()).orElseThrow(()
     -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
     if (!Objects.equals(simulation.getEducator().getId(), getCurrentUser())){
       throw new BadRequestException("Simulation cannot be deleted. Because the educator is not correct", ErrorCode.SIMULATION_ERROR_NOT_DELETE);
     }
+    subTaskRepository.deleteByTaskId(id);
     taskRepository.delete(task);
     if (Objects.equals(simulation.getStatus(), UserBaseConstant.STATUS_ACTIVE)){
       simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);

@@ -21,9 +21,11 @@ import com.base.auth.model.criteria.SimulationCriteria;
 import com.base.auth.repository.EducatorRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.SpecializationRepository;
+import com.base.auth.repository.SubTaskRepository;
 import com.base.auth.repository.TaskRepository;
 import java.util.List;
 import java.util.Objects;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +63,9 @@ public class SimulationController extends ABasicController{
 
   @Autowired
   TaskRepository taskRepository;
+
+  @Autowired
+  SubTaskRepository subTaskRepository;
 
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('SI_C')")
@@ -220,6 +225,7 @@ public class SimulationController extends ABasicController{
 
   @DeleteMapping(value = "/approve-delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('SI_APD')")
+  @Transactional
   public ApiMessageDto<String> approveDelete(@PathVariable("id") Long id){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Simulation simulation = simulationRepository.findById(id).orElseThrow(()
@@ -227,9 +233,10 @@ public class SimulationController extends ABasicController{
     if (!Objects.equals(UserBaseConstant.STATUS_WAITING_APPROVE, simulation.getStatus())){
       throw new BadRequestException("Simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_DELETE);
     }
-    Task task = taskRepository.findFirstBySimulationId(id).orElse(null);
+    Task task = taskRepository.findBySimulationId(id).orElse(null);
     if (task != null){
-      throw new BadRequestException("Simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_DELETE);
+      subTaskRepository.deleteByTaskId(task.getId());
+      taskRepository.delete(task);
     }
     simulationRepository.delete(simulation);
     apiMessageDto.setMessage("Approve delete simulation success");

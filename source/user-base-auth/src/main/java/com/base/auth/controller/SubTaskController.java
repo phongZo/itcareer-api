@@ -88,10 +88,6 @@ public class SubTaskController extends ABasicController{
   public ApiMessageDto<ResponseListDto<List<SubTaskDto>>> getList(@Valid SubTaskCriteria subTaskCriteria, Pageable pageable){
     ApiMessageDto<ResponseListDto<List<SubTaskDto>>> apiMessageDto = new ApiMessageDto<>();
     ResponseListDto<List<SubTaskDto>> responseListDto = new ResponseListDto<>();
-    Task task = taskRepository.findById(subTaskCriteria.getTaskId()).orElseThrow(()
-        -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
-    Simulation simulation = simulationRepository.findById(subTaskCriteria.getSimulationId()).orElseThrow(()
-    -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
     Page<SubTask> subTasks = subTaskRepository.findAll(subTaskCriteria.getSpecification(), pageable);
     responseListDto.setContent(subTaskMapper.fromEntityToSubTaskDtoList(subTasks.getContent()));
     responseListDto.setTotalElements(subTasks.getTotalElements());
@@ -109,10 +105,6 @@ public class SubTaskController extends ABasicController{
     if (!isStudent()){
       throw new BadRequestException("User is not a student", ErrorCode.USER_ERROR_NOT_STUDENT);
     }
-    Task task = taskRepository.findById(subTaskCriteria.getTaskId()).orElseThrow(()
-        -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
-    Simulation simulation = simulationRepository.findById(subTaskCriteria.getSimulationId()).orElseThrow(()
-        -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
     subTaskCriteria.setStatus(UserBaseConstant.STATUS_ACTIVE);
     Page<SubTask> subTasks = subTaskRepository.findAll(subTaskCriteria.getSpecification(), pageable);
     responseListDto.setContent(subTaskMapper.fromEntityToSubTaskDisplayDtoList(subTasks.getContent()));
@@ -131,10 +123,6 @@ public class SubTaskController extends ABasicController{
     if (!isEducator()){
       throw new BadRequestException("User is not an educator", ErrorCode.USER_ERROR_NOT_EDUCATOR);
     }
-    Task task = taskRepository.findById(subTaskCriteria.getTaskId()).orElseThrow(()
-        -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
-    Simulation simulation = simulationRepository.findById(subTaskCriteria.getSimulationId()).orElseThrow(()
-        -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
     subTaskCriteria.setEducatorId(getCurrentUser());
     Page<SubTask> subTasks = subTaskRepository.findAll(subTaskCriteria.getSpecification(), pageable);
     responseListDto.setContent(subTaskMapper.fromEntityToSubTaskDisplayDtoList(subTasks.getContent()));
