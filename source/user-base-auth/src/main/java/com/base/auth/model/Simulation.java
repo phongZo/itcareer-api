@@ -1,5 +1,6 @@
 package com.base.auth.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
@@ -23,7 +24,9 @@ public class Simulation extends Auditable<String>{
   @GeneratedValue(generator = "idGenerator")
   private Long id;
   private String title;
+  @Column(columnDefinition = "TEXT")
   private String overview;
+  @Column(columnDefinition = "TEXT")
   private String description;
   private Integer level;
   private String totalEstimatedTime = "0";

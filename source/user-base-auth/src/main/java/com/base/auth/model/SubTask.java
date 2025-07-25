@@ -1,5 +1,6 @@
 package com.base.auth.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
@@ -23,7 +24,9 @@ public class SubTask{
   @GeneratedValue(generator = "idGenerator")
   private Long id;
   private String title;
+  @Column(columnDefinition = "TEXT")
   private String introduction;
+  @Column(columnDefinition = "LONGTEXT")
   private String content;
   private String imagePath;
   private String filePath;
