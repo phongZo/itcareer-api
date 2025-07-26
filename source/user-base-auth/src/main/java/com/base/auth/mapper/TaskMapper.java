@@ -20,11 +20,15 @@ import org.mapstruct.ReportingPolicy;
     uses = {SimulationMapper.class})
 public interface TaskMapper {
   @Mapping(source = "name", target = "name")
+  @Mapping(source = "description", target = "description")
+  @Mapping(source = "content", target = "content")
   @BeanMapping(ignoreByDefault = true)
   Task fromCreateTaskFormToEntity(CreateTaskForm createTaskForm);
 
   @Mapping(source = "id", target = "id")
   @Mapping(source = "name", target = "name")
+  @Mapping(source = "description", target = "description")
+  @Mapping(source = "content", target = "content")
   @Mapping(source = "simulation", target = "simulation", qualifiedByName = "fromEntityToSimulationDto")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToTaskDto")
@@ -32,6 +36,8 @@ public interface TaskMapper {
 
   @Mapping(source = "id", target = "id")
   @Mapping(source = "name", target = "name")
+  @Mapping(source = "description", target = "description")
+  @Mapping(source = "content", target = "content")
   @Mapping(source = "simulation", target = "simulation", qualifiedByName = "fromEntityToSimulationClientDto")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToTaskDisplayDto")
@@ -44,6 +50,8 @@ public interface TaskMapper {
   List<TaskDisplayDto> fromEntityToTaskDisplayDtoList(List<Task> tasks);
 
   @Mapping(source = "name", target = "name")
+  @Mapping(source = "description", target = "description")
+  @Mapping(source = "content", target = "content")
   @BeanMapping(ignoreByDefault = true)
   void fromUpdateTaskFormToEntity(UpdateTaskForm updateTaskForm, @MappingTarget Task task);
 }

@@ -49,6 +49,11 @@ public interface SimulationMapper {
 
   @Mapping(source = "id", target = "id")
   @Mapping(source = "title", target = "title")
+  @Mapping(source = "level", target = "level")
+  @Mapping(source = "totalEstimatedTime", target = "totalEstimatedTime")
+  @Mapping(source = "imagePath", target = "imagePath")
+  @Mapping(source = "avgRating", target = "avgRating")
+  @Mapping(source = "educator", target = "educator", qualifiedByName = "fromEducatorToProfileDto")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToSimulationDisplayDto")
   SimulationDisplayDto fromEntityToSimulationDisplayDto(Simulation simulation);
@@ -63,7 +68,7 @@ public interface SimulationMapper {
   @Mapping(source = "avgRating", target = "avgRating")
   @Mapping(source = "participantQuantity", target = "participantQuantity")
   @Mapping(source = "specialization", target = "specialization", qualifiedByName = "fromEntityToSpecializationAutoCompleteDto")
-  @Mapping(source = "educator", target = "educator", qualifiedByName = "fromEducatorToDtoAutoComplete")
+  @Mapping(source = "educator", target = "educator", qualifiedByName = "fromEducatorToProfileDto")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToSimulationClientDto")
   SimulationClientDto fromEntityToSimulationClientDto(Simulation simulation);

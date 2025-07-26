@@ -1,6 +1,7 @@
 package com.base.auth.dto.simulation;
 
 import com.base.auth.dto.educator.EducatorAutoCompleteDto;
+import com.base.auth.dto.educator.ProfileEducatorDto;
 import com.base.auth.dto.specialization.SpecializationAutoCompleteDto;
 import lombok.Data;
 
@@ -16,5 +17,5 @@ public class SimulationClientDto {
   private Float avgRating;
   private Integer participantQuantity;
   private SpecializationAutoCompleteDto specialization;
-  private EducatorAutoCompleteDto educator;
+  private ProfileEducatorDto educator;
 }

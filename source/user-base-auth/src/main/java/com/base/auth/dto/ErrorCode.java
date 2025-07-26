@@ -143,4 +143,13 @@ public class ErrorCode {
     public static final String SUBTASK_ERROR_NOT_FOUND = "SUBTASK-ERROR-0000";
     public static final String SUBTASK_ERROR_EXIST = "SUBTASK-ERROR-0001";
     public static final String SUBTASK_ERROR_NOT_DELETE = "SUBTASK-ERROR-0002";
+
+    /**
+     * Starting error code TaskQuestion
+     * */
+    public static final String TASK_QUESTION_ERROR_NOT_FOUND = "TASK_QUESTION-ERROR-0000";
+    public static final String TASK_QUESTION_ERROR_EXIST = "TASK_QUESTION-ERROR-0001";
+    public static final String TASK_QUESTION_ERROR_NOT_DELETE = "TASK_QUESTION-ERROR-0002";
+    public static final String TASK_QUESTION_ERROR_NOT_CREATE = "TASK_QUESTION-ERROR-0003";
+    public static final String TASK_QUESTION_ERROR_NOT_UPDATE = "TASK_QUESTION-ERROR-0004";
 }

@@ -7,5 +7,7 @@ import lombok.Data;
 public class TaskDto {
   private Long id;
   private String name;
+  private String description;
+  private String content;
   private SimulationDto simulation;
 }

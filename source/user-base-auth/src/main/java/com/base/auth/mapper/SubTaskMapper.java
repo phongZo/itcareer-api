@@ -56,7 +56,7 @@ public interface SubTaskMapper {
   @Mapping(source = "videoPath", target = "videoPath")
   @Mapping(source = "task", target = "task", qualifiedByName = "fromEntityToTaskDisplayDto")
   @BeanMapping(ignoreByDefault = true)
-  @Named("fromEntityToSubTaskDto")
+  @Named("fromEntityToSubTaskClientDto")
   SubTaskClientDto fromEntityToSubTaskClientDto(SubTask subTask);
 
   @IterableMapping(elementTargetType = SubTaskDto.class, qualifiedByName = "fromEntityToSubTaskDto")
