@@ -14,21 +14,21 @@ import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(name = "db_user_base_task")
+@Table(name = "db_user_base_task_question")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-public class Task{
+public class TaskQuestion {
   @Id
   @GenericGenerator(name = "idGenerator", strategy = "com.base.auth.service.id.IdGenerator")
   @GeneratedValue(generator = "idGenerator")
   private Long id;
-  private String name;
-  @Column(name = "description", columnDefinition = "TEXT")
-  private String description;
-  @Column(name = "content", columnDefinition = "TEXT")
-  private String content;
+  @Column(name = "question", columnDefinition = "TEXT")
+  private String question;
+  private Integer questionType;
+  @Column(name = "options" ,  columnDefinition = "TEXT")
+  private String options;
   @ManyToOne
-  @JoinColumn(name = "simulation_id")
-  private Simulation simulation;
+  @JoinColumn(name = "sub_task_id")
+  private SubTask subTask;
 }

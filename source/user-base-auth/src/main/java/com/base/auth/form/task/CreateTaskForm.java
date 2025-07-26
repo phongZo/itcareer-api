@@ -12,6 +12,12 @@ public class CreateTaskForm {
   @NotEmpty(message = "name cannot be null")
   @ApiModelProperty(name = "name")
   private String name;
+  @NotEmpty(message = "description cannot be null")
+  @ApiModelProperty(name = "description")
+  private String description;
+  @NotEmpty(message = "content cannot be null")
+  @ApiModelProperty(name = "content")
+  private String content;
   @NotNull(message = "simulationId cannot be null")
   @ApiModelProperty(name = "simulationId")
   private Long simulationId;

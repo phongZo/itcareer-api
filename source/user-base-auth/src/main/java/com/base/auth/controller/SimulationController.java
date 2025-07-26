@@ -22,6 +22,7 @@ import com.base.auth.repository.EducatorRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.SpecializationRepository;
 import com.base.auth.repository.SubTaskRepository;
+import com.base.auth.repository.TaskQuestionRepository;
 import com.base.auth.repository.TaskRepository;
 import java.util.List;
 import java.util.Objects;
@@ -66,6 +67,9 @@ public class SimulationController extends ABasicController{
 
   @Autowired
   SubTaskRepository subTaskRepository;
+
+  @Autowired
+  TaskQuestionRepository taskQuestionRepository;
 
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('SI_C')")
@@ -233,6 +237,7 @@ public class SimulationController extends ABasicController{
     if (!Objects.equals(UserBaseConstant.STATUS_WAITING_APPROVE, simulation.getStatus())){
       throw new BadRequestException("Simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_DELETE);
     }
+    taskQuestionRepository.deleteAllTaskQuestionBySimulationId(id);
     subTaskRepository.deleteAllSubTaskBySimulationId(id);
     taskRepository.deleteBySimulationId(id);
     simulationRepository.delete(simulation);

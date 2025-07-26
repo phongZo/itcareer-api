@@ -18,9 +18,11 @@ import com.base.auth.model.Task;
 import com.base.auth.model.criteria.SubTaskCriteria;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.SubTaskRepository;
+import com.base.auth.repository.TaskQuestionRepository;
 import com.base.auth.repository.TaskRepository;
 import java.util.List;
 import java.util.Objects;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +57,9 @@ public class SubTaskController extends ABasicController{
 
   @Autowired
   SimulationRepository simulationRepository;
+
+  @Autowired
+  TaskQuestionRepository taskQuestionRepository;
 
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('STA_C')")
@@ -229,6 +234,7 @@ public class SubTaskController extends ABasicController{
 
   @DeleteMapping(value = "/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('STA_D')")
+  @Transactional
   public ApiMessageDto<String> delete(@PathVariable("id") Long id){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     if (!isEducator()){
@@ -241,8 +247,9 @@ public class SubTaskController extends ABasicController{
     Simulation simulation = simulationRepository.findById(task.getSimulation().getId()).orElseThrow(()
     -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
     if (!Objects.equals(simulation.getEducator().getId(), getCurrentUser())){
-      throw new BadRequestException("Simulation cannot be deleted. Because the educator is not correct", ErrorCode.SIMULATION_ERROR_NOT_DELETE);
+      throw new BadRequestException("Simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_AUTHORIZED);
     }
+    taskQuestionRepository.deleteBySubTaskId(id);
     subTaskRepository.delete(subTask);
     if (Objects.equals(simulation.getStatus(), UserBaseConstant.STATUS_ACTIVE)){
       simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
