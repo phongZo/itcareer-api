@@ -1,13 +1,13 @@
 #!/bin/bash
 SERVER_DEPLOY=192.168.155.13
-TARGET_DIR=/opt/deploy/dreamcareer/api/
+TARGET_DIR=/opt/deploy/dreamcareer/api
 APP_ID=itdream-auth
 PACKAGE_NAME=com.userbase.auth
 
 echo "Build source..."
 cd ../source/user-base-auth
 mvn clean package -Dmaven.test.skip
-cd ../../deploy
+cd ../../dev-ops
 
 echo "Update config..."
 # delete release folder if exist
@@ -18,22 +18,22 @@ cp ../source/user-base-auth/target/user-base-auth-0.0.1.jar release/app.jar
 
 cp config/* release/
 rm -rf release/application-prod.properties
-sed -i '' "s/{ENV}/dev/g" release/application.properties
-sed -i '' "s/{APP_ID}/$APP_ID/g" release/application-dev.properties
-sed -i '' "s/{PACKAGE_NAME}/$PACKAGE_NAME/g" release/application-dev.properties
-sed -i '' "s/{PACKAGE_NAME}/$PACKAGE_NAME/g" release/logback-spring.xml
+sed -i "s/{ENV}/local/g" release/application.properties
+sed -i "s/{APP_ID}/$APP_ID/g" release/application-local.properties
+sed -i "s/{PACKAGE_NAME}/$PACKAGE_NAME/g" release/application-local.properties
+sed -i "s/{PACKAGE_NAME}/$PACKAGE_NAME/g" release/logback-spring.xml
 
 cp service-template-dev.service release/$APP_ID.service
-sed -i '' "s/{CONFIG_LOCATION}/$(printf '%s\n' "$TARGET_DIR" | sed -e 's/[]\/$*.^[]/\\&/g')/g" release/$APP_ID.service
-sed -i '' "s/{ENV}/dev/g" release/$APP_ID.service
-sed -i '' "s/{APP_ID}/$APP_ID/g" release/$APP_ID.service
+sed -i "s/{CONFIG_LOCATION}/$(printf '%s\n' "$TARGET_DIR" | sed -e 's/[]\/$*.^[]/\\&/g')/g" release/$APP_ID.service
+sed -i "s/{ENV}/dev/g" release/$APP_ID.service
+sed -i "s/{APP_ID}/$APP_ID/g" release/$APP_ID.service
 
 cp logs-template.conf release/$APP_ID.conf
-sed -i '' "s/{APP_ID}/$APP_ID/g" release/$APP_ID.conf
+sed -i "s/{APP_ID}/$APP_ID/g" release/$APP_ID.conf
 
 
 echo "Compress source..."
-gtar -czf api.tar.gz release
+tar -czf api.tar.gz release
 
 echo "Deploy to server..."
 echo " ---> Stop old service..."
