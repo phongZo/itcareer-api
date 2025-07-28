@@ -25,7 +25,7 @@ sed -i "s/{PACKAGE_NAME}/$PACKAGE_NAME/g" release/logback-spring.xml
 
 cp service-template-dev.service release/$APP_ID.service
 sed -i "s/{CONFIG_LOCATION}/$(printf '%s\n' "$TARGET_DIR" | sed -e 's/[]\/$*.^[]/\\&/g')/g" release/$APP_ID.service
-sed -i "s/{ENV}/dev/g" release/$APP_ID.service
+sed -i "s/{ENV}/local/g" release/$APP_ID.service
 sed -i "s/{APP_ID}/$APP_ID/g" release/$APP_ID.service
 
 cp logs-template.conf release/$APP_ID.conf
