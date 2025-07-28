@@ -5,7 +5,7 @@ Description=ITDream api service
 #User=root #use user with restricted permissions
 #Type=simple
 
-ExecStart=/usr/bin/java -Dfile.encoding=UTF-8 -Dspring.config.location={CONFIG_LOCATION}/ -Dspring.profiles.active={ENV} -Djava.security.egd=file:/dev/./urandom -jar {CONFIG_LOCATION}/app.jar
+ExecStart=/opt/jdk11/bin/java -Dfile.encoding=UTF-8 -Dspring.config.location={CONFIG_LOCATION}/ -Dspring.profiles.active={ENV} -Djava.security.egd=file:/dev/./urandom -jar {CONFIG_LOCATION}/app.jar
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier={APP_ID}
