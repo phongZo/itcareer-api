@@ -1,0 +1,120 @@
+package com.base.auth.controller;
+
+import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.dto.ApiMessageDto;
+import com.base.auth.dto.ErrorCode;
+import com.base.auth.dto.ResponseListDto;
+import com.base.auth.dto.studentTaskQuestionProgress.StudentTaskQuestionProgressDisplayDto;
+import com.base.auth.dto.studentTaskQuestionProgress.StudentTaskQuestionProgressDto;
+import com.base.auth.exception.BadRequestException;
+import com.base.auth.exception.NotFoundException;
+import com.base.auth.form.studentTaskQuestionProgress.CreateStudentTaskQuestionProgressForm;
+import com.base.auth.mapper.StudentTaskQuestionProgressMapper;
+import com.base.auth.model.StudentSubTaskProgress;
+import com.base.auth.model.StudentTaskQuestionProgress;
+import com.base.auth.model.TaskQuestion;
+import com.base.auth.model.criteria.StudentTaskQuestionProgressCriteria;
+import com.base.auth.repository.StudentSubTaskProgressRepository;
+import com.base.auth.repository.StudentTaskQuestionProgressRepository;
+import com.base.auth.repository.TaskQuestionRepository;
+import java.util.List;
+import java.util.Objects;
+import javax.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/v1/task-question-progress")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
+@Slf4j
+public class StudentTaskQuestionProgressController extends ABasicController{
+  @Autowired
+  StudentTaskQuestionProgressRepository studentTaskQuestionProgressRepository;
+
+  @Autowired
+  StudentSubTaskProgressRepository studentSubTaskProgressRepository;
+
+  @Autowired
+  TaskQuestionRepository taskQuestionRepository;
+
+  @Autowired
+  StudentTaskQuestionProgressMapper studentTaskQuestionProgressMapper;
+
+  @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasRole('STTQ_C')")
+  public ApiMessageDto<String> create(@Valid @RequestBody CreateStudentTaskQuestionProgressForm createStudentTaskQuestionProgressForm, BindingResult bindingResult){
+    ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
+    if (!isStudent()){
+      throw new BadRequestException("User is not an student", ErrorCode.USER_ERROR_NOT_STUDENT);
+    }
+    StudentSubTaskProgress studentSubTaskProgress = studentSubTaskProgressRepository.findById(
+        createStudentTaskQuestionProgressForm.getStudentSubTaskProgressId()).orElseThrow(()
+    -> new NotFoundException("Student subtask progress not found", ErrorCode.STUDENT_SUBTASK_PROGRESS_ERROR_NOT_FOUND));
+    TaskQuestion taskQuestion = taskQuestionRepository.findById(
+        createStudentTaskQuestionProgressForm.getTaskQuestionId()).orElseThrow(()
+    -> new NotFoundException("Task question not found", ErrorCode.TASK_QUESTION_ERROR_NOT_FOUND));
+    if (!Objects.equals(taskQuestion.getSubTask().getId(), studentSubTaskProgress.getSubTask().getId())){
+      throw new BadRequestException("Student task question progress cannot be created", ErrorCode.STUDENT_TASK_QUESTION_PROGRESS_ERROR_CREATE);
+    }
+    StudentTaskQuestionProgress studentTaskQuestionProgress = studentTaskQuestionProgressMapper.fromCreateStudentTaskQuestionProgressFormToEntity(createStudentTaskQuestionProgressForm);
+    studentTaskQuestionProgress.setStudentSubTaskProgress(studentSubTaskProgress);
+    studentTaskQuestionProgress.setTaskQuestion(taskQuestion);
+    if (Objects.equals(taskQuestion.getQuestionType(), UserBaseConstant.QUESTION_TYPE_FILE) || Objects.equals(taskQuestion.getQuestionType(), UserBaseConstant.QUESTION_TYPE_TEXT)){
+      studentTaskQuestionProgress.setIsCorrect(true);
+    } else {
+      if (!createStudentTaskQuestionProgressForm.getIsCorrect()){
+        if (studentSubTaskProgress.getErrorCount() >= studentSubTaskProgress.getSubTask().getMaxErrors()){
+          throw new BadRequestException("Subtask fail", ErrorCode.SUBTASK_ERROR_FAIL);
+        }
+        studentSubTaskProgress.setErrorCount(studentSubTaskProgress.getErrorCount() + 1);
+      }
+      studentTaskQuestionProgress.setIsCorrect(createStudentTaskQuestionProgressForm.getIsCorrect());
+    }
+    studentTaskQuestionProgressRepository.save(studentTaskQuestionProgress);
+    apiMessageDto.setMessage("Create success");
+    return apiMessageDto;
+  }
+
+  @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasRole('STTQ_L')")
+  public ApiMessageDto<ResponseListDto<List<StudentTaskQuestionProgressDto>>> getList(
+      StudentTaskQuestionProgressCriteria studentTaskQuestionProgressCriteria, Pageable pageable){
+    ApiMessageDto<ResponseListDto<List<StudentTaskQuestionProgressDto>>> apiMessageDto = new ApiMessageDto<>();
+    ResponseListDto<List<StudentTaskQuestionProgressDto>> responseListDto = new ResponseListDto<>();
+    Page<StudentTaskQuestionProgress> studentTaskQuestionProgresses = studentTaskQuestionProgressRepository.findAll(studentTaskQuestionProgressCriteria.getSpecification(), pageable);
+    responseListDto.setContent(studentTaskQuestionProgressMapper.fromEntityToStudentTaskQuestionProgressDtoList(studentTaskQuestionProgresses.getContent()));
+    responseListDto.setTotalElements(studentTaskQuestionProgresses.getTotalElements());
+    responseListDto.setTotalPages(studentTaskQuestionProgresses.getTotalPages());
+    apiMessageDto.setData(responseListDto);
+    apiMessageDto.setMessage("Get list success");
+    return apiMessageDto;
+  }
+
+  @GetMapping(value = "/student-list", produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasRole('STTQ_ST_L')")
+  public ApiMessageDto<ResponseListDto<List<StudentTaskQuestionProgressDisplayDto>>> getListForStudent(
+      StudentTaskQuestionProgressCriteria studentTaskQuestionProgressCriteria, Pageable pageable){
+    ApiMessageDto<ResponseListDto<List<StudentTaskQuestionProgressDisplayDto>>> apiMessageDto = new ApiMessageDto<>();
+    ResponseListDto<List<StudentTaskQuestionProgressDisplayDto>> responseListDto = new ResponseListDto<>();
+    studentTaskQuestionProgressCriteria.setStudentId(getCurrentUser());
+    studentTaskQuestionProgressCriteria.setIsCorrect(true);
+    Page<StudentTaskQuestionProgress> studentTaskQuestionProgresses = studentTaskQuestionProgressRepository.findAll(studentTaskQuestionProgressCriteria.getSpecification(), pageable);
+    responseListDto.setContent(studentTaskQuestionProgressMapper.fromEntityToStudentTaskQuestionProgressDisplayDtoList(studentTaskQuestionProgresses.getContent()));
+    responseListDto.setTotalElements(studentTaskQuestionProgresses.getTotalElements());
+    responseListDto.setTotalPages(studentTaskQuestionProgresses.getTotalPages());
+    apiMessageDto.setData(responseListDto);
+    apiMessageDto.setMessage("Get list success");
+    return apiMessageDto;
+  }
+}

@@ -14,26 +14,22 @@ import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(name = "db_user_base_sub_task")
+@Table(name = "db_user_base_student_task_question_progress")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-public class SubTask{
+public class StudentTaskQuestionProgress {
   @Id
   @GenericGenerator(name = "idGenerator", strategy = "com.base.auth.service.id.IdGenerator")
   @GeneratedValue(generator = "idGenerator")
-  private Long id;
-  private String title;
-  @Column(columnDefinition = "TEXT")
-  private String introduction;
-  @Column(columnDefinition = "LONGTEXT")
-  private String content;
-  private String imagePath;
-  private String filePath;
-  private String videoPath;
-  private Integer maxErrors = 0;
-  private Integer totalQuestion = 0;
+  private  Long id;
   @ManyToOne
-  @JoinColumn(name = "task_id")
-  private Task task;
+  @JoinColumn(name = "student_subtask_progress_id")
+  private StudentSubTaskProgress studentSubTaskProgress;
+  @ManyToOne
+  @JoinColumn(name = "task_question_id")
+  private TaskQuestion taskQuestion;
+  @Column(name = "answer", columnDefinition = "TEXT")
+  private String answer;
+  private Boolean isCorrect;
 }

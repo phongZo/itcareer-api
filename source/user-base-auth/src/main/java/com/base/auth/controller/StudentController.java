@@ -24,6 +24,8 @@ import com.base.auth.model.criteria.StudentCriteria;
 import com.base.auth.repository.AccountRepository;
 import com.base.auth.repository.GroupRepository;
 import com.base.auth.repository.StudentRepository;
+import com.base.auth.repository.StudentSubTaskProgressRepository;
+import com.base.auth.repository.StudentTaskQuestionProgressRepository;
 import com.base.auth.service.CommonAsyncService;
 import com.base.auth.service.UserBaseApiService;
 import com.base.auth.utils.AESUtils;
@@ -78,6 +80,12 @@ public class StudentController extends ABasicController{
 
   @Autowired
   private UserBaseApiService userBaseApiService;
+
+  @Autowired
+  private StudentSubTaskProgressRepository studentSubTaskProgressRepository;
+
+  @Autowired
+  private StudentTaskQuestionProgressRepository studentTaskQuestionProgressRepository;
 
   @PostMapping(value = "/signup", produces= MediaType.APPLICATION_JSON_VALUE)
   public ApiMessageDto<OtpDto> create(@Valid @RequestBody SignUpStudentForm signUpStudentForm, BindingResult bindingResult)
@@ -243,6 +251,7 @@ public class StudentController extends ABasicController{
 
   @DeleteMapping(value = "/delete/{id}")
   @PreAuthorize("hasRole('ST_D')")
+  @Transactional
   public ApiMessageDto<String> deleteStudent(@PathVariable("id") Long id)
   {
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
@@ -259,6 +268,8 @@ public class StudentController extends ABasicController{
       return apiMessageDto;
     }
 
+    studentTaskQuestionProgressRepository.deleteAllByStudentId(id);
+    studentSubTaskProgressRepository.deleteAllByStudentId(id);
     studentRepository.delete(student);
     accountRepository.delete(account);
     apiMessageDto.setMessage("Delete student success");

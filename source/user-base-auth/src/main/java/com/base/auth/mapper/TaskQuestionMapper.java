@@ -62,7 +62,6 @@ public interface TaskQuestionMapper {
   List<TaskQuestionStudentDto> fromEntityToTaskQuestionStudentDtoList(List<TaskQuestion> taskQuestions);
 
   @Mapping(source = "question", target = "question")
-  @Mapping(source = "questionType", target = "questionType")
   @Mapping(source = "options", target = "options")
   @BeanMapping(ignoreByDefault = true)
   void fromUpdateTaskQuestionFormToEntity(UpdateQuestionTaskForm updateQuestionTaskForm, @MappingTarget TaskQuestion taskQuestion);

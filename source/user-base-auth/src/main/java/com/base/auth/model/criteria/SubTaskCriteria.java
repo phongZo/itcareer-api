@@ -32,11 +32,11 @@ public class SubTaskCriteria {
         List<Predicate> predicates = new ArrayList<>();
         Join<SubTask, Task> taskJoin = root.join("task");
         Join<Task, Simulation> simulationJoin = taskJoin.join("simulation");
-        predicates.add(cb.equal(taskJoin.get("id"), taskId));
-        predicates.add(cb.equal(simulationJoin.get("id"), simulationId));
+        predicates.add(cb.equal(taskJoin.get("id"), getTaskId()));
+        predicates.add(cb.equal(simulationJoin.get("id"), getSimulationId()));
 
         if (getEducatorId() != null){
-          predicates.add(cb.equal(simulationJoin.get("educator").get("id"), educatorId));
+          predicates.add(cb.equal(simulationJoin.get("educator").get("id"), getEducatorId()));
         }
 
         if (getStatus()!=null){

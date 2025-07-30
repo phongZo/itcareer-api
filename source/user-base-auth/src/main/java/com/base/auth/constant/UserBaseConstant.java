@@ -21,6 +21,11 @@ public class UserBaseConstant {
     public static final Integer STATUS_LOCK = -1;
     public static final Integer STATUS_REJECT = -2;
 
+    public static final Integer STATE_COMPLETED = 1;
+    public static final Integer STATE_IN_PROGRESS = 2;
+
+    public static final Integer RESTART_ERROR_COUNT = 0;
+
     public static final Integer QUESTION_TYPE_FILE = 1;
     public static final Integer QUESTION_TYPE_TEXT = 2;
     public static final Integer QUESTION_TYPE_MULTIPLE_CHOICE = 3;

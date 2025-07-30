@@ -13,10 +13,12 @@ import com.base.auth.form.subtask.CreateSubTaskForm;
 import com.base.auth.form.subtask.UpdateSubTaskForm;
 import com.base.auth.mapper.SubTaskMapper;
 import com.base.auth.model.Simulation;
+import com.base.auth.model.StudentSubTaskProgress;
 import com.base.auth.model.SubTask;
 import com.base.auth.model.Task;
 import com.base.auth.model.criteria.SubTaskCriteria;
 import com.base.auth.repository.SimulationRepository;
+import com.base.auth.repository.StudentSubTaskProgressRepository;
 import com.base.auth.repository.SubTaskRepository;
 import com.base.auth.repository.TaskQuestionRepository;
 import com.base.auth.repository.TaskRepository;
@@ -60,6 +62,9 @@ public class SubTaskController extends ABasicController{
 
   @Autowired
   TaskQuestionRepository taskQuestionRepository;
+
+  @Autowired
+  StudentSubTaskProgressRepository studentSubTaskProgressRepository;
 
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('STA_C')")
@@ -248,6 +253,10 @@ public class SubTaskController extends ABasicController{
     -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
     if (!Objects.equals(simulation.getEducator().getId(), getCurrentUser())){
       throw new BadRequestException("Simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_AUTHORIZED);
+    }
+    StudentSubTaskProgress studentSubTaskProgress = studentSubTaskProgressRepository.findFirstBySubTaskId(id).orElse(null);
+    if (studentSubTaskProgress != null){
+      throw new BadRequestException("SubTask cannot deleted", ErrorCode.SUBTASK_ERROR_DELETE);
     }
     taskQuestionRepository.deleteBySubTaskId(id);
     subTaskRepository.delete(subTask);
