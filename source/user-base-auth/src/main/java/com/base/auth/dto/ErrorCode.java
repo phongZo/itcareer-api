@@ -135,21 +135,36 @@ public class ErrorCode {
      * */
     public static final String TASK_ERROR_NOT_FOUND = "TASK-ERROR-0000";
     public static final String TASK_ERROR_EXIST = "TASK-ERROR-0001";
-    public static final String TASK_ERROR_NOT_DELETE = "TASK-ERROR-0002";
 
     /**
      * Starting error code SubTask
      * */
     public static final String SUBTASK_ERROR_NOT_FOUND = "SUBTASK-ERROR-0000";
     public static final String SUBTASK_ERROR_EXIST = "SUBTASK-ERROR-0001";
-    public static final String SUBTASK_ERROR_NOT_DELETE = "SUBTASK-ERROR-0002";
+    public static final String SUBTASK_ERROR_FAIL = "SUBTASK-ERROR-0002";
 
     /**
      * Starting error code TaskQuestion
      * */
     public static final String TASK_QUESTION_ERROR_NOT_FOUND = "TASK_QUESTION-ERROR-0000";
     public static final String TASK_QUESTION_ERROR_EXIST = "TASK_QUESTION-ERROR-0001";
-    public static final String TASK_QUESTION_ERROR_NOT_DELETE = "TASK_QUESTION-ERROR-0002";
-    public static final String TASK_QUESTION_ERROR_NOT_CREATE = "TASK_QUESTION-ERROR-0003";
-    public static final String TASK_QUESTION_ERROR_NOT_UPDATE = "TASK_QUESTION-ERROR-0004";
+    public static final String TASK_QUESTION_ERROR_NOT_CREATE = "TASK_QUESTION-ERROR-0002";
+    public static final String TASK_QUESTION_ERROR_NOT_UPDATE = "TASK_QUESTION-ERROR-0003";
+    public static final String TASK_QUESTION_ERROR_NOT_CREATE_OPTION = "TASK_QUESTION-ERROR-0004";
+    public static final String TASK_QUESTION_ERROR_OPTION_NOT_NULL = "TASK_QUESTION-ERROR-0005";
+
+    /**
+     * Starting error code StudentSubTaskProgress
+     * */
+    public static final String STUDENT_SUBTASK_PROGRESS_ERROR_NOT_FOUND = "STUDENT-SUBTASK-PROGRESS-ERROR-0000";
+    public static final String STUDENT_SUBTASK_PROGRESS_ERROR_EXIST = "STUDENT-SUBTASK-PROGRESS-ERROR-0001";
+    public static final String STUDENT_SUBTASK_PROGRESS_ERROR_NOT_COMPLETED = "STUDENT-SUBTASK-PROGRESS-ERROR-0002";
+
+    /**
+     * Starting error code StudentTaskQuestionProgress
+     * */
+    public static final String STUDENT_TASK_QUESTION_PROGRESS_ERROR_NOT_FOUND = "STUDENT-TASK-QUESTION-PROGRESS-ERROR-0000";
+    public static final String STUDENT_TASK_QUESTION_PROGRESS_ERROR_EXIST = "STUDENT-TASK-QUESTION-PROGRESS-ERROR-0001";
+    public static final String STUDENT_TASK_QUESTION_PROGRESS_ERROR_NOT_CREATE = "STUDENT-TASK-QUESTION-PROGRESS-ERROR-0002";
+
 }

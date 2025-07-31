@@ -24,6 +24,12 @@ import com.base.auth.model.criteria.EducatorCriteria;
 import com.base.auth.repository.AccountRepository;
 import com.base.auth.repository.EducatorRepository;
 import com.base.auth.repository.GroupRepository;
+import com.base.auth.repository.SimulationRepository;
+import com.base.auth.repository.StudentSubTaskProgressRepository;
+import com.base.auth.repository.StudentTaskQuestionProgressRepository;
+import com.base.auth.repository.SubTaskRepository;
+import com.base.auth.repository.TaskQuestionRepository;
+import com.base.auth.repository.TaskRepository;
 import com.base.auth.service.UserBaseApiService;
 import com.base.auth.utils.AESUtils;
 import com.base.auth.utils.ConvertUtils;
@@ -50,7 +56,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -78,6 +83,24 @@ public class EducatorController extends ABasicController{
 
   @Autowired
   UserBaseApiService userBaseApiService;
+
+  @Autowired
+  SimulationRepository simulationRepository;
+
+  @Autowired
+  TaskRepository taskRepository;
+
+  @Autowired
+  SubTaskRepository subTaskRepository;
+
+  @Autowired
+  TaskQuestionRepository taskQuestionRepository;
+
+  @Autowired
+  StudentSubTaskProgressRepository studentSubTaskProgressRepository;
+
+  @Autowired
+  StudentTaskQuestionProgressRepository studentTaskQuestionProgressRepository;
 
   @PostMapping(value = "/signup", produces= MediaType.APPLICATION_JSON_VALUE)
   public ApiMessageDto<OtpDto> create(@Valid @RequestBody SignUpEducatorForm signUpEducatorForm, BindingResult bindingResult)
@@ -244,6 +267,7 @@ public class EducatorController extends ABasicController{
 
   @DeleteMapping(value = "/delete/{id}")
   @PreAuthorize("hasRole('ED_D')")
+  @Transactional
   public ApiMessageDto<String> deleteEducator(@PathVariable("id") Long id)
   {
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
@@ -260,6 +284,12 @@ public class EducatorController extends ABasicController{
       return apiMessageDto;
     }
 
+    studentTaskQuestionProgressRepository.deleteAllByEducatorId(id);
+    studentSubTaskProgressRepository.deleteAllByEducatorId(id);
+    taskQuestionRepository.deleteAllByEducatorId(id);
+    subTaskRepository.deleteAllByEducatorId(id);
+    taskRepository.deleteAllByEducatorId(id);
+    simulationRepository.deleteAllByEducatorId(id);
     educatorRepository.delete(educator);
     accountRepository.delete(account);
     apiMessageDto.setMessage("Delete educator success");

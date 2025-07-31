@@ -31,7 +31,7 @@ public class TaskCriteria {
         List<Predicate> predicates = new ArrayList<>();
 
         Join<Task, Simulation> joinSimulation = root.join("simulation", JoinType.INNER);
-        predicates.add(cb.equal(joinSimulation.get("id"), simulationId));
+        predicates.add(cb.equal(joinSimulation.get("id"), getSimulationId()));
 
         if (getEducatorId() != null) {
           Join<Simulation, Educator> joinEducator = joinSimulation.join("educator", JoinType.INNER);

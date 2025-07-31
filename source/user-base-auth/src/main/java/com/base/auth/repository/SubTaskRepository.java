@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface SubTaskRepository extends JpaRepository<SubTask, Long>, JpaSpecificationExecutor<SubTask> {
 
@@ -20,4 +21,13 @@ public interface SubTaskRepository extends JpaRepository<SubTask, Long>, JpaSpec
       "JOIN db_user_base_task t ON s.task_id = t.id " +
       "WHERE t.simulation_id = :simulationId", nativeQuery = true)
   void deleteAllSubTaskBySimulationId(Long simulationId);
+
+  @Modifying
+  @Transactional
+  @Query(value = "DELETE st FROM db_user_base_sub_task st " +
+      "JOIN db_user_base_task t ON st.task_id = t.id " +
+      "JOIN db_user_base_simulation s ON t.simulation_id = s.id " +
+      "WHERE s.educator_id = :educatorId", nativeQuery = true)
+  void deleteAllByEducatorId(@Param("educatorId") Long educatorId);
+
 }
