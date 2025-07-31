@@ -26,6 +26,7 @@ import com.base.auth.repository.EducatorRepository;
 import com.base.auth.repository.GroupRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
+import com.base.auth.repository.StudentTaskQuestionProgressRepository;
 import com.base.auth.repository.SubTaskRepository;
 import com.base.auth.repository.TaskQuestionRepository;
 import com.base.auth.repository.TaskRepository;
@@ -97,6 +98,9 @@ public class EducatorController extends ABasicController{
 
   @Autowired
   StudentSubTaskProgressRepository studentSubTaskProgressRepository;
+
+  @Autowired
+  StudentTaskQuestionProgressRepository studentTaskQuestionProgressRepository;
 
   @PostMapping(value = "/signup", produces= MediaType.APPLICATION_JSON_VALUE)
   public ApiMessageDto<OtpDto> create(@Valid @RequestBody SignUpEducatorForm signUpEducatorForm, BindingResult bindingResult)
@@ -280,9 +284,8 @@ public class EducatorController extends ABasicController{
       return apiMessageDto;
     }
 
-    if (studentSubTaskProgressRepository.existsStudentSubTaskProgressByEducatorId(id)){
-      throw new BadRequestException("Educator cannot be deleted", ErrorCode.USER_ERROR_NOT_DELETED);
-    }
+    studentTaskQuestionProgressRepository.deleteAllByEducatorId(id);
+    studentSubTaskProgressRepository.deleteAllByEducatorId(id);
     taskQuestionRepository.deleteAllByEducatorId(id);
     subTaskRepository.deleteAllByEducatorId(id);
     taskRepository.deleteAllByEducatorId(id);

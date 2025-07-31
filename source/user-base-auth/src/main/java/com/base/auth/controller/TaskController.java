@@ -17,6 +17,7 @@ import com.base.auth.model.Task;
 import com.base.auth.model.criteria.TaskCriteria;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
+import com.base.auth.repository.StudentTaskQuestionProgressRepository;
 import com.base.auth.repository.SubTaskRepository;
 import com.base.auth.repository.TaskQuestionRepository;
 import com.base.auth.repository.TaskRepository;
@@ -63,6 +64,9 @@ public class TaskController extends ABasicController{
 
   @Autowired
   StudentSubTaskProgressRepository studentSubTaskProgressRepository;
+
+  @Autowired
+  StudentTaskQuestionProgressRepository studentTaskQuestionProgressRepository;
 
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('TA_C')")
@@ -189,9 +193,8 @@ public class TaskController extends ABasicController{
     if (!Objects.equals(simulation.getEducator().getId(), getCurrentUser())){
       throw new BadRequestException("Simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_AUTHORIZED);
     }
-    if (studentSubTaskProgressRepository.existsStudentSubTaskProgressByTaskId(id)){
-      throw new BadRequestException("Task cannot be deleted", ErrorCode.TASK_ERROR_NOT_DELETE);
-    }
+    studentTaskQuestionProgressRepository.deleteAllByTaskId(id);
+    studentSubTaskProgressRepository.deleteAllByTaskId(id);
     taskQuestionRepository.deleteAllTaskQuestionByTaskId(id);
     subTaskRepository.deleteByTaskId(id);
     taskRepository.delete(task);

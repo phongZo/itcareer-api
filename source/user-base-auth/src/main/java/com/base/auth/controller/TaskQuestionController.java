@@ -254,20 +254,15 @@ public class TaskQuestionController extends ABasicController{
       throw new BadRequestException("Simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_AUTHORIZED);
     }
 
+    int currentTotalQuestion = subTask.getTotalQuestion() - 1;
+    subTask.setTotalQuestion(currentTotalQuestion);
     if (Objects.equals(taskQuestion.getQuestionType(), UserBaseConstant.QUESTION_TYPE_MULTIPLE_CHOICE)){
-      int currentTotalQuestion = subTask.getTotalQuestion() - 1;
-      subTask.setTotalQuestion(currentTotalQuestion);
       subTask.setMaxErrors((int) Math.ceil((double) currentTotalQuestion / 2));
-      subTaskRepository.save(subTask);
     }
+    subTaskRepository.save(subTask);
 
-    StudentTaskQuestionProgress studentTaskQuestionProgress = studentTaskQuestionProgressRepository.findFirstByTaskQuestionId(id).orElse(null);
-    if (studentTaskQuestionProgress != null){
-      throw new BadRequestException("Task question cannot be deleted", ErrorCode.TASK_ERROR_NOT_DELETE);
-    }
-
+    studentTaskQuestionProgressRepository.deleteAllByTaskQuestionId(id);
     taskQuestionRepository.delete(taskQuestion);
-
 
     if (Objects.equals(simulation.getStatus(), UserBaseConstant.STATUS_ACTIVE)){
       simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
