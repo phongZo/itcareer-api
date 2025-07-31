@@ -28,7 +28,9 @@ import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -65,7 +67,11 @@ public class StudentTaskQuestionProgressController extends ABasicController{
         createStudentTaskQuestionProgressForm.getTaskQuestionId()).orElseThrow(()
     -> new NotFoundException("Task question not found", ErrorCode.TASK_QUESTION_ERROR_NOT_FOUND));
     if (!Objects.equals(taskQuestion.getSubTask().getId(), studentSubTaskProgress.getSubTask().getId())){
-      throw new BadRequestException("Student task question progress cannot be created", ErrorCode.STUDENT_TASK_QUESTION_PROGRESS_ERROR_CREATE);
+      throw new BadRequestException("Student task question progress cannot be created", ErrorCode.STUDENT_TASK_QUESTION_PROGRESS_ERROR_NOT_CREATE);
+    }
+    StudentTaskQuestionProgress existStudentTaskQuestionProgress = studentTaskQuestionProgressRepository.findByTaskQuestionIdAndStudentSubTaskProgressIdAndIsCorrect(taskQuestion.getId(), studentSubTaskProgress.getId(), true).orElse(null);
+    if (existStudentTaskQuestionProgress != null){
+      throw new BadRequestException("Student task question progress already exist", ErrorCode.STUDENT_TASK_QUESTION_PROGRESS_ERROR_EXIST);
     }
     StudentTaskQuestionProgress studentTaskQuestionProgress = studentTaskQuestionProgressMapper.fromCreateStudentTaskQuestionProgressFormToEntity(createStudentTaskQuestionProgressForm);
     studentTaskQuestionProgress.setStudentSubTaskProgress(studentSubTaskProgress);
@@ -86,21 +92,6 @@ public class StudentTaskQuestionProgressController extends ABasicController{
     return apiMessageDto;
   }
 
-  @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasRole('STTQ_L')")
-  public ApiMessageDto<ResponseListDto<List<StudentTaskQuestionProgressDto>>> getList(
-      StudentTaskQuestionProgressCriteria studentTaskQuestionProgressCriteria, Pageable pageable){
-    ApiMessageDto<ResponseListDto<List<StudentTaskQuestionProgressDto>>> apiMessageDto = new ApiMessageDto<>();
-    ResponseListDto<List<StudentTaskQuestionProgressDto>> responseListDto = new ResponseListDto<>();
-    Page<StudentTaskQuestionProgress> studentTaskQuestionProgresses = studentTaskQuestionProgressRepository.findAll(studentTaskQuestionProgressCriteria.getSpecification(), pageable);
-    responseListDto.setContent(studentTaskQuestionProgressMapper.fromEntityToStudentTaskQuestionProgressDtoList(studentTaskQuestionProgresses.getContent()));
-    responseListDto.setTotalElements(studentTaskQuestionProgresses.getTotalElements());
-    responseListDto.setTotalPages(studentTaskQuestionProgresses.getTotalPages());
-    apiMessageDto.setData(responseListDto);
-    apiMessageDto.setMessage("Get list success");
-    return apiMessageDto;
-  }
-
   @GetMapping(value = "/student-list", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('STTQ_ST_L')")
   public ApiMessageDto<ResponseListDto<List<StudentTaskQuestionProgressDisplayDto>>> getListForStudent(
@@ -115,6 +106,20 @@ public class StudentTaskQuestionProgressController extends ABasicController{
     responseListDto.setTotalPages(studentTaskQuestionProgresses.getTotalPages());
     apiMessageDto.setData(responseListDto);
     apiMessageDto.setMessage("Get list success");
+    return apiMessageDto;
+  }
+
+  @DeleteMapping(value = "/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasRole('STTQ_D')")
+  public ApiMessageDto<String> delete(@PathVariable("id") Long id){
+    ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
+    if (!isStudent()){
+      throw new BadRequestException("User is not a student", ErrorCode.USER_ERROR_NOT_STUDENT);
+    }
+    StudentTaskQuestionProgress studentTaskQuestionProgress = studentTaskQuestionProgressRepository.findById(id).orElseThrow(()
+    -> new NotFoundException("Student task question progress not found", ErrorCode.STUDENT_TASK_QUESTION_PROGRESS_ERROR_NOT_FOUND));
+    studentTaskQuestionProgressRepository.delete(studentTaskQuestionProgress);
+    apiMessageDto.setMessage("Delete success");
     return apiMessageDto;
   }
 }

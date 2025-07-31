@@ -31,11 +31,4 @@ public interface StudentSubTaskProgressMapper {
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToStudentSubTaskProgressDisplayDto")
   StudentSubTaskProgressDisplayDto fromEntityToStudentSubTaskProgressDisplayDto(StudentSubTaskProgress studentSubTaskProgress);
-
-  @IterableMapping(elementTargetType = StudentSubTaskProgressDto.class, qualifiedByName = "fromEntityToStudentSubTaskProgressDto")
-  List<StudentSubTaskProgressDto> fromEntityToStudentSubTaskProgressDtoList(List<StudentSubTaskProgress> studentSubTaskProgresses);
-
-  @IterableMapping(elementTargetType = StudentSubTaskProgressDisplayDto.class, qualifiedByName = "fromEntityToStudentSubTaskProgressDisplayDto")
-  List<StudentSubTaskProgressDisplayDto> fromEntityToStudentSubTaskProgressDtoDisplayList(List<StudentSubTaskProgress> studentSubTaskProgresses);
-
 }

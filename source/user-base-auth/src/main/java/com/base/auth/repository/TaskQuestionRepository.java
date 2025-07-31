@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface TaskQuestionRepository extends JpaRepository<TaskQuestion, Long>,
     JpaSpecificationExecutor<TaskQuestion> {
@@ -33,6 +34,15 @@ public interface TaskQuestionRepository extends JpaRepository<TaskQuestion, Long
       "JOIN db_user_base_task t ON s.task_id = t.id " +
       "WHERE t.simulation_id = :simulationId", nativeQuery = true)
   void deleteAllTaskQuestionBySimulationId(Long simulationId);
+
+  @Modifying
+  @Transactional
+  @Query(value = "DELETE tq FROM db_user_base_task_question tq " +
+      "JOIN db_user_base_sub_task st ON tq.sub_task_id = st.id " +
+      "JOIN db_user_base_task t ON st.task_id = t.id " +
+      "JOIN db_user_base_simulation s ON t.simulation_id = s.id " +
+      "WHERE s.educator_id = :educatorId", nativeQuery = true)
+  void deleteAllByEducatorId(@Param("educatorId") Long educatorId);
 
   Optional<TaskQuestion> findByQuestionAndSubTaskId(String question, Long subTaskId);
 

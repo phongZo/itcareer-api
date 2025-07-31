@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface StudentTaskQuestionProgressRepository extends JpaRepository<StudentTaskQuestionProgress, Long>,
     JpaSpecificationExecutor<StudentTaskQuestionProgress> {
@@ -24,4 +25,10 @@ public interface StudentTaskQuestionProgressRepository extends JpaRepository<Stu
   void deleteAllByStudentId(Long studentId);
 
   Optional<StudentTaskQuestionProgress> findFirstByTaskQuestionId(Long taskQuestionId);
+
+  @Query("SELECT COUNT(stq) FROM StudentTaskQuestionProgress stq " +
+      "WHERE stq.studentSubTaskProgress.id = :studentSubTaskProgressId AND stq.isCorrect = true")
+  int countCorrectByStudentSubTaskProgressId(@Param("studentSubTaskProgressId") Long studentSubTaskProgressId);
+
+  Optional<StudentTaskQuestionProgress> findByTaskQuestionIdAndStudentSubTaskProgressIdAndIsCorrect(Long taskQuestionId, Long studentSubTaskProgressId, boolean isCorrect);
 }

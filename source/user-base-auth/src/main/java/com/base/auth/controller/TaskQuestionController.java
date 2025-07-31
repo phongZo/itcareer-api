@@ -116,12 +116,12 @@ public class TaskQuestionController extends ABasicController{
     taskQuestion.setSubTask(subTask);
     taskQuestionRepository.save(taskQuestion);
 
+    int currentTotalQuestion = subTask.getTotalQuestion() + 1;
+    subTask.setTotalQuestion(currentTotalQuestion);
     if (Objects.equals(createTaskQuestionForm.getQuestionType(), UserBaseConstant.QUESTION_TYPE_MULTIPLE_CHOICE)){
-      int currentTotalQuestion = subTask.getTotalQuestion() + 1;
-      subTask.setTotalQuestion(currentTotalQuestion);
       subTask.setMaxErrors((int) Math.ceil((double) currentTotalQuestion / 2));
-      subTaskRepository.save(subTask);
     }
+    subTaskRepository.save(subTask);
 
     if (Objects.equals(simulation.getStatus(), UserBaseConstant.STATUS_ACTIVE)){
       simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);

@@ -98,6 +98,7 @@ public class ErrorCode {
     public static final String USER_ERROR_NOT_REJECT = "ERROR-USER-0005";
     public static final String USER_ERROR_NOT_EDUCATOR = "ERROR-USER-0006";
     public static final String USER_ERROR_NOT_STUDENT = "ERROR-USER-0007";
+    public static final String USER_ERROR_NOT_DELETED = "ERROR-USER-0008";
 
     /**
      * Starting error code DATABASE_ERROR
@@ -161,11 +162,13 @@ public class ErrorCode {
      * */
     public static final String STUDENT_SUBTASK_PROGRESS_ERROR_NOT_FOUND = "STUDENT-SUBTASK-PROGRESS-ERROR-0000";
     public static final String STUDENT_SUBTASK_PROGRESS_ERROR_EXIST = "STUDENT-SUBTASK-PROGRESS-ERROR-0001";
+    public static final String STUDENT_SUBTASK_PROGRESS_ERROR_NOT_COMPLETED = "STUDENT-SUBTASK-PROGRESS-ERROR-0002";
 
     /**
      * Starting error code StudentTaskQuestionProgress
      * */
     public static final String STUDENT_TASK_QUESTION_PROGRESS_ERROR_NOT_FOUND = "STUDENT-TASK-QUESTION-PROGRESS-ERROR-0000";
     public static final String STUDENT_TASK_QUESTION_PROGRESS_ERROR_EXIST = "STUDENT-TASK-QUESTION-PROGRESS-ERROR-0001";
-    public static final String STUDENT_TASK_QUESTION_PROGRESS_ERROR_CREATE = "STUDENT-TASK-QUESTION-PROGRESS-ERROR-0002";
+    public static final String STUDENT_TASK_QUESTION_PROGRESS_ERROR_NOT_CREATE = "STUDENT-TASK-QUESTION-PROGRESS-ERROR-0002";
+
 }

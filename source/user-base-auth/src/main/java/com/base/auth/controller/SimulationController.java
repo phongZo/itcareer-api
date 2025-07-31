@@ -21,6 +21,7 @@ import com.base.auth.model.criteria.SimulationCriteria;
 import com.base.auth.repository.EducatorRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.SpecializationRepository;
+import com.base.auth.repository.StudentSubTaskProgressRepository;
 import com.base.auth.repository.SubTaskRepository;
 import com.base.auth.repository.TaskQuestionRepository;
 import com.base.auth.repository.TaskRepository;
@@ -70,6 +71,9 @@ public class SimulationController extends ABasicController{
 
   @Autowired
   TaskQuestionRepository taskQuestionRepository;
+
+  @Autowired
+  StudentSubTaskProgressRepository studentSubTaskProgressRepository;
 
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('SI_C')")
@@ -235,6 +239,9 @@ public class SimulationController extends ABasicController{
     Simulation simulation = simulationRepository.findById(id).orElseThrow(()
     -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
     if (!Objects.equals(UserBaseConstant.STATUS_WAITING_APPROVE, simulation.getStatus())){
+      throw new BadRequestException("Simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_DELETE);
+    }
+    if (studentSubTaskProgressRepository.existsStudentSubTaskProgressBySimulationId(id)){
       throw new BadRequestException("Simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_DELETE);
     }
     taskQuestionRepository.deleteAllTaskQuestionBySimulationId(id);
