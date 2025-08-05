@@ -8,6 +8,6 @@ public class TaskDisplayDto {
   private Long id;
   private String name;
   private String description;
-  private String content;
+  private String introduction;
   private SimulationClientDto simulation;
 }

@@ -135,6 +135,9 @@ public class ErrorCode {
      * */
     public static final String TASK_ERROR_NOT_FOUND = "TASK-ERROR-0000";
     public static final String TASK_ERROR_EXIST = "TASK-ERROR-0001";
+    public static final String TASK_ERROR_NOT_PARENT = "TASK-ERROR-0002";
+    public static final String TASK_ERROR_PARENT = "TASK-ERROR-0003";
+    public static final String TASK_ERROR_PARENT_NOT_FOUND = "TASK-ERROR-0004";
 
     /**
      * Starting error code SubTask
@@ -142,6 +145,7 @@ public class ErrorCode {
     public static final String SUBTASK_ERROR_NOT_FOUND = "SUBTASK-ERROR-0000";
     public static final String SUBTASK_ERROR_EXIST = "SUBTASK-ERROR-0001";
     public static final String SUBTASK_ERROR_FAIL = "SUBTASK-ERROR-0002";
+    public static final String SUBTASK_ERROR_NOT_BELONG_SIMULATION = "SUBTASK-ERROR-0003";
 
     /**
      * Starting error code TaskQuestion

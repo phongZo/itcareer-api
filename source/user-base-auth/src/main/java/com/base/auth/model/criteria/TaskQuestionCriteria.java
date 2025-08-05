@@ -1,7 +1,6 @@
 package com.base.auth.model.criteria;
 
 import com.base.auth.model.Simulation;
-import com.base.auth.model.SubTask;
 import com.base.auth.model.Task;
 import com.base.auth.model.TaskQuestion;
 import java.util.ArrayList;
@@ -21,8 +20,6 @@ public class TaskQuestionCriteria {
   private Long simulationId;
   @NotNull(message = "taskId required")
   private Long taskId;
-  @NotNull(message = "subtaskId required")
-  private Long subtaskId;
   private Long educatorId;
   private Integer status;
 
@@ -33,11 +30,9 @@ public class TaskQuestionCriteria {
       @Override
       public Predicate toPredicate(Root<TaskQuestion> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         List<Predicate> predicates = new ArrayList<>();
-        Join<TaskQuestion, SubTask> subTaskJoin = root.join("subTask");
-        Join<SubTask, Task> taskJoin = subTaskJoin.join("task");
+        Join<TaskQuestion, Task> taskJoin = root.join("task");
         Join<Task, Simulation> simulationJoin = taskJoin.join("simulation");
 
-        predicates.add(cb.equal(subTaskJoin.get("id"), subtaskId));
         predicates.add(cb.equal(taskJoin.get("id"), taskId));
         predicates.add(cb.equal(simulationJoin.get("id"), simulationId));
 

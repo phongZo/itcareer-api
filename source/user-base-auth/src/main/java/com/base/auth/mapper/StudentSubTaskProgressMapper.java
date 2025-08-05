@@ -14,20 +14,20 @@ import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE,
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
-    uses = {SubTaskMapper.class, StudentMapper.class})
+    uses = {TaskMapper.class, StudentMapper.class})
 public interface StudentSubTaskProgressMapper {
   @Mapping(source = "id", target = "id")
   @Mapping(source = "currentAttempt", target = "currentAttempt")
   @Mapping(source = "errorCount", target = "errorCount")
   @Mapping(source = "state", target = "state")
   @Mapping(source = "student", target = "student", qualifiedByName = "fromEntityToStudentDto")
-  @Mapping(source = "subTask", target = "subTask", qualifiedByName = "fromEntityToSubTaskDto")
+  @Mapping(source = "task", target = "task", qualifiedByName = "fromEntityToTaskDto")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToStudentSubTaskProgressDto")
   StudentSubTaskProgressDto fromEntityToStudentSubTaskProgressDto(StudentSubTaskProgress studentSubTaskProgress);
 
   @Mapping(source = "id", target = "id")
-  @Mapping(source = "subTask", target = "subTask", qualifiedByName = "fromEntityToSubTaskDisplayDto")
+  @Mapping(source = "task", target = "task", qualifiedByName = "fromEntityToTaskDisplayDto")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToStudentSubTaskProgressDisplayDto")
   StudentSubTaskProgressDisplayDto fromEntityToStudentSubTaskProgressDisplayDto(StudentSubTaskProgress studentSubTaskProgress);

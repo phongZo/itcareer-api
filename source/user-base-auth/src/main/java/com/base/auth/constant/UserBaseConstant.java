@@ -15,6 +15,10 @@ public class UserBaseConstant {
     public static final Integer USER_KIND_EDUCATOR = 5;
     public static final Integer USER_KIND_ENTERISE = 6;
 
+    public static final Integer TASK_KIND_TASK = 1;
+    public static final Integer TASK_KIND_SUBTASK = 2;
+    public static final List<Integer> TASK_KINDS = List.of(TASK_KIND_TASK, TASK_KIND_SUBTASK);
+
     public static final Integer STATUS_ACTIVE = 1;
     public static final Integer STATUS_PENDING = 0;
     public static final Integer STATUS_WAITING_APPROVE = 2;
@@ -23,6 +27,9 @@ public class UserBaseConstant {
 
     public static final Integer STATE_COMPLETED = 1;
     public static final Integer STATE_IN_PROGRESS = 2;
+    public static final Integer STATE_PROCESSING = 3;
+    public static final Integer STATE_DONE = 4;
+    public static final Integer STATE_FAIL = 5;
 
     public static final Integer RESTART_ERROR_COUNT = 0;
 
@@ -30,6 +37,8 @@ public class UserBaseConstant {
     public static final Integer QUESTION_TYPE_TEXT = 2;
     public static final Integer QUESTION_TYPE_MULTIPLE_CHOICE = 3;
     public static final List<Integer> QUESTION_TYPES = List.of(QUESTION_TYPE_FILE, QUESTION_TYPE_TEXT, QUESTION_TYPE_MULTIPLE_CHOICE);
+
+    public static final String MEDIA_COMPLETED_PROCESS_VIDEO = "MEDIA_COMPLETED_PROCESS_VIDEO";
 
     public static final Integer NATION_KIND_PROVINCE = 1;
     public static final Integer NATION_KIND_DISTRICT = 2;

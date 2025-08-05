@@ -26,8 +26,8 @@ public class StudentSubTaskProgress extends Auditable<String>{
   @JoinColumn(name = "student_id")
   private Student student;
   @ManyToOne
-  @JoinColumn(name = "subtask_id")
-  private SubTask subTask;
+  @JoinColumn(name = "task_id")
+  private Task task;
   private Integer currentAttempt = 1;
   private Integer errorCount = 0;
   private Integer state;

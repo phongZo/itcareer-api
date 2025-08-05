@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 @ApiModel
 public class CreateStudentSubTaskProgressForm {
-  @NotNull(message = "subtask id cannot be null")
-  @ApiModelProperty(name = "subtask id")
-  private Long subTaskId;
+  @NotNull(message = "task id cannot be null")
+  @ApiModelProperty(name = "task id")
+  private Long taskId;
 }

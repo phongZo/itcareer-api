@@ -18,7 +18,7 @@ public class CreateTaskQuestionForm {
   private Integer questionType;
   @ApiModelProperty(name = "options")
   private String options;
-  @NotNull(message = "subtaskId cannot be null")
-  @ApiModelProperty(name = "subtaskId")
-  private Long subTaskId;
+  @NotNull(message = "taskId cannot be null")
+  @ApiModelProperty(name = "taskId")
+  private Long taskId;
 }

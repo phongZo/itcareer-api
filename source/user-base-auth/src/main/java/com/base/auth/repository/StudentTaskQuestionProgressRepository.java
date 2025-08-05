@@ -27,7 +27,7 @@ public interface StudentTaskQuestionProgressRepository extends JpaRepository<Stu
   @Modifying
   @Transactional
   @Query("DELETE FROM StudentTaskQuestionProgress stq WHERE stq.taskQuestion.id = :taskQuestionId")
-  void deleteAllByTaskQuestionId(@Param("taskQuestionId") Long taskQuestionId);
+  void deleteAllByTaskQuestionId(Long taskQuestionId);
 
   @Query("SELECT COUNT(stq) FROM StudentTaskQuestionProgress stq " +
       "WHERE stq.studentSubTaskProgress.id = :studentSubTaskProgressId AND stq.isCorrect = true")
@@ -38,35 +38,38 @@ public interface StudentTaskQuestionProgressRepository extends JpaRepository<Stu
   @Modifying
   @Transactional
   @Query(value = "DELETE stqp FROM db_user_base_student_task_question_progress stqp " +
-      "JOIN db_user_base_task_question tq ON stqp.task_question_id = tq.id " +
-      "WHERE tq.sub_task_id = :subTaskId", nativeQuery = true)
-  void deleteAllBySubTaskId(@Param("subTaskId") Long subTaskId);
+          "WHERE stqp.task_question_id IN ( " +
+          "   SELECT tq.id FROM db_user_base_task_question tq " +
+          "   WHERE tq.task_id = :taskId " +
+          "   OR tq.task_id IN (SELECT id FROM db_user_base_task WHERE parent_id = :taskId))", nativeQuery = true)
+  void deleteAllByTaskAndSubtask(@Param("taskId") Long taskId);
 
   @Modifying
   @Transactional
   @Query(value = "DELETE stqp FROM db_user_base_student_task_question_progress stqp " +
-      "JOIN db_user_base_task_question tq ON stqp.task_question_id = tq.id " +
-      "JOIN db_user_base_sub_task st ON tq.sub_task_id = st.id " +
-      "WHERE st.task_id = :taskId", nativeQuery = true)
-  void deleteAllByTaskId(@Param("taskId") Long taskId);
-
-  @Modifying
-  @Transactional
-  @Query(value = "DELETE stqp FROM db_user_base_student_task_question_progress stqp " +
-      "JOIN db_user_base_task_question tq ON stqp.task_question_id = tq.id " +
-      "JOIN db_user_base_sub_task st ON tq.sub_task_id = st.id " +
-      "JOIN db_user_base_task t ON st.task_id = t.id " +
-      "WHERE t.simulation_id = :simulationId", nativeQuery = true)
+          "JOIN db_user_base_task_question tq ON stqp.task_question_id = tq.id " +
+          "JOIN db_user_base_task t ON tq.task_id = t.id " +
+          "WHERE t.simulation_id = :simulationId", nativeQuery = true)
   void deleteAllBySimulationId(@Param("simulationId") Long simulationId);
 
+
+//  @Modifying
+//  @Transactional
+//  @Query(value = "DELETE stqp FROM db_user_base_student_task_question_progress stqp " +
+//      "JOIN db_user_base_task_question tq ON stqp.task_question_id = tq.id " +
+//      "JOIN db_user_base_sub_task st ON tq.sub_task_id = st.id " +
+//      "JOIN db_user_base_task t ON st.task_id = t.id " +
+//      "JOIN db_user_base_simulation sim ON t.simulation_id = sim.id " +
+//      "JOIN db_user_base_educator edu ON sim.educator_id = edu.id " +
+//      "WHERE edu.id = :educatorId", nativeQuery = true)
+//  void deleteAllByEducatorId(@Param("educatorId") Long educatorId);
+
   @Modifying
   @Transactional
   @Query(value = "DELETE stqp FROM db_user_base_student_task_question_progress stqp " +
-      "JOIN db_user_base_task_question tq ON stqp.task_question_id = tq.id " +
-      "JOIN db_user_base_sub_task st ON tq.sub_task_id = st.id " +
-      "JOIN db_user_base_task t ON st.task_id = t.id " +
-      "JOIN db_user_base_simulation sim ON t.simulation_id = sim.id " +
-      "JOIN db_user_base_educator edu ON sim.educator_id = edu.id " +
-      "WHERE edu.id = :educatorId", nativeQuery = true)
+          "JOIN db_user_base_task_question tq ON stqp.task_question_id = tq.id " +
+          "JOIN db_user_base_task t ON tq.task_id = t.id " +
+          "JOIN db_user_base_simulation sim ON t.simulation_id = sim.id " +
+          "WHERE sim.educator_id = :educatorId", nativeQuery = true)
   void deleteAllByEducatorId(@Param("educatorId") Long educatorId);
 }

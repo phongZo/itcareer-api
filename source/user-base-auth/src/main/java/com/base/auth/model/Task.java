@@ -24,10 +24,22 @@ public class Task{
   @GeneratedValue(generator = "idGenerator")
   private Long id;
   private String name;
-  @Column(name = "description", columnDefinition = "TEXT")
+  @Column(columnDefinition = "TEXT")
   private String description;
-  @Column(name = "content", columnDefinition = "TEXT")
+  private String title;
+  @Column(columnDefinition = "TEXT")
+  private String introduction;
+  @Column(columnDefinition = "TEXT")
   private String content;
+  private String imagePath;
+  private String filePath;
+  private String videoPath;
+  private Integer maxErrors = 0;
+  private Integer totalQuestion = 0;
+  private Integer kind;
+  @ManyToOne
+  @JoinColumn(name = "parent_id")
+  private Task parent;
   @ManyToOne
   @JoinColumn(name = "simulation_id")
   private Simulation simulation;

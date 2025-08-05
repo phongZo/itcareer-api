@@ -16,14 +16,12 @@ import com.base.auth.mapper.SimulationMapper;
 import com.base.auth.model.Educator;
 import com.base.auth.model.Simulation;
 import com.base.auth.model.Specialization;
-import com.base.auth.model.Task;
 import com.base.auth.model.criteria.SimulationCriteria;
 import com.base.auth.repository.EducatorRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.SpecializationRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
 import com.base.auth.repository.StudentTaskQuestionProgressRepository;
-import com.base.auth.repository.SubTaskRepository;
 import com.base.auth.repository.TaskQuestionRepository;
 import com.base.auth.repository.TaskRepository;
 import java.util.List;
@@ -66,9 +64,6 @@ public class SimulationController extends ABasicController{
 
   @Autowired
   TaskRepository taskRepository;
-
-  @Autowired
-  SubTaskRepository subTaskRepository;
 
   @Autowired
   TaskQuestionRepository taskQuestionRepository;
@@ -247,9 +242,9 @@ public class SimulationController extends ABasicController{
     }
     studentTaskQuestionProgressRepository.deleteAllBySimulationId(id);
     studentSubTaskProgressRepository.deleteAllBySimulationId(id);
-    taskQuestionRepository.deleteAllTaskQuestionBySimulationId(id);
-    subTaskRepository.deleteAllSubTaskBySimulationId(id);
-    taskRepository.deleteBySimulationId(id);
+    taskQuestionRepository.deleteAllBySimulationId(id);
+    taskRepository.deleteAllSubTaskBySimulationId(id);
+    taskRepository.deleteAllTaskBySimulationId(id);
     simulationRepository.delete(simulation);
     apiMessageDto.setMessage("Approve delete simulation success");
     return apiMessageDto;

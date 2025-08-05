@@ -11,11 +11,11 @@ import com.base.auth.mapper.StudentSubTaskProgressMapper;
 import com.base.auth.model.Student;
 import com.base.auth.model.StudentSubTaskProgress;
 import com.base.auth.model.StudentTaskQuestionProgress;
-import com.base.auth.model.SubTask;
+import com.base.auth.model.Task;
 import com.base.auth.repository.StudentRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
 import com.base.auth.repository.StudentTaskQuestionProgressRepository;
-import com.base.auth.repository.SubTaskRepository;
+import com.base.auth.repository.TaskRepository;
 import java.util.Objects;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
@@ -44,7 +44,7 @@ public class StudentSubTaskProgressController extends ABasicController{
   StudentSubTaskProgressMapper studentSubTaskProgressMapper;
 
   @Autowired
-  SubTaskRepository subTaskRepository;
+  TaskRepository taskRepository;
 
   @Autowired
   StudentRepository studentRepository;
@@ -52,19 +52,19 @@ public class StudentSubTaskProgressController extends ABasicController{
   @Autowired
   StudentTaskQuestionProgressRepository studentTaskQuestionProgressRepository;
 
-  @GetMapping(value = "/student-get/{subTaskId}", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(value = "/student-get/{taskId}", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('STSP_ST_V')")
-  public ApiMessageDto<StudentSubTaskProgressDisplayDto> getForStudent(@PathVariable("subTaskId") Long subTaskId){
+  public ApiMessageDto<StudentSubTaskProgressDisplayDto> getForStudent(@PathVariable("taskId") Long taskId){
     ApiMessageDto<StudentSubTaskProgressDisplayDto> apiMessageDto = new ApiMessageDto<>();
     Student student = studentRepository.findById(getCurrentUser()).orElseThrow(()
         -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
     if (!isStudent()){
       throw new BadRequestException("User is not a student", ErrorCode.USER_ERROR_NOT_STUDENT);
     }
-    SubTask subTask = subTaskRepository.findById(subTaskId).orElseThrow(()
-        -> new NotFoundException("Subtask not found", ErrorCode.SUBTASK_ERROR_NOT_FOUND));
-    StudentSubTaskProgress existStudentSubTaskProgress = studentSubTaskProgressRepository.findBySubTaskIdAndStudentId(
-        subTask.getId(), getCurrentUser()).orElse(null);
+    Task task = taskRepository.findById(taskId).orElseThrow(()
+    -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
+    StudentSubTaskProgress existStudentSubTaskProgress = studentSubTaskProgressRepository.findByTaskIdAndStudentId(
+        task.getId(), getCurrentUser()).orElse(null);
     if (existStudentSubTaskProgress != null){
       apiMessageDto.setData(studentSubTaskProgressMapper.fromEntityToStudentSubTaskProgressDisplayDto(existStudentSubTaskProgress));
       existStudentSubTaskProgress.setCurrentAttempt(existStudentSubTaskProgress.getCurrentAttempt() + 1);
@@ -73,7 +73,7 @@ public class StudentSubTaskProgressController extends ABasicController{
     } else {
       StudentSubTaskProgress studentSubTaskProgress = new StudentSubTaskProgress();
       studentSubTaskProgress.setStudent(student);
-      studentSubTaskProgress.setSubTask(subTask);
+      studentSubTaskProgress.setTask(task);
       studentSubTaskProgress.setState(UserBaseConstant.STATE_IN_PROGRESS);
       studentSubTaskProgressRepository.save(studentSubTaskProgress);
       apiMessageDto.setMessage("Create success");
@@ -89,12 +89,12 @@ public class StudentSubTaskProgressController extends ABasicController{
     if (!isStudent()){
       throw new BadRequestException("User is not an student", ErrorCode.USER_ERROR_NOT_STUDENT);
     }
-    SubTask subTask = subTaskRepository.findById(requestStudentSubTaskProgressForm.getSubTaskId()).orElseThrow(()
-    -> new NotFoundException("Subtask not found", ErrorCode.SUBTASK_ERROR_NOT_FOUND));
-    StudentSubTaskProgress studentSubTaskProgress = studentSubTaskProgressRepository.findBySubTaskIdAndStudentId(subTask.getId(), getCurrentUser()).orElseThrow(()
+    Task task = taskRepository.findById(requestStudentSubTaskProgressForm.getTaskId()).orElseThrow(()
+    -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
+    StudentSubTaskProgress studentSubTaskProgress = studentSubTaskProgressRepository.findByTaskIdAndStudentId(task.getId(), getCurrentUser()).orElseThrow(()
     -> new NotFoundException("Student subtask progress not found", ErrorCode.STUDENT_SUBTASK_PROGRESS_ERROR_NOT_FOUND));
     int count = studentTaskQuestionProgressRepository.countCorrectByStudentSubTaskProgressId(studentSubTaskProgress.getId());
-    if (count != subTask.getTotalQuestion()){
+    if (count != task.getTotalQuestion()){
       throw new BadRequestException("Student subtask progress cannot be completed", ErrorCode.STUDENT_SUBTASK_PROGRESS_ERROR_NOT_COMPLETED);
     }
     studentSubTaskProgress.setState(UserBaseConstant.STATE_COMPLETED);
@@ -116,9 +116,9 @@ public class StudentSubTaskProgressController extends ABasicController{
     if (!isStudent()){
       throw new BadRequestException("User is not an student", ErrorCode.USER_ERROR_NOT_STUDENT);
     }
-    SubTask subTask = subTaskRepository.findById(requestStudentSubTaskProgressForm.getSubTaskId()).orElseThrow(()
-        -> new NotFoundException("Subtask not found", ErrorCode.SUBTASK_ERROR_NOT_FOUND));
-    StudentSubTaskProgress studentSubTaskProgress = studentSubTaskProgressRepository.findBySubTaskIdAndStudentId(subTask.getId(), getCurrentUser()).orElseThrow(()
+    Task task = taskRepository.findById(requestStudentSubTaskProgressForm.getTaskId()).orElseThrow(()
+    -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
+    StudentSubTaskProgress studentSubTaskProgress = studentSubTaskProgressRepository.findByTaskIdAndStudentId(task.getId(), getCurrentUser()).orElseThrow(()
         -> new NotFoundException("Student subtask progress not found", ErrorCode.STUDENT_SUBTASK_PROGRESS_ERROR_NOT_FOUND));
     studentSubTaskProgress.setCurrentAttempt(studentSubTaskProgress.getCurrentAttempt() + 1);
     studentSubTaskProgress.setErrorCount(UserBaseConstant.RESTART_ERROR_COUNT);

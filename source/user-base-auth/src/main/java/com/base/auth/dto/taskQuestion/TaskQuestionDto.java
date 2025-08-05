@@ -1,6 +1,6 @@
 package com.base.auth.dto.taskQuestion;
 
-import com.base.auth.dto.subtask.SubTaskDto;
+import com.base.auth.dto.task.TaskDto;
 import lombok.Data;
 
 @Data
@@ -9,5 +9,5 @@ public class TaskQuestionDto {
   private String question;
   private Integer questionType;
   private String options;
-  private SubTaskDto subTask;
+  private TaskDto task;
 }

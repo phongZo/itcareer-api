@@ -18,8 +18,8 @@ import org.springframework.data.jpa.domain.Specification;
 public class StudentTaskQuestionProgressCriteria {
   @NotNull(message = "studentSubTaskProgressId required")
   private Long studentSubTaskProgressId;
-  @NotNull(message = "subTaskId required")
-  private Long subTaskId;
+  @NotNull(message = "taskId required")
+  private Long taskId;
   private Long studentId;
   private Long taskQuestionId;
   private Boolean isCorrect;
@@ -33,7 +33,7 @@ public class StudentTaskQuestionProgressCriteria {
         List<Predicate> predicates = new ArrayList<>();
         Join<StudentTaskQuestionProgress, StudentSubTaskProgress> progressJoin = root.join("studentSubTaskProgress");
         predicates.add(cb.equal(progressJoin.get("id"), getStudentSubTaskProgressId()));
-        predicates.add(cb.equal(progressJoin.get("subTask").get("id"), getSubTaskId()));
+        predicates.add(cb.equal(progressJoin.get("task").get("id"), getTaskId()));
 
         if (getStudentId() != null){
           predicates.add(cb.equal(progressJoin.get("student").get("id"), getStudentId()));
