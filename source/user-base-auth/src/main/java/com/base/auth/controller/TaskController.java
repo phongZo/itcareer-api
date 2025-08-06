@@ -10,6 +10,7 @@ import com.base.auth.dto.task.TaskEducatorDto;
 import com.base.auth.dto.task.TaskStudentDto;
 import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
+import com.base.auth.form.MediaCompletedRequestForm;
 import com.base.auth.form.task.CreateTaskForm;
 import com.base.auth.form.task.UpdateTaskForm;
 import com.base.auth.mapper.TaskMapper;
@@ -26,6 +27,7 @@ import java.util.Objects;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -292,5 +294,16 @@ public class TaskController extends ABasicController{
     }
     apiMessageDto.setMessage("Delete task success");
     return apiMessageDto;
+  }
+
+  @RabbitListener(queues = UserBaseConstant.MEDIA_COMPLETED_PROCESS_VIDEO)
+  public void handleUpdateVideoPath(MediaCompletedRequestForm mediaCompletedRequestForm) {
+    if (!simulationRepository.existsById(mediaCompletedRequestForm.getData().getSimulationId())){
+      throw new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND);
+    }
+    Task task = taskRepository.findById(mediaCompletedRequestForm.getData().getTaskId()).orElseThrow(()
+    -> new NotFoundException("Task not found",ErrorCode.TASK_ERROR_NOT_FOUND));
+    task.setVideoPath(mediaCompletedRequestForm.getData().getContentPath());
+    taskRepository.save(task);
   }
 }

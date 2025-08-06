@@ -74,7 +74,7 @@ public class StudentSubTaskProgressController extends ABasicController{
       StudentSubTaskProgress studentSubTaskProgress = new StudentSubTaskProgress();
       studentSubTaskProgress.setStudent(student);
       studentSubTaskProgress.setTask(task);
-      studentSubTaskProgress.setState(UserBaseConstant.STATE_IN_PROGRESS);
+      studentSubTaskProgress.setState(UserBaseConstant.STATE_STUDENT_SUBTASK_PROGRESS_IN_PROGRESS);
       studentSubTaskProgressRepository.save(studentSubTaskProgress);
       apiMessageDto.setMessage("Create success");
     }
@@ -97,7 +97,7 @@ public class StudentSubTaskProgressController extends ABasicController{
     if (count != task.getTotalQuestion()){
       throw new BadRequestException("Student subtask progress cannot be completed", ErrorCode.STUDENT_SUBTASK_PROGRESS_ERROR_NOT_COMPLETED);
     }
-    studentSubTaskProgress.setState(UserBaseConstant.STATE_COMPLETED);
+    studentSubTaskProgress.setState(UserBaseConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED);
     studentSubTaskProgress.setErrorCount(UserBaseConstant.RESTART_ERROR_COUNT);
     StudentTaskQuestionProgress studentTaskQuestionProgress = studentTaskQuestionProgressRepository.findFirstByStudentSubTaskProgressId(studentSubTaskProgress.getId()).orElse(null);
     if (studentTaskQuestionProgress != null && Objects.equals(studentTaskQuestionProgress.getTaskQuestion().getQuestionType(), UserBaseConstant.QUESTION_TYPE_MULTIPLE_CHOICE)){
