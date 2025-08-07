@@ -18,7 +18,7 @@ import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE,
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
-    uses = {SubTaskMapper.class})
+    uses = {TaskMapper.class})
 public interface TaskQuestionMapper {
   @Mapping(source = "question", target = "question")
   @Mapping(source = "questionType", target = "questionType")
@@ -30,7 +30,7 @@ public interface TaskQuestionMapper {
   @Mapping(source = "question", target = "question")
   @Mapping(source = "questionType", target = "questionType")
   @Mapping(source = "options", target = "options")
-  @Mapping(source = "subTask", target = "subTask", qualifiedByName = "fromEntityToSubTaskDto")
+  @Mapping(source = "task", target = "task", qualifiedByName = "fromEntityToTaskDto")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToTaskQuestionDto")
   TaskQuestionDto fromEntityToTaskQuestionDto(TaskQuestion taskQuestion);
@@ -39,7 +39,7 @@ public interface TaskQuestionMapper {
   @Mapping(source = "question", target = "question")
   @Mapping(source = "questionType", target = "questionType")
   @Mapping(source = "options", target = "options")
-  @Mapping(source = "subTask", target = "subTask", qualifiedByName = "fromEntityToSubTaskClientDto")
+  @Mapping(source = "task", target = "task", qualifiedByName = "fromEntityToTaskEducatorDto")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToTaskQuestionEducatorDto")
   TaskQuestionEducatorDto fromEntityToTaskQuestionEducatorDto(TaskQuestion taskQuestion);
@@ -47,7 +47,7 @@ public interface TaskQuestionMapper {
   @Mapping(source = "id", target = "id")
   @Mapping(source = "question", target = "question")
   @Mapping(source = "options", target = "options")
-  @Mapping(source = "subTask", target = "subTask", qualifiedByName = "fromEntityToSubTaskClientDto")
+  @Mapping(source = "task", target = "task", qualifiedByName = "fromEntityToTaskStudentDto")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToTaskQuestionStudentDto")
   TaskQuestionStudentDto fromEntityToTaskQuestionStudentDto(TaskQuestion taskQuestion);

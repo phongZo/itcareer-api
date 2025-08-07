@@ -13,14 +13,11 @@ import com.base.auth.form.taskQuestion.CreateTaskQuestionForm;
 import com.base.auth.form.taskQuestion.UpdateQuestionTaskForm;
 import com.base.auth.mapper.TaskQuestionMapper;
 import com.base.auth.model.Simulation;
-import com.base.auth.model.StudentTaskQuestionProgress;
-import com.base.auth.model.SubTask;
 import com.base.auth.model.Task;
 import com.base.auth.model.TaskQuestion;
 import com.base.auth.model.criteria.TaskQuestionCriteria;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.StudentTaskQuestionProgressRepository;
-import com.base.auth.repository.SubTaskRepository;
 import com.base.auth.repository.TaskQuestionRepository;
 import com.base.auth.repository.TaskRepository;
 import java.util.List;
@@ -55,9 +52,6 @@ public class TaskQuestionController extends ABasicController{
   TaskQuestionMapper taskQuestionMapper;
 
   @Autowired
-  SubTaskRepository subTaskRepository;
-
-  @Autowired
   TaskRepository taskRepository;
 
   @Autowired
@@ -73,7 +67,7 @@ public class TaskQuestionController extends ABasicController{
     if (!isEducator()){
       throw new BadRequestException("User is not an educator", ErrorCode.USER_ERROR_NOT_EDUCATOR);
     }
-    TaskQuestion taskQuestion = taskQuestionRepository.findByQuestionAndSubTaskId(createTaskQuestionForm.getQuestion(), createTaskQuestionForm.getSubTaskId()).orElse(null);
+    TaskQuestion taskQuestion = taskQuestionRepository.findByQuestionAndTaskId(createTaskQuestionForm.getQuestion(), createTaskQuestionForm.getTaskId()).orElse(null);
     if (taskQuestion != null){
       if (!validateQuestionType(taskQuestion.getQuestionType(), createTaskQuestionForm.getQuestionType())){
         throw new BadRequestException("Question cannot be created due to a type conflict", ErrorCode.TASK_QUESTION_ERROR_NOT_CREATE);
@@ -90,8 +84,8 @@ public class TaskQuestionController extends ABasicController{
         }
       }
     } else{
-      TaskQuestion existTaskQuestionBySubTaskId = taskQuestionRepository.findFirstBySubTaskId(createTaskQuestionForm.getSubTaskId());
-      if (existTaskQuestionBySubTaskId != null && !validateQuestionType(existTaskQuestionBySubTaskId.getQuestionType(), createTaskQuestionForm.getQuestionType())){
+      TaskQuestion existTaskQuestionByTaskId = taskQuestionRepository.findFirstByTaskId(createTaskQuestionForm.getTaskId());
+      if (existTaskQuestionByTaskId != null && !validateQuestionType(existTaskQuestionByTaskId.getQuestionType(), createTaskQuestionForm.getQuestionType())){
         throw new BadRequestException("Question cannot be created due to a type conflict", ErrorCode.TASK_QUESTION_ERROR_NOT_CREATE);
       } else{
         if (!Objects.equals(createTaskQuestionForm.getQuestionType(), UserBaseConstant.QUESTION_TYPE_MULTIPLE_CHOICE)){
@@ -105,23 +99,23 @@ public class TaskQuestionController extends ABasicController{
         }
       }
     }
-    SubTask subTask = subTaskRepository.findById(createTaskQuestionForm.getSubTaskId()).orElseThrow(()
-    -> new NotFoundException("Subtask not found", ErrorCode.SUBTASK_ERROR_NOT_FOUND));
-    Task task = taskRepository.findById(subTask.getTask().getId()).orElseThrow(()
+    Task task = taskRepository.findById(createTaskQuestionForm.getTaskId()).orElseThrow(()
     -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
     Simulation simulation = simulationRepository.findById(task.getSimulation().getId()).orElseThrow(()
     -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-
+    if (!Objects.equals(simulation.getEducator().getId(), getCurrentUser())){
+      throw new BadRequestException("Simulation cannot be updated", ErrorCode.SIMULATION_ERROR_NOT_AUTHORIZED);
+    }
     taskQuestion = taskQuestionMapper.fromCreateTaskQuestionFormToEntity(createTaskQuestionForm);
-    taskQuestion.setSubTask(subTask);
+    taskQuestion.setTask(task);
     taskQuestionRepository.save(taskQuestion);
 
-    int currentTotalQuestion = subTask.getTotalQuestion() + 1;
-    subTask.setTotalQuestion(currentTotalQuestion);
+    int currentTotalQuestion = task.getTotalQuestion() + 1;
+    task.setTotalQuestion(currentTotalQuestion);
     if (Objects.equals(createTaskQuestionForm.getQuestionType(), UserBaseConstant.QUESTION_TYPE_MULTIPLE_CHOICE)){
-      subTask.setMaxErrors((int) Math.ceil((double) currentTotalQuestion / 2));
+      task.setMaxErrors((int) Math.ceil((double) currentTotalQuestion / 2));
     }
-    subTaskRepository.save(subTask);
+    taskRepository.save(task);
 
     if (Objects.equals(simulation.getStatus(), UserBaseConstant.STATUS_ACTIVE)){
       simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
@@ -188,7 +182,7 @@ public class TaskQuestionController extends ABasicController{
     }
     TaskQuestion taskQuestion = taskQuestionRepository.findById(updateQuestionTaskForm.getId()).orElseThrow(()
     -> new NotFoundException("Task question not found", ErrorCode.TASK_QUESTION_ERROR_NOT_FOUND));
-    if (!Objects.equals(taskQuestion.getQuestion(), updateQuestionTaskForm.getQuestion()) && Objects.equals(taskQuestion.getSubTask().getId(), updateQuestionTaskForm.getSubtaskId())){
+    if (!Objects.equals(taskQuestion.getQuestion(), updateQuestionTaskForm.getQuestion()) && Objects.equals(taskQuestion.getTask().getId(), updateQuestionTaskForm.getTaskId())){
       if (Objects.equals(taskQuestion.getQuestionType(), UserBaseConstant.QUESTION_TYPE_MULTIPLE_CHOICE)){
         if (updateQuestionTaskForm.getOptions() == null){
           throw new BadRequestException("Options cannot be null", ErrorCode.TASK_QUESTION_ERROR_OPTION_NOT_NULL);
@@ -202,21 +196,19 @@ public class TaskQuestionController extends ABasicController{
         if (updateQuestionTaskForm.getOptions() != null){
           throw new BadRequestException("Question cannot be updated", ErrorCode.TASK_QUESTION_ERROR_NOT_UPDATE);
         } else {
-          TaskQuestion existTaskQuestion = taskQuestionRepository.findByQuestionAndSubTaskId(updateQuestionTaskForm.getQuestion(), updateQuestionTaskForm.getSubtaskId()).orElse(null);
+          TaskQuestion existTaskQuestion = taskQuestionRepository.findByQuestionAndTaskId(updateQuestionTaskForm.getQuestion(), updateQuestionTaskForm.getTaskId()).orElse(null);
           if (existTaskQuestion != null){
             throw new BadRequestException("Task question already exist", ErrorCode.TASK_QUESTION_ERROR_EXIST);
           }
         }
       }
-    } else if (!Objects.equals(taskQuestion.getSubTask().getId(), updateQuestionTaskForm.getSubtaskId())) {
-      TaskQuestion existTaskQuestionBySubTaskId = taskQuestionRepository.findFirstBySubTaskId(updateQuestionTaskForm.getSubtaskId());
+    } else if (!Objects.equals(taskQuestion.getTask().getId(), updateQuestionTaskForm.getTaskId())) {
+      TaskQuestion existTaskQuestionBySubTaskId = taskQuestionRepository.findFirstByTaskId(updateQuestionTaskForm.getTaskId());
       if (existTaskQuestionBySubTaskId != null && !validateQuestionType(taskQuestion.getQuestionType(), existTaskQuestionBySubTaskId.getQuestionType())){
         throw new BadRequestException("Question cannot be created due to a type conflict", ErrorCode.TASK_QUESTION_ERROR_NOT_CREATE);
       }
     }
-    SubTask subTask = subTaskRepository.findById(updateQuestionTaskForm.getSubtaskId()).orElseThrow(()
-        -> new NotFoundException("Subtask not found", ErrorCode.SUBTASK_ERROR_NOT_FOUND));
-    Task task = taskRepository.findById(subTask.getTask().getId()).orElseThrow(()
+    Task task = taskRepository.findById(updateQuestionTaskForm.getTaskId()).orElseThrow(()
         -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
     Simulation simulation = simulationRepository.findById(task.getSimulation().getId()).orElseThrow(()
         -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
@@ -244,9 +236,7 @@ public class TaskQuestionController extends ABasicController{
     }
     TaskQuestion taskQuestion = taskQuestionRepository.findById(id).orElseThrow(()
     -> new NotFoundException("Task question not found", ErrorCode.TASK_QUESTION_ERROR_NOT_FOUND));
-    SubTask subTask = subTaskRepository.findById(taskQuestion.getSubTask().getId()).orElseThrow(()
-        -> new NotFoundException("Subtask not found", ErrorCode.SUBTASK_ERROR_NOT_FOUND));
-    Task task = taskRepository.findById(subTask.getTask().getId()).orElseThrow(()
+    Task task = taskRepository.findById(taskQuestion.getTask().getId()).orElseThrow(()
         -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
     Simulation simulation = simulationRepository.findById(task.getSimulation().getId()).orElseThrow(()
         -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
@@ -254,12 +244,12 @@ public class TaskQuestionController extends ABasicController{
       throw new BadRequestException("Simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_AUTHORIZED);
     }
 
-    int currentTotalQuestion = subTask.getTotalQuestion() - 1;
-    subTask.setTotalQuestion(currentTotalQuestion);
+    int currentTotalQuestion = task.getTotalQuestion() - 1;
+    task.setTotalQuestion(currentTotalQuestion);
     if (Objects.equals(taskQuestion.getQuestionType(), UserBaseConstant.QUESTION_TYPE_MULTIPLE_CHOICE)){
-      subTask.setMaxErrors((int) Math.ceil((double) currentTotalQuestion / 2));
+      task.setMaxErrors((int) Math.ceil((double) currentTotalQuestion / 2));
     }
-    subTaskRepository.save(subTask);
+    taskRepository.save(task);
 
     studentTaskQuestionProgressRepository.deleteAllByTaskQuestionId(id);
     taskQuestionRepository.delete(taskQuestion);

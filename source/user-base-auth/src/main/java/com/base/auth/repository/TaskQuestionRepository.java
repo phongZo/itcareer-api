@@ -14,39 +14,39 @@ import org.springframework.data.repository.query.Param;
 public interface TaskQuestionRepository extends JpaRepository<TaskQuestion, Long>,
     JpaSpecificationExecutor<TaskQuestion> {
 
-  Optional<TaskQuestion> findByQuestion(String question);
-
   Optional<TaskQuestion> findByOptions(String options);
 
-  void deleteBySubTaskId(Long subTaskId);
+  @Modifying
+  @Transactional
+  @Query(value =
+      "DELETE FROM db_user_base_task_question tq " +
+          "WHERE " +
+          "   tq.task_id = :taskId " +
+          "   OR (" +
+          "       (SELECT kind FROM db_user_base_task WHERE id = :taskId) = 1 " +
+          "       AND tq.task_id IN (SELECT id FROM db_user_base_task WHERE parent_id = :taskId)" +
+          "   )",
+      nativeQuery = true)
+  void deleteAllByTaskAndSubtask(@Param("taskId") Long taskId);
 
   @Modifying
   @Transactional
   @Query(value = "DELETE tq FROM db_user_base_task_question tq " +
-      "JOIN db_user_base_sub_task s ON tq.sub_task_id = s.id " +
-      "WHERE s.task_id = :taskId", nativeQuery = true)
-  void deleteAllTaskQuestionByTaskId(Long taskId);
+          "JOIN db_user_base_task t ON tq.task_id = t.id " +
+          "WHERE t.simulation_id = :simulationId", nativeQuery = true)
+  void deleteAllBySimulationId(@Param("simulationId") Long simulationId);
 
   @Modifying
   @Transactional
   @Query(value = "DELETE tq FROM db_user_base_task_question tq " +
-      "JOIN db_user_base_sub_task s ON tq.sub_task_id = s.id " +
-      "JOIN db_user_base_task t ON s.task_id = t.id " +
-      "WHERE t.simulation_id = :simulationId", nativeQuery = true)
-  void deleteAllTaskQuestionBySimulationId(Long simulationId);
-
-  @Modifying
-  @Transactional
-  @Query(value = "DELETE tq FROM db_user_base_task_question tq " +
-      "JOIN db_user_base_sub_task st ON tq.sub_task_id = st.id " +
-      "JOIN db_user_base_task t ON st.task_id = t.id " +
+      "JOIN db_user_base_task t ON tq.task_id = t.id " +
       "JOIN db_user_base_simulation s ON t.simulation_id = s.id " +
       "WHERE s.educator_id = :educatorId", nativeQuery = true)
   void deleteAllByEducatorId(@Param("educatorId") Long educatorId);
 
-  Optional<TaskQuestion> findByQuestionAndSubTaskId(String question, Long subTaskId);
+  Optional<TaskQuestion> findByQuestionAndTaskId(String question, Long taskId);
 
-  TaskQuestion findFirstBySubTaskId(Long subTaskId);
+  TaskQuestion findFirstByTaskId(Long taskId);
 
   Optional<TaskQuestion> findByQuestionAndOptions(String question, String options);
 }

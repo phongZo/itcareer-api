@@ -1,5 +1,6 @@
 package com.base.auth.model;
 
+import com.base.auth.constant.UserBaseConstant;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
@@ -24,10 +25,23 @@ public class Task{
   @GeneratedValue(generator = "idGenerator")
   private Long id;
   private String name;
-  @Column(name = "description", columnDefinition = "TEXT")
+  @Column(columnDefinition = "TEXT")
   private String description;
-  @Column(name = "content", columnDefinition = "TEXT")
+  private String title;
+  @Column(columnDefinition = "TEXT")
+  private String introduction;
+  @Column(columnDefinition = "TEXT")
   private String content;
+  private String imagePath;
+  private String filePath;
+  private String videoPath;
+  private Integer state = UserBaseConstant.STATE_TASK_INIT;
+  private Integer maxErrors = 0;
+  private Integer totalQuestion = 0;
+  private Integer kind;
+  @ManyToOne
+  @JoinColumn(name = "parent_id")
+  private Task parent;
   @ManyToOne
   @JoinColumn(name = "simulation_id")
   private Simulation simulation;

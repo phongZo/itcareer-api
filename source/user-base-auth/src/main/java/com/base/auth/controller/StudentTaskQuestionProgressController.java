@@ -5,7 +5,6 @@ import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.ErrorCode;
 import com.base.auth.dto.ResponseListDto;
 import com.base.auth.dto.studentTaskQuestionProgress.StudentTaskQuestionProgressDisplayDto;
-import com.base.auth.dto.studentTaskQuestionProgress.StudentTaskQuestionProgressDto;
 import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
 import com.base.auth.form.studentTaskQuestionProgress.CreateStudentTaskQuestionProgressForm;
@@ -66,7 +65,7 @@ public class StudentTaskQuestionProgressController extends ABasicController{
     TaskQuestion taskQuestion = taskQuestionRepository.findById(
         createStudentTaskQuestionProgressForm.getTaskQuestionId()).orElseThrow(()
     -> new NotFoundException("Task question not found", ErrorCode.TASK_QUESTION_ERROR_NOT_FOUND));
-    if (!Objects.equals(taskQuestion.getSubTask().getId(), studentSubTaskProgress.getSubTask().getId())){
+    if (!Objects.equals(taskQuestion.getTask().getId(), studentSubTaskProgress.getTask().getId())){
       throw new BadRequestException("Student task question progress cannot be created", ErrorCode.STUDENT_TASK_QUESTION_PROGRESS_ERROR_NOT_CREATE);
     }
     StudentTaskQuestionProgress existStudentTaskQuestionProgress = studentTaskQuestionProgressRepository.findByTaskQuestionIdAndStudentSubTaskProgressIdAndIsCorrect(taskQuestion.getId(), studentSubTaskProgress.getId(), true).orElse(null);
@@ -80,7 +79,7 @@ public class StudentTaskQuestionProgressController extends ABasicController{
       studentTaskQuestionProgress.setIsCorrect(true);
     } else {
       if (!createStudentTaskQuestionProgressForm.getIsCorrect()){
-        if (studentSubTaskProgress.getErrorCount() >= studentSubTaskProgress.getSubTask().getMaxErrors()){
+        if (studentSubTaskProgress.getErrorCount() >= studentSubTaskProgress.getTask().getMaxErrors()){
           throw new BadRequestException("Subtask fail", ErrorCode.SUBTASK_ERROR_FAIL);
         }
         studentSubTaskProgress.setErrorCount(studentSubTaskProgress.getErrorCount() + 1);

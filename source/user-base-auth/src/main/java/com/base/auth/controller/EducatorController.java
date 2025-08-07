@@ -27,7 +27,6 @@ import com.base.auth.repository.GroupRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
 import com.base.auth.repository.StudentTaskQuestionProgressRepository;
-import com.base.auth.repository.SubTaskRepository;
 import com.base.auth.repository.TaskQuestionRepository;
 import com.base.auth.repository.TaskRepository;
 import com.base.auth.service.UserBaseApiService;
@@ -89,9 +88,6 @@ public class EducatorController extends ABasicController{
 
   @Autowired
   TaskRepository taskRepository;
-
-  @Autowired
-  SubTaskRepository subTaskRepository;
 
   @Autowired
   TaskQuestionRepository taskQuestionRepository;
@@ -287,8 +283,8 @@ public class EducatorController extends ABasicController{
     studentTaskQuestionProgressRepository.deleteAllByEducatorId(id);
     studentSubTaskProgressRepository.deleteAllByEducatorId(id);
     taskQuestionRepository.deleteAllByEducatorId(id);
-    subTaskRepository.deleteAllByEducatorId(id);
-    taskRepository.deleteAllByEducatorId(id);
+    taskRepository.deleteAllSubTaskByEducatorId(id);
+    taskRepository.deleteAllTaskByEducatorId(id);
     simulationRepository.deleteAllByEducatorId(id);
     educatorRepository.delete(educator);
     accountRepository.delete(account);

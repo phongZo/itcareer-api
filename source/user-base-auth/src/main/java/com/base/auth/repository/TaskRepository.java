@@ -10,15 +10,41 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificationExecutor<Task> {
-  Optional<Task> findByNameAndSimulationId(String name, Long simulationId);
-
-  void deleteBySimulationId(Long id);
+  @Modifying
+  @Transactional
+  @Query(value = "DELETE FROM db_user_base_task WHERE parent_id IS NOT NULL AND simulation_id = :simulationId", nativeQuery = true)
+  void deleteAllSubTaskBySimulationId(@Param("simulationId") Long simulationId);
 
   @Modifying
   @Transactional
-  @Query(value = "DELETE t FROM db_user_base_task t " +
-      "JOIN db_user_base_simulation s ON t.simulation_id = s.id " +
-      "WHERE s.educator_id = :educatorId", nativeQuery = true)
-  void deleteAllByEducatorId(@Param("educatorId") Long educatorId);
+  @Query(value = "DELETE FROM db_user_base_task WHERE parent_id IS NULL AND simulation_id = :simulationId", nativeQuery = true)
+  void deleteAllTaskBySimulationId(@Param("simulationId") Long simulationId);
 
+  @Modifying
+  @Transactional
+  @Query(value =
+      "DELETE FROM db_user_base_task " +
+          "WHERE parent_id IS NOT NULL AND simulation_id IN (SELECT id FROM db_user_base_simulation WHERE educator_id = :educatorId)",
+      nativeQuery = true)
+  void deleteAllSubTaskByEducatorId(@Param("educatorId") Long educatorId);
+
+  @Modifying
+  @Transactional
+  @Query(value =
+      "DELETE FROM db_user_base_task " +
+          "WHERE parent_id IS NULL AND simulation_id IN (SELECT id FROM db_user_base_simulation WHERE educator_id = :educatorId)",
+      nativeQuery = true)
+  void deleteAllTaskByEducatorId(@Param("educatorId") Long educatorId);
+
+  void deleteAllByParentId(Long id);
+
+  Optional<Task> findByNameAndKindAndSimulationId(String name, Integer taskKindTask, Long simulationId);
+
+  boolean existsByTitleAndParentId(String title, Long parentId);
+
+  Optional<Task> findByIdAndKind(Long parentId, Integer taskKindTask);
+
+  boolean existsByNameAndKindAndSimulationId(String name, Integer taskKindTask, Long simulationId);
+
+  boolean existsByTitleAndKindAndSimulationId(String title, Integer taskKindTask, Long simulationId);
 }

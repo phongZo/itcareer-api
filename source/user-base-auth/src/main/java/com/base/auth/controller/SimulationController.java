@@ -12,20 +12,20 @@ import com.base.auth.exception.NotFoundException;
 import com.base.auth.form.simulation.CreateSimulationForm;
 import com.base.auth.form.simulation.RequestSimulationIdForm;
 import com.base.auth.form.simulation.UpdateSimulationForm;
+import com.base.auth.form.RequestProcessVideoMessageForm;
 import com.base.auth.mapper.SimulationMapper;
 import com.base.auth.model.Educator;
 import com.base.auth.model.Simulation;
 import com.base.auth.model.Specialization;
-import com.base.auth.model.Task;
 import com.base.auth.model.criteria.SimulationCriteria;
 import com.base.auth.repository.EducatorRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.SpecializationRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
 import com.base.auth.repository.StudentTaskQuestionProgressRepository;
-import com.base.auth.repository.SubTaskRepository;
 import com.base.auth.repository.TaskQuestionRepository;
 import com.base.auth.repository.TaskRepository;
+import com.base.auth.service.ProcessVideoService;
 import java.util.List;
 import java.util.Objects;
 import javax.transaction.Transactional;
@@ -68,9 +68,6 @@ public class SimulationController extends ABasicController{
   TaskRepository taskRepository;
 
   @Autowired
-  SubTaskRepository subTaskRepository;
-
-  @Autowired
   TaskQuestionRepository taskQuestionRepository;
 
   @Autowired
@@ -78,6 +75,9 @@ public class SimulationController extends ABasicController{
 
   @Autowired
   StudentTaskQuestionProgressRepository studentTaskQuestionProgressRepository;
+
+  @Autowired
+  ProcessVideoService processVideoService;
 
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('SI_C')")
@@ -98,7 +98,20 @@ public class SimulationController extends ABasicController{
     simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
     simulation.setSpecialization(specialization);
     simulation.setEducator(educator);
+    if (createSimulationForm.getVideoPath() != null){
+      simulation.setState(UserBaseConstant.STATE_SIMULATION_PROCESSING);
+    } else {
+      simulation.setState(UserBaseConstant.STATE_SIMULATION_DONE);
+    }
     simulationRepository.save(simulation);
+    if (createSimulationForm.getVideoPath() != null){
+      RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
+      data.setId(simulation.getId());
+      data.setKind(UserBaseConstant.KIND_SIMULATION);
+      data.setUrl(createSimulationForm.getVideoPath());
+      data.setTsSecond(tsSecond);
+      processVideoService.sendProcessVideoMessage(data);
+    }
     apiMessageDto.setMessage("Create simulation success. Please wait for approval");
     return apiMessageDto;
   }
@@ -247,9 +260,9 @@ public class SimulationController extends ABasicController{
     }
     studentTaskQuestionProgressRepository.deleteAllBySimulationId(id);
     studentSubTaskProgressRepository.deleteAllBySimulationId(id);
-    taskQuestionRepository.deleteAllTaskQuestionBySimulationId(id);
-    subTaskRepository.deleteAllSubTaskBySimulationId(id);
-    taskRepository.deleteBySimulationId(id);
+    taskQuestionRepository.deleteAllBySimulationId(id);
+    taskRepository.deleteAllSubTaskBySimulationId(id);
+    taskRepository.deleteAllTaskBySimulationId(id);
     simulationRepository.delete(simulation);
     apiMessageDto.setMessage("Approve delete simulation success");
     return apiMessageDto;

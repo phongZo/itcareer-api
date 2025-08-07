@@ -29,6 +29,6 @@ public class TaskQuestion {
   @Column(name = "options" ,  columnDefinition = "TEXT")
   private String options;
   @ManyToOne
-  @JoinColumn(name = "sub_task_id")
-  private SubTask subTask;
+  @JoinColumn(name = "task_id")
+  private Task task;
 }
