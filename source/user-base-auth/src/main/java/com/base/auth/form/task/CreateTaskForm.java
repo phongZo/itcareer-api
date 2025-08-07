@@ -29,8 +29,6 @@ public class CreateTaskForm {
   private String filePath;
   @ApiModelProperty(name = "videoPath")
   private String videoPath;
-  @ApiModelProperty(name = "tsSecond")
-  private Integer tsSecond;
   @TaskKind
   @ApiModelProperty(name = "kind")
   private Integer kind;

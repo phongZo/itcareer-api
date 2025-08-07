@@ -12,6 +12,7 @@ import com.base.auth.exception.NotFoundException;
 import com.base.auth.form.simulation.CreateSimulationForm;
 import com.base.auth.form.simulation.RequestSimulationIdForm;
 import com.base.auth.form.simulation.UpdateSimulationForm;
+import com.base.auth.form.task.RequestProcessVideoMessageForm;
 import com.base.auth.mapper.SimulationMapper;
 import com.base.auth.model.Educator;
 import com.base.auth.model.Simulation;
@@ -24,12 +25,14 @@ import com.base.auth.repository.StudentSubTaskProgressRepository;
 import com.base.auth.repository.StudentTaskQuestionProgressRepository;
 import com.base.auth.repository.TaskQuestionRepository;
 import com.base.auth.repository.TaskRepository;
+import com.base.auth.service.ProcessVideoService;
 import java.util.List;
 import java.util.Objects;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -74,6 +77,9 @@ public class SimulationController extends ABasicController{
   @Autowired
   StudentTaskQuestionProgressRepository studentTaskQuestionProgressRepository;
 
+  @Autowired
+  ProcessVideoService processVideoService;
+
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('SI_C')")
   public ApiMessageDto<String> create(@Valid @RequestBody CreateSimulationForm createSimulationForm, BindingResult bindingResult){
@@ -93,7 +99,19 @@ public class SimulationController extends ABasicController{
     simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
     simulation.setSpecialization(specialization);
     simulation.setEducator(educator);
+    if (createSimulationForm.getVideoPath() != null){
+      simulation.setState(UserBaseConstant.STATE_SIMULATION_PROCESSING);
+    } else {
+      simulation.setState(UserBaseConstant.STATE_SIMULATION_DONE);
+    }
     simulationRepository.save(simulation);
+    if (createSimulationForm.getVideoPath() != null){
+      RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
+      data.setSimulationId(simulation.getId());
+      data.setUrl(createSimulationForm.getVideoPath());
+      data.setTsSecond(tsSecond);
+      processVideoService.sendProcessVideoMessage(data);
+    }
     apiMessageDto.setMessage("Create simulation success. Please wait for approval");
     return apiMessageDto;
   }

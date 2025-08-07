@@ -58,8 +58,12 @@ public class ProcessVideoService {
       }
       if(form.getCmd().equals(UserBaseConstant.MEDIA_COMPLETED_PROCESS_VIDEO_CMD)){
         ProcessVideoSuccessForm data = objectMapper.convertValue(form.getData(), ProcessVideoSuccessForm.class);
-        // update task when received data success
-        updateTaskProcessed(data);
+        if (data.getTaskId() != null){
+          // update task when received data success
+          updateTaskProcessed(data);
+        } else {
+          updateSimulationProcessed(data);
+        }
       }
       else {
         log.error("===========> Invalid cmd: " + form.getCmd());
@@ -79,6 +83,20 @@ public class ProcessVideoService {
         task.setState(UserBaseConstant.STATE_TASK_DONE);
       }
       taskRepository.save(task);
+    }
+  }
+
+  void updateSimulationProcessed(ProcessVideoSuccessForm processVideoSuccessForm){
+    log.info("Update state lesson processed.............");
+    Simulation simulation = simulationRepository.findById(processVideoSuccessForm.getSimulationId()).orElse(null);
+    if (simulation != null){
+      if (!processVideoSuccessForm.getIsSuccess()){
+        simulation.setState(UserBaseConstant.STATE_TASK_FAIL);
+      } else {
+        simulation.setVideoPath(processVideoSuccessForm.getContentPath());
+        simulation.setState(UserBaseConstant.STATE_TASK_DONE);
+      }
+      simulationRepository.save(simulation);
     }
   }
 }

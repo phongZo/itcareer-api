@@ -125,7 +125,7 @@ public class TaskController extends ABasicController{
       data.setSimulationId(simulation.getId());
       data.setTaskId(task.getId());
       data.setUrl(createTaskForm.getVideoPath());
-      data.setTsSecond(createTaskForm.getTsSecond());
+      data.setTsSecond(tsSecond);
       processVideoService.sendProcessVideoMessage(data);
     }
 

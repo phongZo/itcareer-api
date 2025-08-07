@@ -43,6 +43,9 @@ public class ABasicController {
     @Autowired
     private UserBaseApiService userBaseApiService;
 
+    @Value("${ts.second}")
+    protected Integer tsSecond;
+
     public long getCurrentUser(){
         UserBaseJwt userBaseJwt = userService.getAddInfoFromToken();
         return userBaseJwt.getAccountId();
