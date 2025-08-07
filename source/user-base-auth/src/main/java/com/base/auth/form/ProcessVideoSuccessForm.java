@@ -1,4 +1,4 @@
-package com.base.auth.form.task;
+package com.base.auth.form;
 
 import lombok.Data;
 

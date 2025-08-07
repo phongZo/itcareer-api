@@ -2,8 +2,8 @@ package com.base.auth.service;
 
 import com.base.auth.constant.UserBaseConstant;
 import com.base.auth.form.BaseMsgForm;
-import com.base.auth.form.task.ProcessVideoSuccessForm;
-import com.base.auth.form.task.RequestProcessVideoMessageForm;
+import com.base.auth.form.ProcessVideoSuccessForm;
+import com.base.auth.form.RequestProcessVideoMessageForm;
 import com.base.auth.model.Simulation;
 import com.base.auth.model.Task;
 import com.base.auth.repository.SimulationRepository;
@@ -72,10 +72,9 @@ public class ProcessVideoService {
   }
 
   void updateTaskProcessed(ProcessVideoSuccessForm processVideoSuccessForm){
-    log.info("Update state lesson processed.............");
-    Simulation simulation = simulationRepository.findById(processVideoSuccessForm.getSimulationId()).orElse(null);
+    log.info("Update state task processed.............");
     Task task = taskRepository.findById(processVideoSuccessForm.getTaskId()).orElse(null);
-    if (simulation != null && task != null && Objects.equals(task.getSimulation().getId(), simulation.getId())){
+    if (task != null){
       if (!processVideoSuccessForm.getIsSuccess()){
         task.setState(UserBaseConstant.STATE_TASK_FAIL);
       } else {
@@ -87,14 +86,14 @@ public class ProcessVideoService {
   }
 
   void updateSimulationProcessed(ProcessVideoSuccessForm processVideoSuccessForm){
-    log.info("Update state lesson processed.............");
+    log.info("Update state simulation processed.............");
     Simulation simulation = simulationRepository.findById(processVideoSuccessForm.getSimulationId()).orElse(null);
     if (simulation != null){
       if (!processVideoSuccessForm.getIsSuccess()){
-        simulation.setState(UserBaseConstant.STATE_TASK_FAIL);
+        simulation.setState(UserBaseConstant.STATE_SIMULATION_FAIL);
       } else {
         simulation.setVideoPath(processVideoSuccessForm.getContentPath());
-        simulation.setState(UserBaseConstant.STATE_TASK_DONE);
+        simulation.setState(UserBaseConstant.STATE_SIMULATION_DONE);
       }
       simulationRepository.save(simulation);
     }

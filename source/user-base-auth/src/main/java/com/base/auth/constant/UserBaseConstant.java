@@ -35,6 +35,9 @@ public class UserBaseConstant {
     public static final Integer STATE_TASK_DONE = 2;
     public static final Integer STATE_TASK_FAIL = 3;
 
+    public static final Integer KIND_SIMULATION = 1;
+    public static final Integer KIND_TASK = 2;
+
     public static final Integer RESTART_ERROR_COUNT = 0;
 
     public static final Integer QUESTION_TYPE_FILE = 1;

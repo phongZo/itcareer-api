@@ -11,7 +11,7 @@ import com.base.auth.dto.task.TaskStudentDto;
 import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
 import com.base.auth.form.task.CreateTaskForm;
-import com.base.auth.form.task.RequestProcessVideoMessageForm;
+import com.base.auth.form.RequestProcessVideoMessageForm;
 import com.base.auth.form.task.UpdateTaskForm;
 import com.base.auth.mapper.TaskMapper;
 import com.base.auth.model.Simulation;
@@ -122,8 +122,8 @@ public class TaskController extends ABasicController{
 
     if (createTaskForm.getVideoPath() != null){
       RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
-      data.setSimulationId(simulation.getId());
       data.setTaskId(task.getId());
+      data.setKind(UserBaseConstant.KIND_TASK);
       data.setUrl(createTaskForm.getVideoPath());
       data.setTsSecond(tsSecond);
       processVideoService.sendProcessVideoMessage(data);

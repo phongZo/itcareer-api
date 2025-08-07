@@ -12,7 +12,7 @@ import com.base.auth.exception.NotFoundException;
 import com.base.auth.form.simulation.CreateSimulationForm;
 import com.base.auth.form.simulation.RequestSimulationIdForm;
 import com.base.auth.form.simulation.UpdateSimulationForm;
-import com.base.auth.form.task.RequestProcessVideoMessageForm;
+import com.base.auth.form.RequestProcessVideoMessageForm;
 import com.base.auth.mapper.SimulationMapper;
 import com.base.auth.model.Educator;
 import com.base.auth.model.Simulation;
@@ -32,7 +32,6 @@ import javax.transaction.Transactional;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -108,6 +107,7 @@ public class SimulationController extends ABasicController{
     if (createSimulationForm.getVideoPath() != null){
       RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
       data.setSimulationId(simulation.getId());
+      data.setKind(UserBaseConstant.KIND_SIMULATION);
       data.setUrl(createSimulationForm.getVideoPath());
       data.setTsSecond(tsSecond);
       processVideoService.sendProcessVideoMessage(data);
