@@ -112,8 +112,23 @@ public class TaskController extends ABasicController{
           .orElseThrow(() -> new NotFoundException("Task parent not found", ErrorCode.TASK_ERROR_PARENT_NOT_FOUND));
       task.setParent(parentTask);
     }
+    if (createTaskForm.getVideoPath() != null){
+      task.setState(UserBaseConstant.STATE_TASK_PROCESSING);
+    } else {
+      task.setState(UserBaseConstant.STATE_TASK_DONE);
+    }
     task.setSimulation(simulation);
     taskRepository.save(task);
+
+    if (createTaskForm.getVideoPath() != null){
+      RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
+      data.setSimulationId(simulation.getId());
+      data.setTaskId(task.getId());
+      data.setUrl(createTaskForm.getVideoPath());
+      data.setTsSecond(createTaskForm.getTsSecond());
+      processVideoService.sendProcessVideoMessage(data);
+    }
+
     if (Objects.equals(UserBaseConstant.STATUS_ACTIVE, simulation.getStatus())){
       simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
       simulationRepository.save(simulation);
@@ -296,26 +311,6 @@ public class TaskController extends ABasicController{
       simulationRepository.save(simulation);
     }
     apiMessageDto.setMessage("Delete task success");
-    return apiMessageDto;
-  }
-
-  @PutMapping(value = "/video-process", produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasRole('TA_VP')")
-  public ApiMessageDto<String> processVideo(@Valid @RequestBody RequestProcessVideoMessageForm data, BindingResult bindingResult){
-    ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
-    if (!isEducator()){
-      throw new BadRequestException("User is not an educator", ErrorCode.USER_ERROR_NOT_EDUCATOR);
-    }
-    if (!simulationRepository.existsById(data.getSimulationId())){
-      throw new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND);
-    }
-    Task task = taskRepository.findById(data.getTaskId()).orElseThrow(()
-    -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
-    processVideoService.sendProcessVideoMessage(data);
-    task.setState(UserBaseConstant.STATE_TASK_PROCESSING);
-    task.setVideoPath(data.getUrl());
-    taskRepository.save(task);
-    apiMessageDto.setMessage("");
     return apiMessageDto;
   }
 }
