@@ -1,5 +1,6 @@
 package com.base.auth.model;
 
+import com.base.auth.constant.UserBaseConstant;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
@@ -34,6 +35,7 @@ public class Task{
   private String imagePath;
   private String filePath;
   private String videoPath;
+  private Integer state = UserBaseConstant.STATE_TASK_INIT;
   private Integer maxErrors = 0;
   private Integer totalQuestion = 0;
   private Integer kind;

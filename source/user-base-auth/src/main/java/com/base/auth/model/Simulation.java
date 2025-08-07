@@ -1,5 +1,6 @@
 package com.base.auth.model;
 
+import com.base.auth.constant.UserBaseConstant;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
@@ -32,6 +33,7 @@ public class Simulation extends Auditable<String>{
   private String totalEstimatedTime = "0";
   private String imagePath;
   private String videoPath;
+  private Integer state = UserBaseConstant.STATE_SIMULATION_INIT;
   private Float avgRating = 0F;
   private Integer participantQuantity = 0;
   @ManyToOne

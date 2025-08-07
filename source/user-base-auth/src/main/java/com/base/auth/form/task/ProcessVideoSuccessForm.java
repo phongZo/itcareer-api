@@ -3,7 +3,7 @@ package com.base.auth.form.task;
 import lombok.Data;
 
 @Data
-public class UpdateTaskVideoForm {
+public class ProcessVideoSuccessForm {
   private Long simulationId;
   private Long taskId;
   private String thumbnail;

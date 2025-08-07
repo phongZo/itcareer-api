@@ -10,8 +10,8 @@ import com.base.auth.dto.task.TaskEducatorDto;
 import com.base.auth.dto.task.TaskStudentDto;
 import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
-import com.base.auth.form.MediaCompletedRequestForm;
 import com.base.auth.form.task.CreateTaskForm;
+import com.base.auth.form.task.RequestProcessVideoMessageForm;
 import com.base.auth.form.task.UpdateTaskForm;
 import com.base.auth.mapper.TaskMapper;
 import com.base.auth.model.Simulation;
@@ -22,12 +22,12 @@ import com.base.auth.repository.StudentSubTaskProgressRepository;
 import com.base.auth.repository.StudentTaskQuestionProgressRepository;
 import com.base.auth.repository.TaskQuestionRepository;
 import com.base.auth.repository.TaskRepository;
+import com.base.auth.service.ProcessVideoService;
 import java.util.List;
 import java.util.Objects;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -66,6 +66,9 @@ public class TaskController extends ABasicController{
 
   @Autowired
   StudentTaskQuestionProgressRepository studentTaskQuestionProgressRepository;
+
+  @Autowired
+  ProcessVideoService processVideoService;
 
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('TA_C')")
@@ -296,14 +299,23 @@ public class TaskController extends ABasicController{
     return apiMessageDto;
   }
 
-  @RabbitListener(queues = UserBaseConstant.MEDIA_COMPLETED_PROCESS_VIDEO)
-  public void handleUpdateVideoPath(MediaCompletedRequestForm mediaCompletedRequestForm) {
-    if (!simulationRepository.existsById(mediaCompletedRequestForm.getData().getSimulationId())){
+  @PutMapping(value = "/video-process", produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasRole('TA_VP')")
+  public ApiMessageDto<String> processVideo(@Valid @RequestBody RequestProcessVideoMessageForm data, BindingResult bindingResult){
+    ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
+    if (!isEducator()){
+      throw new BadRequestException("User is not an educator", ErrorCode.USER_ERROR_NOT_EDUCATOR);
+    }
+    if (!simulationRepository.existsById(data.getSimulationId())){
       throw new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND);
     }
-    Task task = taskRepository.findById(mediaCompletedRequestForm.getData().getTaskId()).orElseThrow(()
-    -> new NotFoundException("Task not found",ErrorCode.TASK_ERROR_NOT_FOUND));
-    task.setVideoPath(mediaCompletedRequestForm.getData().getContentPath());
+    Task task = taskRepository.findById(data.getTaskId()).orElseThrow(()
+    -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
+    processVideoService.sendProcessVideoMessage(data);
+    task.setState(UserBaseConstant.STATE_TASK_PROCESSING);
+    task.setVideoPath(data.getUrl());
     taskRepository.save(task);
+    apiMessageDto.setMessage("");
+    return apiMessageDto;
   }
 }

@@ -9,4 +9,14 @@
     <changeSet author="Authentication" id="1754467903186-1">
         <dropTable tableName="db_user_base_category"/>
     </changeSet>
+    <changeSet author="Authentication" id="1754540031770-1">
+        <addColumn tableName="db_user_base_simulation">
+            <column name="state" type="integer"/>
+        </addColumn>
+    </changeSet>
+    <changeSet author="Authentication" id="1754540031770-2">
+        <addColumn tableName="db_user_base_task">
+            <column name="state" type="integer"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

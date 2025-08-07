@@ -25,9 +25,15 @@ public class UserBaseConstant {
     public static final Integer STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED = 1;
     public static final Integer STATE_STUDENT_SUBTASK_PROGRESS_IN_PROGRESS = 2;
 
+    public static final Integer STATE_SIMULATION_INIT = 0;
     public static final Integer STATE_SIMULATION_PROCESSING = 1;
     public static final Integer STATE_SIMULATION_DONE = 2;
     public static final Integer STATE_SIMULATION_FAIL = 3;
+
+    public static final Integer STATE_TASK_INIT = 0;
+    public static final Integer STATE_TASK_PROCESSING = 1;
+    public static final Integer STATE_TASK_DONE = 2;
+    public static final Integer STATE_TASK_FAIL = 3;
 
     public static final Integer RESTART_ERROR_COUNT = 0;
 
@@ -36,7 +42,8 @@ public class UserBaseConstant {
     public static final Integer QUESTION_TYPE_MULTIPLE_CHOICE = 3;
     public static final List<Integer> QUESTION_TYPES = List.of(QUESTION_TYPE_FILE, QUESTION_TYPE_TEXT, QUESTION_TYPE_MULTIPLE_CHOICE);
 
-    public static final String MEDIA_COMPLETED_PROCESS_VIDEO = "ITCAREER_QUEUE_MEDIA_COMPLETED_PROCESS_VIDEO";
+    public static final String BACKEND_PROCESS_VIDEO_CMD = "BACKEND_PROCESS_VIDEO";
+    public static final String MEDIA_COMPLETED_PROCESS_VIDEO_CMD = "MEDIA_COMPLETED_PROCESS_VIDEO";
 
     public static final Integer GROUP_KIND_ADMIN = 1;
     public static final Integer GROUP_KIND_MANAGER = 2;
@@ -46,14 +53,9 @@ public class UserBaseConstant {
     public static final int MAX_TIME_FORGET_PWD = 5 * 60 * 1000; //5 minutes
     public static final Integer MAX_ATTEMPT_LOGIN = 5;
 
-    public static final Integer CATEGORY_KIND_NEWS = 1;
-
     public static final String PASSWORD_PATTERN = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$";
     public static final String EMAIL_PATTERN = "^\\S+@\\S+\\.\\S+$";
     public static final String PHONE_PATTERN = "^0\\d{9}$";
-
-    public static final String[] UPLOAD_TYPES = new String[]{"LOGO", "AVATAR", "IMAGE"};
-    public static final String[] AVATAR_EXTENSION = new String[]{"jpeg", "jpg", "gif", "bmp", "png"};
 
     private UserBaseConstant(){
         throw new IllegalStateException("Utility class");
