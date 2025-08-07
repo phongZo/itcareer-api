@@ -122,7 +122,7 @@ public class TaskController extends ABasicController{
 
     if (createTaskForm.getVideoPath() != null){
       RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
-      data.setTaskId(task.getId());
+      data.setId(task.getId());
       data.setKind(UserBaseConstant.KIND_TASK);
       data.setUrl(createTaskForm.getVideoPath());
       data.setTsSecond(tsSecond);

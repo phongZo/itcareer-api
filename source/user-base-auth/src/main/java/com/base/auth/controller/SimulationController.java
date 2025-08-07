@@ -106,7 +106,7 @@ public class SimulationController extends ABasicController{
     simulationRepository.save(simulation);
     if (createSimulationForm.getVideoPath() != null){
       RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
-      data.setSimulationId(simulation.getId());
+      data.setId(simulation.getId());
       data.setKind(UserBaseConstant.KIND_SIMULATION);
       data.setUrl(createSimulationForm.getVideoPath());
       data.setTsSecond(tsSecond);

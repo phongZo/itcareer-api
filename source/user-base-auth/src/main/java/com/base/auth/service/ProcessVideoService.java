@@ -58,7 +58,7 @@ public class ProcessVideoService {
       }
       if(form.getCmd().equals(UserBaseConstant.MEDIA_COMPLETED_PROCESS_VIDEO_CMD)){
         ProcessVideoSuccessForm data = objectMapper.convertValue(form.getData(), ProcessVideoSuccessForm.class);
-        if (data.getTaskId() != null){
+        if (Objects.equals(data.getKind(), UserBaseConstant.KIND_TASK)){
           // update task when received data success
           updateTaskProcessed(data);
         } else {
@@ -73,7 +73,7 @@ public class ProcessVideoService {
 
   void updateTaskProcessed(ProcessVideoSuccessForm processVideoSuccessForm){
     log.info("Update state task processed.............");
-    Task task = taskRepository.findById(processVideoSuccessForm.getTaskId()).orElse(null);
+    Task task = taskRepository.findById(processVideoSuccessForm.getId()).orElse(null);
     if (task != null){
       if (!processVideoSuccessForm.getIsSuccess()){
         task.setState(UserBaseConstant.STATE_TASK_FAIL);
@@ -87,7 +87,7 @@ public class ProcessVideoService {
 
   void updateSimulationProcessed(ProcessVideoSuccessForm processVideoSuccessForm){
     log.info("Update state simulation processed.............");
-    Simulation simulation = simulationRepository.findById(processVideoSuccessForm.getSimulationId()).orElse(null);
+    Simulation simulation = simulationRepository.findById(processVideoSuccessForm.getId()).orElse(null);
     if (simulation != null){
       if (!processVideoSuccessForm.getIsSuccess()){
         simulation.setState(UserBaseConstant.STATE_SIMULATION_FAIL);
