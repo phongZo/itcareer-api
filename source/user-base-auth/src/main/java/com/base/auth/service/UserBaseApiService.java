@@ -39,8 +39,10 @@ public class UserBaseApiService {
                 log.warn("======> Empty path provided, skip delete");
                 return;
             }
+
             String cleanedPath = filePath.startsWith("/") ? filePath.substring(1) : filePath;
             String[] parts = cleanedPath.split("/", 2);
+
             if (parts.length < 2) {
                 log.warn("======> Invalid path format: {}", filePath);
                 return;
@@ -50,17 +52,17 @@ public class UserBaseApiService {
             String subPath = parts[1];
             String basePath = uploadDir + UserBaseConstant.DIRECTORY_GENERAL + "/" + rootFolder;
             Path subPathObj = Paths.get(subPath);
+            boolean isFolderKind = !subPathObj.getFileName().toString().contains(".");
 
-            if ("video".equalsIgnoreCase(rootFolder)) {
+            if (isFolderKind) {
                 String folderName = subPathObj.getName(0).toString();
                 File targetFolder = new File(basePath + "/" + folderName);
-
-                log.info("======> Deleting video folder: {}", targetFolder.getAbsolutePath());
+                log.info("======> Deleting folder: {}", targetFolder.getAbsolutePath());
                 if (targetFolder.exists() && targetFolder.isDirectory()) {
                     deleteDirectory(targetFolder.toPath());
-                    log.info("======> Video folder '{}' deleted successfully", targetFolder.getAbsolutePath());
+                    log.info("======> Folder '{}' deleted successfully", targetFolder.getAbsolutePath());
                 } else {
-                    log.warn("======> Video folder not found: {}", targetFolder.getAbsolutePath());
+                    log.warn("======> Folder not found or not a directory: {}", targetFolder.getAbsolutePath());
                 }
             } else {
                 File targetFile = new File(basePath + "/" + subPath);
@@ -72,7 +74,7 @@ public class UserBaseApiService {
                         log.warn("======> Failed to delete file: {}", targetFile.getAbsolutePath());
                     }
                 } else {
-                    log.warn("======> File not found: {}", targetFile.getAbsolutePath());
+                    log.warn("======> File not found or is not a file: {}", targetFile.getAbsolutePath());
                 }
             }
         } catch (Exception e) {
@@ -86,8 +88,7 @@ public class UserBaseApiService {
             .map(Path::toFile)
             .forEach(File::delete);
     }
-
-
+    
     public String getRequestOTP(){
         return userBaseOTPService.generate(6);
     }
