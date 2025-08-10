@@ -23,11 +23,13 @@ import com.base.auth.repository.StudentTaskQuestionProgressRepository;
 import com.base.auth.repository.TaskQuestionRepository;
 import com.base.auth.repository.TaskRepository;
 import com.base.auth.service.ProcessVideoService;
+import com.base.auth.service.UserBaseApiService;
 import java.util.List;
 import java.util.Objects;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -112,7 +114,7 @@ public class TaskController extends ABasicController{
           .orElseThrow(() -> new NotFoundException("Task parent not found", ErrorCode.TASK_ERROR_PARENT_NOT_FOUND));
       task.setParent(parentTask);
     }
-    if (createTaskForm.getVideoPath() != null){
+    if (StringUtils.isNotBlank(createTaskForm.getVideoPath())){
       task.setState(UserBaseConstant.STATE_TASK_PROCESSING);
     } else {
       task.setState(UserBaseConstant.STATE_TASK_DONE);
@@ -120,7 +122,7 @@ public class TaskController extends ABasicController{
     task.setSimulation(simulation);
     taskRepository.save(task);
 
-    if (createTaskForm.getVideoPath() != null){
+    if (StringUtils.isNotBlank(createTaskForm.getVideoPath())){
       RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
       data.setId(task.getId());
       data.setKind(UserBaseConstant.KIND_TASK);
@@ -275,6 +277,41 @@ public class TaskController extends ABasicController{
       }
     }
 
+    if (StringUtils.isNotBlank(updateTaskForm.getVideoPath())){
+      if (StringUtils.isNotBlank(task.getVideoPath())){
+        if (!Objects.equals(task.getVideoPath(), updateTaskForm.getVideoPath())){
+          userBaseApiService.deleteByFilePath(task.getVideoPath());
+          RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
+          data.setId(updateTaskForm.getId());
+          data.setUrl(updateTaskForm.getVideoPath());
+          data.setKind(UserBaseConstant.KIND_TASK);
+          data.setTsSecond(tsSecond);
+          processVideoService.sendProcessVideoMessage(data);
+        }
+      } else {
+        RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
+        data.setId(updateTaskForm.getId());
+        data.setUrl(updateTaskForm.getVideoPath());
+        data.setKind(UserBaseConstant.KIND_TASK);
+        data.setTsSecond(tsSecond);
+        processVideoService.sendProcessVideoMessage(data);
+      }
+    }
+
+    if (StringUtils.isNotBlank(updateTaskForm.getImagePath())){
+      if (StringUtils.isNotBlank(task.getImagePath()) && !Objects.equals(task.getImagePath(), updateTaskForm.getImagePath())){
+        userBaseApiService.deleteByFilePath(task.getImagePath());
+      }
+      task.setImagePath(updateTaskForm.getImagePath());
+    }
+
+    if (StringUtils.isNotBlank(updateTaskForm.getFilePath())) {
+      if (StringUtils.isNotBlank(task.getFilePath()) && !Objects.equals(task.getFilePath(), updateTaskForm.getFilePath())){
+        userBaseApiService.deleteByFilePath(task.getFilePath());
+      }
+      task.setFilePath(updateTaskForm.getFilePath());
+    }
+
     taskMapper.fromUpdateTaskFormToEntity(updateTaskForm, task);
     taskRepository.save(task);
 
@@ -302,15 +339,31 @@ public class TaskController extends ABasicController{
     studentTaskQuestionProgressRepository.deleteAllByTaskAndSubtask(id);
     studentSubTaskProgressRepository.deleteAllByTaskAndSubtask(id);
     taskQuestionRepository.deleteAllByTaskAndSubtask(id);
-    if (Objects.equals(task.getKind(), UserBaseConstant.TASK_KIND_TASK)){
+
+    if (Objects.equals(task.getKind(), UserBaseConstant.TASK_KIND_SUBTASK)) {
+      deleteTaskFiles(task);
+      taskRepository.delete(task);
+    } else if (Objects.equals(task.getKind(), UserBaseConstant.TASK_KIND_TASK)) {
+      deleteTaskFiles(task);
+      List<Task> subTasks = taskRepository.findAllByParentId(id);
+      for (Task subTask : subTasks) {
+        deleteTaskFiles(subTask);
+      }
       taskRepository.deleteAllByParentId(id);
+      taskRepository.delete(task);
     }
-    taskRepository.delete(task);
+
     if (Objects.equals(simulation.getStatus(), UserBaseConstant.STATUS_ACTIVE)){
       simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
       simulationRepository.save(simulation);
     }
     apiMessageDto.setMessage("Delete task success");
     return apiMessageDto;
+  }
+
+  private void deleteTaskFiles(Task task) {
+    userBaseApiService.deleteByFilePath(task.getImagePath());
+    userBaseApiService.deleteByFilePath(task.getFilePath());
+    userBaseApiService.deleteByFilePath(task.getVideoPath());
   }
 }

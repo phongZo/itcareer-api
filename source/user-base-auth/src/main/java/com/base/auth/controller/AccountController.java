@@ -50,9 +50,6 @@ public class AccountController extends ABasicController{
     AccountMapper accountMapper;
 
     @Autowired
-    UserBaseApiService userBaseApiService;
-
-    @Autowired
     StudentRepository studentRepository;
 
     @Autowired
@@ -114,7 +111,7 @@ public class AccountController extends ABasicController{
         if (StringUtils.isNoneBlank(updateAccountAdminForm.getAvatarPath())) {
             if(!updateAccountAdminForm.getAvatarPath().equals(account.getAvatarPath())){
                 //delete old image
-                userBaseApiService.deleteFile(account.getAvatarPath());
+                userBaseApiService.deleteByFilePath(account.getAvatarPath());
             }
             account.setAvatarPath(updateAccountAdminForm.getAvatarPath());
         }
@@ -158,7 +155,7 @@ public class AccountController extends ABasicController{
             return apiMessageDto;
         }
         //delete avatar file
-        userBaseApiService.deleteFile(account.getAvatarPath());
+        userBaseApiService.deleteByFilePath(account.getAvatarPath());
         studentRepository.deleteAllByAccountId(id);
         accountRepository.deleteById(id);
         apiMessageDto.setMessage("Delete Account success");

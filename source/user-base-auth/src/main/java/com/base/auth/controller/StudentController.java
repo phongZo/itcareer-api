@@ -79,9 +79,6 @@ public class StudentController extends ABasicController{
   private GroupRepository groupRepository;
 
   @Autowired
-  private UserBaseApiService userBaseApiService;
-
-  @Autowired
   private StudentSubTaskProgressRepository studentSubTaskProgressRepository;
 
   @Autowired
@@ -239,8 +236,9 @@ public class StudentController extends ABasicController{
 
     if (StringUtils.isNotBlank(updateStudentForm.getAvatarPath())) {
       if (!updateStudentForm.getAvatarPath().equals(account.getAvatarPath())){
-        userBaseApiService.deleteFile(account.getAvatarPath());
+        userBaseApiService.deleteByFilePath(account.getAvatarPath());
       }
+      account.setAvatarPath(updateStudentForm.getAvatarPath());
     }
 
     accountMapper.fromUpdateStudentFormToEntity(updateStudentForm, account);
@@ -268,6 +266,7 @@ public class StudentController extends ABasicController{
       return apiMessageDto;
     }
 
+    userBaseApiService.deleteByFilePath(student.getAccount().getAvatarPath());
     studentTaskQuestionProgressRepository.deleteAllByStudentId(id);
     studentSubTaskProgressRepository.deleteAllByStudentId(id);
     studentRepository.delete(student);
@@ -311,8 +310,9 @@ public class StudentController extends ABasicController{
 
     if (StringUtils.isNotBlank(updateStudentForm.getAvatarPath())) {
       if (!updateStudentForm.getAvatarPath().equals(currentAccount.getAvatarPath())){
-        userBaseApiService.deleteFile(currentAccount.getAvatarPath());
+        userBaseApiService.deleteByFilePath(currentAccount.getAvatarPath());
       }
+      currentAccount.setAvatarPath(updateStudentForm.getAvatarPath());
     }
 
     accountMapper.fromUpdateProfileStudentFormToEntity(updateStudentForm, currentAccount);

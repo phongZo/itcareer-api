@@ -1,6 +1,7 @@
 package com.base.auth.repository;
 
 import com.base.auth.model.Task;
+import java.util.List;
 import java.util.Optional;
 import javax.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -47,4 +48,14 @@ public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificat
   boolean existsByNameAndKindAndSimulationId(String name, Integer taskKindTask, Long simulationId);
 
   boolean existsByTitleAndKindAndSimulationId(String title, Integer taskKindTask, Long simulationId);
+
+  List<Task> findAllByParentId(Long id);
+
+  List<Task> findAllBySimulationId(Long simulationId);
+
+  @Query("SELECT t FROM Task t " +
+      "JOIN t.simulation s " +
+      "JOIN s.educator e " +
+      "WHERE e.id = :educatorId")
+  List<Task> findAllByEducatorId(@Param("educatorId") Long educatorId);
 }

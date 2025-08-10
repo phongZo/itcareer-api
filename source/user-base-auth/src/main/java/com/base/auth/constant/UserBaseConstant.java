@@ -1,10 +1,13 @@
 package com.base.auth.constant;
 
+import java.io.File;
 import java.util.List;
 
 public class UserBaseConstant {
     public static final String DATE_FORMAT = "dd/MM/yyyy";
     public static final String DATE_TIME_FORMAT = "dd/MM/yyyy HH:mm:ss";
+
+    public static final String DIRECTORY_GENERAL = File.separator + "general";
 
     public static final Integer USER_KIND_ADMIN = 1;
     public static final Integer USER_KIND_MANAGER = 2;

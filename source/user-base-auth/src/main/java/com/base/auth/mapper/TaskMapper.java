@@ -27,6 +27,8 @@ public interface TaskMapper {
   @Mapping(source = "introduction", target = "introduction")
   @Mapping(source = "content", target = "content")
   @Mapping(source = "kind", target = "kind")
+  @Mapping(source = "imagePath", target = "imagePath")
+  @Mapping(source = "filePath", target = "filePath")
   @BeanMapping(ignoreByDefault = true)
   Task fromCreateTaskFormToEntity(CreateTaskForm createTaskForm);
 
