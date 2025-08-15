@@ -58,12 +58,10 @@ public interface AccountMapper {
     Account fromSignUpEducatorToAccount(SignUpEducatorForm signUpEducatorForm);
 
     @Mapping(source = "fullName",target = "fullName")
-    @Mapping(source = "avatarPath",target = "avatarPath")
     @BeanMapping(ignoreByDefault = true)
     void fromUpdateStudentFormToEntity(UpdateStudentForm updateStudentForm, @MappingTarget Account account );
 
     @Mapping(source = "fullName",target = "fullName")
-    @Mapping(source = "avatarPath",target = "avatarPath")
     @BeanMapping(ignoreByDefault = true)
     void fromUpdateEducatorFormToEntity(UpdateEducatorForm updateEducatorForm, @MappingTarget Account account );
 
@@ -78,12 +76,10 @@ public interface AccountMapper {
     ProfileAccountDto fromAccountToProfileDto(Account account);
 
     @Mapping(source = "fullname", target = "fullName")
-    @Mapping(source = "avatarPath", target = "avatarPath")
     @BeanMapping(ignoreByDefault = true)
     void fromUpdateProfileStudentFormToEntity(UpdateProfileStudentForm updateProfileStudentForm, @MappingTarget Account account);
 
     @Mapping(source = "fullname", target = "fullName")
-    @Mapping(source = "avatarPath", target = "avatarPath")
     @BeanMapping(ignoreByDefault = true)
     void fromUpdateProfileEducatorFormToEntity(UpdateProfileEducatorForm updateProfileEducatorForm, @MappingTarget Account account);
 }

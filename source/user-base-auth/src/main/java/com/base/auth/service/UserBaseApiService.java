@@ -1,7 +1,13 @@
 package com.base.auth.service;
 
+import com.base.auth.constant.UserBaseConstant;
 import com.base.auth.model.Permission;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,13 +33,62 @@ public class UserBaseApiService {
 
     private Map<String, Long> storeQRCodeRandom = new ConcurrentHashMap<>();
 
-    public void deleteFile(String filePath) {
-        File file = new File(uploadDir + filePath);
-        if (file.exists()){
-            file.delete();
+    public void deleteByFilePath(String filePath) {
+        try {
+            if (filePath == null || filePath.trim().isEmpty()) {
+                log.warn("======> Empty path provided, skip delete");
+                return;
+            }
+
+            String cleanedPath = filePath.startsWith("/") ? filePath.substring(1) : filePath;
+            String[] parts = cleanedPath.split("/", 2);
+
+            if (parts.length < 2) {
+                log.warn("======> Invalid path format: {}", filePath);
+                return;
+            }
+
+            String rootFolder = parts[0]; // video, avatar, image, document...
+            String subPath = parts[1];
+            String basePath = uploadDir + UserBaseConstant.DIRECTORY_GENERAL + "/" + rootFolder;
+            Path subPathObj = Paths.get(subPath);
+            boolean isFolderKind = !subPathObj.getFileName().toString().contains(".");
+
+            if (isFolderKind) {
+                String folderName = subPathObj.getName(0).toString();
+                File targetFolder = new File(basePath + "/" + folderName);
+                log.info("======> Deleting folder: {}", targetFolder.getAbsolutePath());
+                if (targetFolder.exists() && targetFolder.isDirectory()) {
+                    deleteDirectory(targetFolder.toPath());
+                    log.info("======> Folder '{}' deleted successfully", targetFolder.getAbsolutePath());
+                } else {
+                    log.warn("======> Folder not found or not a directory: {}", targetFolder.getAbsolutePath());
+                }
+            } else {
+                File targetFile = new File(basePath + "/" + subPath);
+                log.info("======> Deleting file: {}", targetFile.getAbsolutePath());
+                if (targetFile.exists() && targetFile.isFile()) {
+                    if (targetFile.delete()) {
+                        log.info("======> File '{}' deleted successfully", targetFile.getAbsolutePath());
+                    } else {
+                        log.warn("======> Failed to delete file: {}", targetFile.getAbsolutePath());
+                    }
+                } else {
+                    log.warn("======> File not found or is not a file: {}", targetFile.getAbsolutePath());
+                }
+            }
+        } catch (Exception e) {
+            log.error("======> Error occurred while deleting path: {}", filePath, e);
         }
     }
 
+    private void deleteDirectory(Path path) throws IOException {
+        Files.walk(path)
+            .sorted(Comparator.reverseOrder())
+            .map(Path::toFile)
+            .forEach(File::delete);
+    }
+    
     public String getRequestOTP(){
         return userBaseOTPService.generate(6);
     }

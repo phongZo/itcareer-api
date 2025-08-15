@@ -20,6 +20,8 @@ import com.base.auth.mapper.EducatorMapper;
 import com.base.auth.model.Account;
 import com.base.auth.model.Educator;
 import com.base.auth.model.Group;
+import com.base.auth.model.Simulation;
+import com.base.auth.model.Task;
 import com.base.auth.model.criteria.EducatorCriteria;
 import com.base.auth.repository.AccountRepository;
 import com.base.auth.repository.EducatorRepository;
@@ -79,9 +81,6 @@ public class EducatorController extends ABasicController{
 
   @Autowired
   GroupRepository groupRepository;
-
-  @Autowired
-  UserBaseApiService userBaseApiService;
 
   @Autowired
   SimulationRepository simulationRepository;
@@ -251,8 +250,9 @@ public class EducatorController extends ABasicController{
 
     if (StringUtils.isNotBlank(updateEducatorForm.getAvatarPath())) {
       if (!updateEducatorForm.getAvatarPath().equals(account.getAvatarPath())){
-        userBaseApiService.deleteFile(account.getAvatarPath());
+        userBaseApiService.deleteByFilePath(account.getAvatarPath());
       }
+      account.setAvatarPath(updateEducatorForm.getAvatarPath());
     }
 
     accountMapper.fromUpdateEducatorFormToEntity(updateEducatorForm, account);
@@ -280,6 +280,17 @@ public class EducatorController extends ABasicController{
       return apiMessageDto;
     }
 
+    List<Task> tasks = taskRepository.findAllByEducatorId(id);
+    for (Task task : tasks){
+      deleteTaskFiles(task);
+    }
+
+    List<Simulation> simulations = simulationRepository.findAllByEducatorId(id);
+    for (Simulation simulation : simulations){
+      deleteSimulationFiles(simulation);
+    }
+
+    userBaseApiService.deleteByFilePath(educator.getAccount().getAvatarPath());
     studentTaskQuestionProgressRepository.deleteAllByEducatorId(id);
     studentSubTaskProgressRepository.deleteAllByEducatorId(id);
     taskQuestionRepository.deleteAllByEducatorId(id);
@@ -327,8 +338,9 @@ public class EducatorController extends ABasicController{
 
     if (StringUtils.isNotBlank(updateEducatorForm.getAvatarPath())) {
       if (!updateEducatorForm.getAvatarPath().equals(currentAccount.getAvatarPath())){
-        userBaseApiService.deleteFile(currentAccount.getAvatarPath());
+        userBaseApiService.deleteByFilePath(currentAccount.getAvatarPath());
       }
+      currentAccount.setAvatarPath(updateEducatorForm.getAvatarPath());
     }
 
     accountMapper.fromUpdateProfileEducatorFormToEntity(updateEducatorForm, currentAccount);
@@ -422,5 +434,16 @@ public class EducatorController extends ABasicController{
     accountRepository.save(account);
     apiMessageDto.setMessage("Reject educator success");
     return apiMessageDto;
+  }
+
+  private void deleteSimulationFiles(Simulation simulation) {
+    userBaseApiService.deleteByFilePath(simulation.getImagePath());
+    userBaseApiService.deleteByFilePath(simulation.getVideoPath());
+  }
+
+  private void deleteTaskFiles(Task task) {
+    userBaseApiService.deleteByFilePath(task.getImagePath());
+    userBaseApiService.deleteByFilePath(task.getFilePath());
+    userBaseApiService.deleteByFilePath(task.getVideoPath());
   }
 }

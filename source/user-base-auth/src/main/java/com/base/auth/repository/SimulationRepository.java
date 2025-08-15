@@ -1,6 +1,7 @@
 package com.base.auth.repository;
 
 import com.base.auth.model.Simulation;
+import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
@@ -18,4 +19,6 @@ public interface SimulationRepository extends JpaRepository<Simulation, Long>,
   Optional<Simulation> findByTitleAndEducatorId(String title, long educatorId);
 
   void deleteAllByEducatorId(Long educatorId);
+
+  List<Simulation> findAllByEducatorId(Long educatorId);
 }

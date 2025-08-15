@@ -41,7 +41,7 @@ public class ABasicController {
     StudentRepository studentRepository;
 
     @Autowired
-    private UserBaseApiService userBaseApiService;
+    protected UserBaseApiService userBaseApiService;
 
     @Value("${ts.second}")
     protected Integer tsSecond;

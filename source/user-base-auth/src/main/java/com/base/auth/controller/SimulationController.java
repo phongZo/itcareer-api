@@ -17,6 +17,7 @@ import com.base.auth.mapper.SimulationMapper;
 import com.base.auth.model.Educator;
 import com.base.auth.model.Simulation;
 import com.base.auth.model.Specialization;
+import com.base.auth.model.Task;
 import com.base.auth.model.criteria.SimulationCriteria;
 import com.base.auth.repository.EducatorRepository;
 import com.base.auth.repository.SimulationRepository;
@@ -31,6 +32,7 @@ import java.util.Objects;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -241,6 +243,35 @@ public class SimulationController extends ABasicController{
     if (!Objects.equals(UserBaseConstant.STATUS_ACTIVE, simulation.getStatus())){
       throw new BadRequestException("Simulation cannot active", ErrorCode.SIMULATION_ERROR_NOT_ACTIVE);
     }
+
+    if (StringUtils.isNotBlank(updateSimulationForm.getVideoPath())){
+      if (StringUtils.isNotBlank(simulation.getVideoPath())){
+        if (!Objects.equals(simulation.getVideoPath(), updateSimulationForm.getVideoPath())){
+          userBaseApiService.deleteByFilePath(simulation.getVideoPath());
+          RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
+          data.setId(simulation.getId());
+          data.setKind(UserBaseConstant.KIND_SIMULATION);
+          data.setUrl(updateSimulationForm.getVideoPath());
+          data.setTsSecond(tsSecond);
+          processVideoService.sendProcessVideoMessage(data);
+        }
+      } else {
+        RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
+        data.setId(simulation.getId());
+        data.setKind(UserBaseConstant.KIND_SIMULATION);
+        data.setUrl(updateSimulationForm.getVideoPath());
+        data.setTsSecond(tsSecond);
+        processVideoService.sendProcessVideoMessage(data);
+      }
+    }
+
+    if (StringUtils.isNotBlank(updateSimulationForm.getImagePath())){
+      if (StringUtils.isNotBlank(simulation.getImagePath()) && !Objects.equals(simulation.getImagePath(), updateSimulationForm.getImagePath())){
+        userBaseApiService.deleteByFilePath(simulation.getImagePath());
+      }
+      simulation.setImagePath(updateSimulationForm.getImagePath());
+    }
+
     simulationMapper.fromUpdateSimulationFormToEntity(updateSimulationForm, simulation);
     simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
     simulationRepository.save(simulation);
@@ -258,6 +289,12 @@ public class SimulationController extends ABasicController{
     if (!Objects.equals(UserBaseConstant.STATUS_WAITING_APPROVE, simulation.getStatus())){
       throw new BadRequestException("Simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_DELETE);
     }
+    List<Task> tasks = taskRepository.findAllBySimulationId(id);
+    for (Task task : tasks){
+      deleteTaskFiles(task);
+    }
+    userBaseApiService.deleteByFilePath(simulation.getImagePath());
+    userBaseApiService.deleteByFilePath(simulation.getVideoPath());
     studentTaskQuestionProgressRepository.deleteAllBySimulationId(id);
     studentSubTaskProgressRepository.deleteAllBySimulationId(id);
     taskQuestionRepository.deleteAllBySimulationId(id);
@@ -329,5 +366,11 @@ public class SimulationController extends ABasicController{
     simulationRepository.save(simulation);
     apiMessageDto.setMessage("Reject simulation success");
     return apiMessageDto;
+  }
+
+  private void deleteTaskFiles(Task task) {
+    userBaseApiService.deleteByFilePath(task.getImagePath());
+    userBaseApiService.deleteByFilePath(task.getFilePath());
+    userBaseApiService.deleteByFilePath(task.getVideoPath());
   }
 }
