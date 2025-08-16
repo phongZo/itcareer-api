@@ -1,6 +1,6 @@
 package com.base.auth.validation;
 
-import com.base.auth.validation.impl.QuestionTypeValidation;
+import com.base.auth.validation.impl.StarValidation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -11,12 +11,12 @@ import javax.validation.Payload;
 
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = QuestionTypeValidation.class)
+@Constraint(validatedBy = StarValidation.class)
 @Documented
-public @interface QuestionType {
+public @interface Star {
   boolean allowNull() default false;
 
-  String message() default "Question type: 1 - File, 2 - Text, 3 - Multiple choice";
+  String message() default "Star invalid";
 
   Class<?>[] groups() default {};
 

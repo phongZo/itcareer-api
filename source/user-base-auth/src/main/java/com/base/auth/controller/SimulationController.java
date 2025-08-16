@@ -20,6 +20,7 @@ import com.base.auth.model.Specialization;
 import com.base.auth.model.Task;
 import com.base.auth.model.criteria.SimulationCriteria;
 import com.base.auth.repository.EducatorRepository;
+import com.base.auth.repository.ReviewRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.SpecializationRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
@@ -80,6 +81,9 @@ public class SimulationController extends ABasicController{
 
   @Autowired
   ProcessVideoService processVideoService;
+
+  @Autowired
+  ReviewRepository reviewRepository;
 
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('SI_C')")
@@ -300,6 +304,7 @@ public class SimulationController extends ABasicController{
     taskQuestionRepository.deleteAllBySimulationId(id);
     taskRepository.deleteAllSubTaskBySimulationId(id);
     taskRepository.deleteAllTaskBySimulationId(id);
+    reviewRepository.deleteBySimulationId(id);
     simulationRepository.delete(simulation);
     apiMessageDto.setMessage("Approve delete simulation success");
     return apiMessageDto;
