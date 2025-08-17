@@ -8,10 +8,12 @@ import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
 import com.base.auth.form.studentSubTaskProgress.RequestStudentSubTaskProgressForm;
 import com.base.auth.mapper.StudentSubTaskProgressMapper;
+import com.base.auth.model.Simulation;
 import com.base.auth.model.Student;
 import com.base.auth.model.StudentSubTaskProgress;
 import com.base.auth.model.StudentTaskQuestionProgress;
 import com.base.auth.model.Task;
+import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.StudentRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
 import com.base.auth.repository.StudentTaskQuestionProgressRepository;
@@ -52,6 +54,9 @@ public class StudentSubTaskProgressController extends ABasicController{
   @Autowired
   StudentTaskQuestionProgressRepository studentTaskQuestionProgressRepository;
 
+  @Autowired
+  SimulationRepository simulationRepository;
+
   @GetMapping(value = "/student-get/{taskId}", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('STSP_ST_V')")
   public ApiMessageDto<StudentSubTaskProgressDisplayDto> getForStudent(@PathVariable("taskId") Long taskId){
@@ -63,6 +68,10 @@ public class StudentSubTaskProgressController extends ABasicController{
     }
     Task task = taskRepository.findById(taskId).orElseThrow(()
     -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
+    Simulation simulation = task.getSimulation();
+    if (simulation == null){
+      throw new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND);
+    }
     StudentSubTaskProgress existStudentSubTaskProgress = studentSubTaskProgressRepository.findByTaskIdAndStudentId(
         task.getId(), getCurrentUser()).orElse(null);
     if (existStudentSubTaskProgress != null){
@@ -76,6 +85,8 @@ public class StudentSubTaskProgressController extends ABasicController{
       studentSubTaskProgress.setTask(task);
       studentSubTaskProgress.setState(UserBaseConstant.STATE_STUDENT_SUBTASK_PROGRESS_IN_PROGRESS);
       studentSubTaskProgressRepository.save(studentSubTaskProgress);
+      simulation.setParticipantQuantity(simulation.getParticipantQuantity() + 1);
+      simulationRepository.save(simulation);
       apiMessageDto.setMessage("Create success");
     }
     return apiMessageDto;

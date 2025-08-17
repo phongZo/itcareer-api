@@ -19,10 +19,14 @@ import com.base.auth.mapper.AccountMapper;
 import com.base.auth.mapper.StudentMapper;
 import com.base.auth.model.Account;
 import com.base.auth.model.Group;
+import com.base.auth.model.Review;
+import com.base.auth.model.Simulation;
 import com.base.auth.model.Student;
 import com.base.auth.model.criteria.StudentCriteria;
 import com.base.auth.repository.AccountRepository;
 import com.base.auth.repository.GroupRepository;
+import com.base.auth.repository.ReviewRepository;
+import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.StudentRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
 import com.base.auth.repository.StudentTaskQuestionProgressRepository;
@@ -83,6 +87,12 @@ public class StudentController extends ABasicController{
 
   @Autowired
   private StudentTaskQuestionProgressRepository studentTaskQuestionProgressRepository;
+
+  @Autowired
+  private ReviewRepository reviewRepository;
+
+  @Autowired
+  SimulationRepository simulationRepository;
 
   @PostMapping(value = "/signup", produces= MediaType.APPLICATION_JSON_VALUE)
   public ApiMessageDto<OtpDto> create(@Valid @RequestBody SignUpStudentForm signUpStudentForm, BindingResult bindingResult)
@@ -269,6 +279,21 @@ public class StudentController extends ABasicController{
     userBaseApiService.deleteByFilePath(student.getAccount().getAvatarPath());
     studentTaskQuestionProgressRepository.deleteAllByStudentId(id);
     studentSubTaskProgressRepository.deleteAllByStudentId(id);
+
+    List<Review> reviews = reviewRepository.findAllByStudentId(id);
+    for (Review review : reviews) {
+      Simulation simulation = review.getSimulation();
+      int totalReviewer = reviewRepository.countBySimulationId(simulation.getId());
+      reviewRepository.delete(review);
+
+      if (totalReviewer > 1) {
+        float avgRating = ((simulation.getAvgRating() * totalReviewer) - review.getStar()) / (totalReviewer - 1);
+        simulation.setAvgRating(avgRating);
+      } else {
+        simulation.setAvgRating(0F);
+      }
+      simulationRepository.save(simulation);
+    }
     studentRepository.delete(student);
     accountRepository.delete(account);
     apiMessageDto.setMessage("Delete student success");

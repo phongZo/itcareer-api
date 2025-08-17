@@ -19,6 +19,8 @@ public class UserBaseConstant {
     public static final Integer TASK_KIND_SUBTASK = 2;
     public static final List<Integer> TASK_KINDS = List.of(TASK_KIND_TASK, TASK_KIND_SUBTASK);
 
+    public static final List<Integer> STARS = List.of(1, 2, 3, 4, 5);
+
     public static final Integer STATUS_ACTIVE = 1;
     public static final Integer STATUS_PENDING = 0;
     public static final Integer STATUS_WAITING_APPROVE = 2;

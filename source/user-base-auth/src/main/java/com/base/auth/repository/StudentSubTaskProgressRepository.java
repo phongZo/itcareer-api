@@ -3,6 +3,7 @@ package com.base.auth.repository;
 import com.base.auth.model.StudentSubTaskProgress;
 import java.util.Optional;
 import javax.transaction.Transactional;
+import javax.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -30,16 +31,6 @@ public interface StudentSubTaskProgressRepository extends JpaRepository<StudentS
           "WHERE t.simulation_id = :simulationId", nativeQuery = true)
   void deleteAllBySimulationId(@Param("simulationId") Long simulationId);
 
-  //  @Modifying
-//  @Transactional
-//  @Query(value = "DELETE sstp FROM db_user_base_student_subtask_progress sstp " +
-//      "JOIN db_user_base_sub_task st ON sstp.subtask_id = st.id " +
-//      "JOIN db_user_base_task t ON st.task_id = t.id " +
-//      "JOIN db_user_base_simulation sim ON t.simulation_id = sim.id " +
-//      "JOIN db_user_base_educator edu ON sim.educator_id = edu.id " +
-//      "WHERE edu.id = :educatorId", nativeQuery = true)
-//  void deleteAllByEducatorId(@Param("educatorId") Long educatorId);
-
   @Modifying
   @Transactional
   @Query(value = "DELETE sstp FROM db_user_base_student_subtask_progress sstp " +
@@ -47,4 +38,6 @@ public interface StudentSubTaskProgressRepository extends JpaRepository<StudentS
           "JOIN db_user_base_simulation sim ON t.simulation_id = sim.id " +
           "WHERE sim.educator_id = :educatorId", nativeQuery = true)
   void deleteAllByEducatorId(@Param("educatorId") Long educatorId);
+
+  boolean existsByStudentIdAndTaskSimulationId(long studentId, Long simulationId);
 }
