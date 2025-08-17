@@ -3,12 +3,14 @@ package com.base.auth.mapper;
 import com.base.auth.dto.review.ReviewClientDto;
 import com.base.auth.dto.review.ReviewDto;
 import com.base.auth.form.review.CreateReviewForm;
+import com.base.auth.form.review.UpdateReviewForm;
 import com.base.auth.model.Review;
 import java.util.List;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
@@ -43,4 +45,9 @@ public interface ReviewMapper {
 
   @IterableMapping(elementTargetType = ReviewClientDto.class, qualifiedByName = "fromEntityToReviewClientDto")
   List<ReviewClientDto> fromEntityToReviewDtoClientList(List<Review> reviews);
+
+  @Mapping(source = "star", target = "star")
+  @Mapping(source = "comment", target = "comment")
+  @BeanMapping(ignoreByDefault = true)
+  void fromUpdateReviewFormToEntity(UpdateReviewForm updateReviewForm, @MappingTarget Review review);
 }

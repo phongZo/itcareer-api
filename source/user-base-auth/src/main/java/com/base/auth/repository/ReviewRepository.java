@@ -2,6 +2,7 @@ package com.base.auth.repository;
 
 import com.base.auth.model.Review;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
@@ -14,4 +15,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, JpaSpecif
   int countBySimulationId(Long simulationId);
 
   List<Review> findAllByStudentId(Long studentId);
+
+  boolean existsByStudentIdAndSimulationId(long studentId, Long simulationId);
 }

@@ -8,6 +8,7 @@ import com.base.auth.dto.review.ReviewDto;
 import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
 import com.base.auth.form.review.CreateReviewForm;
+import com.base.auth.form.review.UpdateReviewForm;
 import com.base.auth.mapper.ReviewMapper;
 import com.base.auth.model.Review;
 import com.base.auth.model.Simulation;
@@ -16,7 +17,9 @@ import com.base.auth.model.criteria.ReviewCriteria;
 import com.base.auth.repository.ReviewRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.StudentRepository;
+import com.base.auth.repository.StudentSubTaskProgressRepository;
 import java.util.List;
+import java.util.Objects;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -51,6 +55,9 @@ public class ReviewController extends ABasicController{
   @Autowired
   SimulationRepository simulationRepository;
 
+  @Autowired
+  StudentSubTaskProgressRepository subTaskProgressRepository;
+
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('RE_C')")
   public ApiMessageDto<String> create(@Valid @RequestBody CreateReviewForm createReviewForm, BindingResult bindingResult){
@@ -60,8 +67,14 @@ public class ReviewController extends ABasicController{
     if (!isStudent()){
       throw new BadRequestException("User is not a student", ErrorCode.USER_ERROR_NOT_STUDENT);
     }
+    if (reviewRepository.existsByStudentIdAndSimulationId(getCurrentUser(), createReviewForm.getSimulationId())){
+      throw new BadRequestException("Review was created by this student", ErrorCode.REVIEW_ERROR_EXIST);
+    }
     Simulation simulation = simulationRepository.findById(createReviewForm.getSimulationId()).orElseThrow(()
     -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
+    if (!subTaskProgressRepository.existsByStudentIdAndTaskSimulationId(getCurrentUser(), createReviewForm.getSimulationId())){
+      throw new BadRequestException("Student didn't participate in this simulation", ErrorCode.REVIEW_ERROR_NOT_CREATE);
+    }
     int totalReviewer = reviewRepository.countBySimulationId(createReviewForm.getSimulationId());
     Review review = reviewMapper.fromCreateReviewFormToEntity(createReviewForm);
     review.setStudent(student);
@@ -105,6 +118,38 @@ public class ReviewController extends ABasicController{
     return apiMessageDto;
   }
 
+  @PutMapping(value = "/update", produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasRole('RE_U')")
+  public ApiMessageDto<String> update(@Valid @RequestBody UpdateReviewForm updateReviewForm, BindingResult bindingResult){
+    ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
+    if (!isStudent()){
+      throw new BadRequestException("User is not a student", ErrorCode.USER_ERROR_NOT_STUDENT);
+    }
+    Review review = reviewRepository.findById(updateReviewForm.getId()).orElseThrow(()
+    -> new NotFoundException("Review not found", ErrorCode.REVIEW_ERROR_NOT_FOUND));
+    if (!Objects.equals(review.getStudent().getId(), getCurrentUser())){
+      throw new BadRequestException("Review cannot be updated", ErrorCode.REVIEW_ERROR_NOT_AUTHORIZE);
+    }
+    Simulation simulation = review.getSimulation();
+    if (simulation == null){
+      throw new BadRequestException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND);
+    }
+    if (!Objects.equals(review.getStar(), updateReviewForm.getStar())){
+      int totalReviewer = reviewRepository.countBySimulationId(simulation.getId());
+      if (totalReviewer > 1){
+        float avgRating = ((simulation.getAvgRating() * totalReviewer) - review.getStar() + updateReviewForm.getStar()) / (totalReviewer);
+        simulation.setAvgRating(avgRating);
+      } else {
+        simulation.setAvgRating(simulation.getAvgRating() - review.getStar() + updateReviewForm.getStar());
+      }
+    }
+    reviewMapper.fromUpdateReviewFormToEntity(updateReviewForm, review);
+    reviewRepository.save(review);
+    simulationRepository.save(simulation);
+    apiMessageDto.setMessage("Update success");
+    return apiMessageDto;
+  }
+
   @DeleteMapping(value = "/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiMessageDto<String> delete(@PathVariable("id") Long id){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
@@ -112,9 +157,9 @@ public class ReviewController extends ABasicController{
       throw new BadRequestException("User is not a student", ErrorCode.USER_ERROR_NOT_STUDENT);
     }
     Review review = reviewRepository.findById(id).orElseThrow(()
-    -> new NotFoundException("Review not found", ErrorCode.REVIEW_NOT_FOUND));
+    -> new NotFoundException("Review not found", ErrorCode.REVIEW_ERROR_NOT_FOUND));
     if (!review.getStudent().getId().equals(getCurrentUser())){
-      throw new BadRequestException("Review cannot deleted", ErrorCode.REVIEW_NOT_AUTHORIZE);
+      throw new BadRequestException("Review cannot deleted", ErrorCode.REVIEW_ERROR_NOT_AUTHORIZE);
     }
     Simulation simulation = review.getSimulation();
     if (simulation == null){
