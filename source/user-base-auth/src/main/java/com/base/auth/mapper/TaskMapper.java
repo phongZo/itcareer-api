@@ -51,6 +51,7 @@ public interface TaskMapper {
 
   @Mapping(source = "id", target = "id")
   @Mapping(source = "name", target = "name")
+  @Mapping(source = "title", target = "title")
   @Mapping(source = "description", target = "description")
   @Mapping(source = "introduction", target = "introduction")
   @Mapping(source = "simulation", target = "simulation", qualifiedByName = "fromEntityToSimulationClientDto")

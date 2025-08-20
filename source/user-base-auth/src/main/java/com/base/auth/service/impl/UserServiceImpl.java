@@ -3,10 +3,12 @@ package com.base.auth.service.impl;
 import com.base.auth.config.SecurityConstant;
 import com.base.auth.constant.UserBaseConstant;
 import com.base.auth.exception.BadRequestException;
+import com.base.auth.form.GoogleLoginForm;
 import com.base.auth.jwt.UserBaseJwt;
 import com.base.auth.model.Account;
 import com.base.auth.repository.AccountRepository;
 import com.base.auth.repository.GroupRepository;
+import com.base.auth.service.GoogleAuthService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -49,6 +51,9 @@ public class UserServiceImpl implements UserDetailsService {
 
     @Autowired
     private GroupRepository groupRepository;
+
+    @Autowired
+    private GoogleAuthService googleAuthService;
 
     @Override
     public UserDetails loadUserByUsername(String userId) {
@@ -161,6 +166,90 @@ public class UserServiceImpl implements UserDetailsService {
             log.error("Invalid password.");
             throw new UsernameNotFoundException("Invalid password.");
         }
+
+        if (!Objects.equals(UserBaseConstant.STATUS_ACTIVE, user.getStatus())){
+            throw new BadRequestException("< ERROR-ACCOUNT-0015 > - User is not active");
+        }
+
+        if(!Objects.equals(user.getKind(), UserBaseConstant.USER_KIND_EDUCATOR)){
+            throw new BadRequestException("< ERROR-ACCOUNT-0018 > - User is not a educator");
+        }
+
+        boolean enabled = true;
+        if (user.getStatus() != 1) {
+            log.error("User had been locked");
+            enabled = false;
+        }
+
+        requestParameters.put("email", user.getEmail());
+
+        Set<GrantedAuthority> grantedAuthorities = getAccountPermission(user);
+
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), enabled, true, true, true, grantedAuthorities);
+
+        OAuth2Request oAuth2Request = new OAuth2Request(requestParameters, clientId,
+            userDetails.getAuthorities(), approved, client.getScope(),
+            client.getResourceIds(), null, responseTypes, extensionProperties);
+        org.springframework.security.core.userdetails.User userPrincipal = new org.springframework.security.core.userdetails.User(userDetails.getUsername(), userDetails.getPassword(), userDetails.isEnabled(), userDetails.isAccountNonExpired(), userDetails.isCredentialsNonExpired(), userDetails.isAccountNonLocked(), userDetails.getAuthorities());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userPrincipal, null, userDetails.getAuthorities());
+        OAuth2Authentication auth = new OAuth2Authentication(oAuth2Request, authenticationToken);
+        return tokenServices.createAccessToken(auth);
+    }
+
+    public OAuth2AccessToken getAccessTokenForGoogleStudent(ClientDetails client, TokenRequest tokenRequest, GoogleLoginForm googleLoginForm, AuthorizationServerTokenServices tokenServices) throws GeneralSecurityException, IOException {
+        Map<String, String> requestParameters = new HashMap<>();
+        requestParameters.put("grantType", SecurityConstant.GRANT_TYPE_STUDENT);
+
+        String clientId = client.getClientId();
+        boolean approved = true;
+        Set<String> responseTypes = new HashSet<>();
+        responseTypes.add("code");
+        Map<String, Serializable> extensionProperties = new HashMap<>();
+
+        Account user = googleAuthService.authenticateWithGoogle(googleLoginForm);
+        user.setPassword("N/A");
+
+        if (!Objects.equals(UserBaseConstant.STATUS_ACTIVE, user.getStatus())){
+            throw new BadRequestException("< ERROR-ACCOUNT-0015 > - User is not active");
+        }
+
+        if(!Objects.equals(user.getKind(), UserBaseConstant.USER_KIND_STUDENT)){
+            throw new BadRequestException("< ERROR-ACCOUNT-0017 > - User is not a student");
+        }
+
+        boolean enabled = true;
+        if (user.getStatus() != 1) {
+            log.error("User had been locked");
+            enabled = false;
+        }
+
+        requestParameters.put("email", user.getEmail());
+
+        Set<GrantedAuthority> grantedAuthorities = getAccountPermission(user);
+
+        UserDetails userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), enabled, true, true, true, grantedAuthorities);
+
+        OAuth2Request oAuth2Request = new OAuth2Request(requestParameters, clientId,
+            userDetails.getAuthorities(), approved, client.getScope(),
+            client.getResourceIds(), null, responseTypes, extensionProperties);
+        org.springframework.security.core.userdetails.User userPrincipal = new org.springframework.security.core.userdetails.User(userDetails.getUsername(), userDetails.getPassword(), userDetails.isEnabled(), userDetails.isAccountNonExpired(), userDetails.isCredentialsNonExpired(), userDetails.isAccountNonLocked(), userDetails.getAuthorities());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userPrincipal, null, userDetails.getAuthorities());
+        OAuth2Authentication auth = new OAuth2Authentication(oAuth2Request, authenticationToken);
+        return tokenServices.createAccessToken(auth);
+    }
+
+    public OAuth2AccessToken getAccessTokenForGoogleEducator(ClientDetails client, TokenRequest tokenRequest, GoogleLoginForm googleLoginForm, AuthorizationServerTokenServices tokenServices) throws GeneralSecurityException, IOException {
+        Map<String, String> requestParameters = new HashMap<>();
+        requestParameters.put("grantType", SecurityConstant.GRANT_TYPE_EDUCATOR);
+
+        String clientId = client.getClientId();
+        boolean approved = true;
+        Set<String> responseTypes = new HashSet<>();
+        responseTypes.add("code");
+        Map<String, Serializable> extensionProperties = new HashMap<>();
+
+        Account user = googleAuthService.authenticateWithGoogle(googleLoginForm);
+        user.setPassword("N/A");
 
         if (!Objects.equals(UserBaseConstant.STATUS_ACTIVE, user.getStatus())){
             throw new BadRequestException("< ERROR-ACCOUNT-0015 > - User is not active");

@@ -175,4 +175,9 @@ public class ErrorCode {
     public static final String REVIEW_ERROR_EXIST = "REVIEW-ERROR-0001";
     public static final String REVIEW_ERROR_NOT_AUTHORIZE = "REVIEW-ERROR-0002";
     public static final String REVIEW_ERROR_NOT_CREATE = "REVIEW-ERROR-0003";
+
+    /**
+     * Starting error code Google
+     * */
+    public static final String GOOGLE_ERROR_ACCESS_TOKEN_INVALID = "GOOGLE-ERROR-0000";
 }
