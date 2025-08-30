@@ -11,4 +11,6 @@ public class RequestStudentSubTaskProgressForm {
   @NotNull(message = "task id cannot be null")
   @ApiModelProperty(name = "task id")
   private Long taskId;
+  @ApiModelProperty(name = "file path")
+  private String filePath;
 }

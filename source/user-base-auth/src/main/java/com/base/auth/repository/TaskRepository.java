@@ -58,4 +58,6 @@ public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificat
       "JOIN s.educator e " +
       "WHERE e.id = :educatorId")
   List<Task> findAllByEducatorId(@Param("educatorId") Long educatorId);
+
+  Long countBySimulationId(Long simulationId);
 }

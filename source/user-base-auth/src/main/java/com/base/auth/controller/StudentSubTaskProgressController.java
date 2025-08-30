@@ -8,11 +8,13 @@ import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
 import com.base.auth.form.studentSubTaskProgress.RequestStudentSubTaskProgressForm;
 import com.base.auth.mapper.StudentSubTaskProgressMapper;
+import com.base.auth.model.Achievement;
 import com.base.auth.model.Simulation;
 import com.base.auth.model.Student;
 import com.base.auth.model.StudentSubTaskProgress;
 import com.base.auth.model.StudentTaskQuestionProgress;
 import com.base.auth.model.Task;
+import com.base.auth.repository.AchievementRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.StudentRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
@@ -56,6 +58,9 @@ public class StudentSubTaskProgressController extends ABasicController{
 
   @Autowired
   SimulationRepository simulationRepository;
+
+  @Autowired
+  AchievementRepository achievementRepository;
 
   @GetMapping(value = "/student-get/{taskId}", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('STSP_ST_V')")
@@ -115,6 +120,17 @@ public class StudentSubTaskProgressController extends ABasicController{
       studentTaskQuestionProgressRepository.deleteAllByStudentSubTaskProgressId(studentSubTaskProgress.getId());
     }
     studentSubTaskProgressRepository.save(studentSubTaskProgress);
+    Long countTask = taskRepository.countBySimulationId(task.getSimulation().getId());
+    Long countStudentSubTaskProgress = studentSubTaskProgressRepository.countByStateAndStudentIdAndTaskSimulationId(UserBaseConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, getCurrentUser(), task.getSimulation().getId());
+    if (Objects.equals(countTask, countStudentSubTaskProgress)){
+      Student student = studentRepository.findById(getCurrentUser()).orElseThrow(()
+      -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
+      Achievement achievement = new Achievement();
+      achievement.setSimulation(task.getSimulation());
+      achievement.setStudent(student);
+      achievement.setFilePath(requestStudentSubTaskProgressForm.getFilePath());
+      achievementRepository.save(achievement);
+    }
     apiMessageDto.setMessage("Complete student subtask progress");
     return apiMessageDto;
   }

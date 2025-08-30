@@ -21,6 +21,7 @@ public class TaskCriteria {
   private Long simulationId;
   private Long educatorId;
   private Integer status;
+  private Long parentId;
 
   public Specification<Task> getSpecification() {
     return new Specification<Task>() {
@@ -32,6 +33,11 @@ public class TaskCriteria {
 
         Join<Task, Simulation> joinSimulation = root.join("simulation", JoinType.INNER);
         predicates.add(cb.equal(joinSimulation.get("id"), getSimulationId()));
+
+        if (getParentId() != null){
+          Join<Task, Task> taskJoin = root.join("parent", JoinType.INNER);
+          predicates.add(cb.equal(taskJoin.get("id"), getParentId()));
+        }
 
         if (getEducatorId() != null) {
           Join<Simulation, Educator> joinEducator = joinSimulation.join("educator", JoinType.INNER);
