@@ -3,6 +3,7 @@ package com.base.auth.controller;
 import com.base.auth.constant.UserBaseConstant;
 import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.ErrorCode;
+import com.base.auth.dto.achievement.AchievementDisplayDto;
 import com.base.auth.dto.studentSubTaskProgress.StudentSubTaskProgressDisplayDto;
 import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
@@ -100,8 +101,8 @@ public class StudentSubTaskProgressController extends ABasicController{
   @PutMapping(value = "/complete", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('STSP_CPL')")
   @Transactional
-  public ApiMessageDto<String> complete(@Valid @RequestBody RequestStudentSubTaskProgressForm requestStudentSubTaskProgressForm, BindingResult bindingResult){
-    ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
+  public ApiMessageDto<AchievementDisplayDto> complete(@Valid @RequestBody RequestStudentSubTaskProgressForm requestStudentSubTaskProgressForm, BindingResult bindingResult){
+    ApiMessageDto<AchievementDisplayDto> apiMessageDto = new ApiMessageDto<>();
     if (!isStudent()){
       throw new BadRequestException("User is not an student", ErrorCode.USER_ERROR_NOT_STUDENT);
     }
@@ -128,8 +129,13 @@ public class StudentSubTaskProgressController extends ABasicController{
       Achievement achievement = new Achievement();
       achievement.setSimulation(task.getSimulation());
       achievement.setStudent(student);
-      achievement.setFilePath(requestStudentSubTaskProgressForm.getFilePath());
       achievementRepository.save(achievement);
+
+      AchievementDisplayDto achievementDisplayDto = new AchievementDisplayDto();
+      achievementDisplayDto.setId(achievement.getId());
+      achievementDisplayDto.setUsername(student.getAccount().getUsername());
+      achievementDisplayDto.setSimulationName(task.getSimulation().getTitle());
+      apiMessageDto.setData(achievementDisplayDto);
     }
     apiMessageDto.setMessage("Complete student subtask progress");
     return apiMessageDto;
