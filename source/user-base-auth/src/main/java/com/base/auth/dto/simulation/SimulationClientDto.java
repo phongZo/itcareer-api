@@ -1,6 +1,5 @@
 package com.base.auth.dto.simulation;
 
-import com.base.auth.dto.educator.EducatorAutoCompleteDto;
 import com.base.auth.dto.educator.ProfileEducatorDto;
 import com.base.auth.dto.specialization.SpecializationAutoCompleteDto;
 import lombok.Data;

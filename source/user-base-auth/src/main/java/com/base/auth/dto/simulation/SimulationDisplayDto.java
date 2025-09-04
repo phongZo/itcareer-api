@@ -11,5 +11,6 @@ public class SimulationDisplayDto {
   private String totalEstimatedTime;
   private String imagePath;
   private Float avgRating;
+  private Float percent;
   private ProfileEducatorDto educator;
 }
