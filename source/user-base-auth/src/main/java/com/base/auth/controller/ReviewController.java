@@ -151,6 +151,7 @@ public class ReviewController extends ABasicController{
   }
 
   @DeleteMapping(value = "/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasRole('RE_D')")
   public ApiMessageDto<String> delete(@PathVariable("id") Long id){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     if (!isStudent()){
