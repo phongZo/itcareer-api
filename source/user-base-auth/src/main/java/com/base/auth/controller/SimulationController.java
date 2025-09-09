@@ -164,7 +164,16 @@ public class SimulationController extends ABasicController{
       throw new BadRequestException("User is not a student", ErrorCode.USER_ERROR_NOT_STUDENT);
     }
     Page<Simulation> simulations = simulationRepository.findAllByStatus(UserBaseConstant.STATUS_ACTIVE, pageable);
-    responseListDto.setContent(simulationMapper.fromEntityToSimulationDisplayDtoList(simulations.getContent()));
+    List<SimulationDisplayDto> simulationDtos =simulationMapper.fromEntityToSimulationDisplayDtoList(simulations.getContent());
+    for (SimulationDisplayDto simulationDto : simulationDtos){
+      Long countTask = taskRepository.countBySimulationId(simulationDto.getId());
+      Long countProgress = studentSubTaskProgressRepository.countByStateAndStudentIdAndTaskSimulationId(UserBaseConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, getCurrentUser(), simulationDto.getId());
+      if (countTask > 0){
+        Float progress = ((countProgress * 1F) / countTask) * 100;
+        simulationDto.setPercent(progress);
+      }
+    }
+    responseListDto.setContent(simulationDtos);
     responseListDto.setTotalElements(simulations.getTotalElements());
     responseListDto.setTotalPages(simulations.getTotalPages());
     apiMessageDto.setData(responseListDto);

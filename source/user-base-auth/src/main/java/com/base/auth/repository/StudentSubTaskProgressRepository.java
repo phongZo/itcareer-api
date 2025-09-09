@@ -40,4 +40,6 @@ public interface StudentSubTaskProgressRepository extends JpaRepository<StudentS
   void deleteAllByEducatorId(@Param("educatorId") Long educatorId);
 
   boolean existsByStudentIdAndTaskSimulationId(long studentId, Long simulationId);
+
+  Long countByStateAndStudentIdAndTaskSimulationId(Integer state, long studentId, Long simulationId);
 }

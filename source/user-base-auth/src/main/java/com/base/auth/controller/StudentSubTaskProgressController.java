@@ -3,16 +3,19 @@ package com.base.auth.controller;
 import com.base.auth.constant.UserBaseConstant;
 import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.ErrorCode;
+import com.base.auth.dto.achievement.AchievementDisplayDto;
 import com.base.auth.dto.studentSubTaskProgress.StudentSubTaskProgressDisplayDto;
 import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
 import com.base.auth.form.studentSubTaskProgress.RequestStudentSubTaskProgressForm;
 import com.base.auth.mapper.StudentSubTaskProgressMapper;
+import com.base.auth.model.Achievement;
 import com.base.auth.model.Simulation;
 import com.base.auth.model.Student;
 import com.base.auth.model.StudentSubTaskProgress;
 import com.base.auth.model.StudentTaskQuestionProgress;
 import com.base.auth.model.Task;
+import com.base.auth.repository.AchievementRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.StudentRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
@@ -57,6 +60,9 @@ public class StudentSubTaskProgressController extends ABasicController{
   @Autowired
   SimulationRepository simulationRepository;
 
+  @Autowired
+  AchievementRepository achievementRepository;
+
   @GetMapping(value = "/student-get/{taskId}", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('STSP_ST_V')")
   public ApiMessageDto<StudentSubTaskProgressDisplayDto> getForStudent(@PathVariable("taskId") Long taskId){
@@ -95,8 +101,8 @@ public class StudentSubTaskProgressController extends ABasicController{
   @PutMapping(value = "/complete", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('STSP_CPL')")
   @Transactional
-  public ApiMessageDto<String> complete(@Valid @RequestBody RequestStudentSubTaskProgressForm requestStudentSubTaskProgressForm, BindingResult bindingResult){
-    ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
+  public ApiMessageDto<AchievementDisplayDto> complete(@Valid @RequestBody RequestStudentSubTaskProgressForm requestStudentSubTaskProgressForm, BindingResult bindingResult){
+    ApiMessageDto<AchievementDisplayDto> apiMessageDto = new ApiMessageDto<>();
     if (!isStudent()){
       throw new BadRequestException("User is not an student", ErrorCode.USER_ERROR_NOT_STUDENT);
     }
@@ -115,6 +121,22 @@ public class StudentSubTaskProgressController extends ABasicController{
       studentTaskQuestionProgressRepository.deleteAllByStudentSubTaskProgressId(studentSubTaskProgress.getId());
     }
     studentSubTaskProgressRepository.save(studentSubTaskProgress);
+    Long countTask = taskRepository.countBySimulationId(task.getSimulation().getId());
+    Long countStudentSubTaskProgress = studentSubTaskProgressRepository.countByStateAndStudentIdAndTaskSimulationId(UserBaseConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, getCurrentUser(), task.getSimulation().getId());
+    if (Objects.equals(countTask, countStudentSubTaskProgress)){
+      Student student = studentRepository.findById(getCurrentUser()).orElseThrow(()
+      -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
+      Achievement achievement = new Achievement();
+      achievement.setSimulation(task.getSimulation());
+      achievement.setStudent(student);
+      achievementRepository.save(achievement);
+
+      AchievementDisplayDto achievementDisplayDto = new AchievementDisplayDto();
+      achievementDisplayDto.setId(achievement.getId());
+      achievementDisplayDto.setUsername(student.getAccount().getUsername());
+      achievementDisplayDto.setSimulationName(task.getSimulation().getTitle());
+      apiMessageDto.setData(achievementDisplayDto);
+    }
     apiMessageDto.setMessage("Complete student subtask progress");
     return apiMessageDto;
   }

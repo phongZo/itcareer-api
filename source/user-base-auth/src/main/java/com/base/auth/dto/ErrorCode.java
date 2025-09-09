@@ -180,4 +180,11 @@ public class ErrorCode {
      * Starting error code Google
      * */
     public static final String GOOGLE_ERROR_ACCESS_TOKEN_INVALID = "GOOGLE-ERROR-0000";
+
+
+    /**
+     * Starting error code Achievement
+     * */
+    public static final String ACHIEVEMENT_ERROR_NOT_FOUND = "ACHIEVEMENT-ERROR-0000";
+    public static final String ACHIEVEMENT_ERROR_NOT_AUTHORIZE = "ACHIEVEMENT-ERROR-0001";
 }
