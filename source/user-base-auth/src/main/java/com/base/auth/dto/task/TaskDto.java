@@ -15,6 +15,7 @@ public class TaskDto {
   private String filePath;
   private String videoPath;
   private Integer kind;
+  private ParentTaskDto parent;
   private Integer maxErrors;
   private Integer totalQuestion;
   private SimulationDto simulation;

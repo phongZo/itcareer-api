@@ -1,5 +1,6 @@
 package com.base.auth.mapper;
 
+import com.base.auth.dto.task.ParentTaskDto;
 import com.base.auth.dto.task.TaskDisplayDto;
 import com.base.auth.dto.task.TaskDto;
 import com.base.auth.dto.task.TaskEducatorDto;
@@ -39,6 +40,7 @@ public interface TaskMapper {
   @Mapping(source = "introduction", target = "introduction")
   @Mapping(source = "content", target = "content")
   @Mapping(source = "kind", target = "kind")
+  @Mapping(source = "parent", target = "parent", qualifiedByName = "fromEntityToParentTaskDto")
   @Mapping(source = "imagePath", target = "imagePath")
   @Mapping(source = "filePath", target = "filePath")
   @Mapping(source = "videoPath", target = "videoPath")
@@ -54,6 +56,8 @@ public interface TaskMapper {
   @Mapping(source = "title", target = "title")
   @Mapping(source = "description", target = "description")
   @Mapping(source = "introduction", target = "introduction")
+  @Mapping(source = "kind", target = "kind")
+  @Mapping(source = "parent", target = "parent", qualifiedByName = "fromEntityToParentTaskDto")
   @Mapping(source = "simulation", target = "simulation", qualifiedByName = "fromEntityToSimulationClientDto")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToTaskDisplayDto")
@@ -87,6 +91,12 @@ public interface TaskMapper {
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToTaskEducatorDto")
   TaskEducatorDto fromEntityToTaskEducatorDto(Task task);
+
+  @Mapping(source = "id", target = "id")
+  @Mapping(source = "name", target = "name")
+  @BeanMapping(ignoreByDefault = true)
+  @Named("fromEntityToParentTaskDto")
+  ParentTaskDto fromEntityToParentTaskDto(Task task);
 
   @IterableMapping(elementTargetType = TaskDto.class, qualifiedByName = "fromEntityToTaskDto")
   List<TaskDto> fromEntityToTaskDtoList(List<Task> tasks);
