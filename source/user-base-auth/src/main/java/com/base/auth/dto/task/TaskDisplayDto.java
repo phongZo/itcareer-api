@@ -10,5 +10,7 @@ public class TaskDisplayDto {
   private String title;
   private String description;
   private String introduction;
+  private Integer kind;
+  private ParentTaskDto parent;
   private SimulationClientDto simulation;
 }
