@@ -34,15 +34,6 @@ public class ErrorCode {
 
 
     /**
-     * Starting error code Customer
-     * */
-    public static final String CUSTOMER_ERROR_UNKNOWN = "ERROR-CUSTOMER-0000";
-    public static final String CUSTOMER_ERROR_EXIST = "ERROR-CUSTOMER-0002";
-    public static final String CUSTOMER_ERROR_UPDATE = "ERROR-CUSTOMER-0003";
-    public static final String CUSTOMER_ERROR_NOT_FOUND = "ERROR-CUSTOMER-0004";
-
-
-    /**
      * Starting error code Store
      * */
     public static final String SERVICE_ERROR_UNKNOWN = "ERROR-SERVICE-0000";
@@ -68,18 +59,6 @@ public class ErrorCode {
      * Starting error code ADDRESS
      * */
     public static final String ADDRESS_ERROR_NOT_FOUND = "ERROR-ADDRESS-0001";
-
-    /**
-     * Starting error code CATEGORY
-     * */
-    public static final String CATEGORY_ERROR_NOT_FOUND = "ERROR-CATEGORY-0000";
-    public static final String CATEGORY_ERROR_EXIST = "ERROR-CATEGORY-0001";
-
-    /**
-     * Starting error code News
-     * */
-    public static final String NEWS_ERROR_NOT_FOUND = "ERROR-NEWS-0000";
-    public static final String NEWS_ERROR_EXISTED = "ERROR-NEWS-0001";
     /**
      * Starting error code Settings
      * */
@@ -98,6 +77,7 @@ public class ErrorCode {
     public static final String USER_ERROR_NOT_REJECT = "ERROR-USER-0005";
     public static final String USER_ERROR_NOT_EDUCATOR = "ERROR-USER-0006";
     public static final String USER_ERROR_NOT_STUDENT = "ERROR-USER-0007";
+    public static final String USER_ERROR_NOT_ADMIN = "ERROR-USER-0008";
 
     /**
      * Starting error code DATABASE_ERROR
@@ -128,7 +108,6 @@ public class ErrorCode {
     public static final String SIMULATION_ERROR_APPROVE = "SIMULATION-ERROR-0003";
     public static final String SIMULATION_ERROR_NOT_AUTHORIZED = "SIMULATION-ERROR-0004";
     public static final String SIMULATION_ERROR_NOT_ACTIVE = "SIMULATION-ERROR-0005";
-    public static final String SIMULATION_ERROR_NOT_GET = "SIMULATION-ERROR-0006";
 
     /**
      * Starting error code Task
@@ -171,6 +150,9 @@ public class ErrorCode {
     public static final String STUDENT_TASK_QUESTION_PROGRESS_ERROR_EXIST = "STUDENT-TASK-QUESTION-PROGRESS-ERROR-0001";
     public static final String STUDENT_TASK_QUESTION_PROGRESS_ERROR_NOT_CREATE = "STUDENT-TASK-QUESTION-PROGRESS-ERROR-0002";
 
+    /**
+     * Starting error code Review
+     * */
     public static final String REVIEW_ERROR_NOT_FOUND = "REVIEW-ERROR-0000";
     public static final String REVIEW_ERROR_EXIST = "REVIEW-ERROR-0001";
     public static final String REVIEW_ERROR_NOT_AUTHORIZE = "REVIEW-ERROR-0002";
@@ -187,4 +169,11 @@ public class ErrorCode {
      * */
     public static final String ACHIEVEMENT_ERROR_NOT_FOUND = "ACHIEVEMENT-ERROR-0000";
     public static final String ACHIEVEMENT_ERROR_NOT_AUTHORIZE = "ACHIEVEMENT-ERROR-0001";
+
+    /**
+     * Starting error code Review submission
+     * */
+    public static final String REVIEW_SUBMISSION_ERROR_NOT_FOUND = "REVIEW-SUBMISSION-ERROR-0000";
+    public static final String REVIEW_SUBMISSION_ERROR_EXIST = "REVIEW-SUBMISSION-ERROR-0001";
+    public static final String REVIEW_SUBMISSION_ERROR_CREATE = "REVIEW-SUBMISSION-ERROR-0002";
 }

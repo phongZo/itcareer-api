@@ -9,10 +9,12 @@ import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
 import com.base.auth.form.studentTaskQuestionProgress.CreateStudentTaskQuestionProgressForm;
 import com.base.auth.mapper.StudentTaskQuestionProgressMapper;
+import com.base.auth.model.Account;
 import com.base.auth.model.StudentSubTaskProgress;
 import com.base.auth.model.StudentTaskQuestionProgress;
 import com.base.auth.model.TaskQuestion;
 import com.base.auth.model.criteria.StudentTaskQuestionProgressCriteria;
+import com.base.auth.repository.AccountRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
 import com.base.auth.repository.StudentTaskQuestionProgressRepository;
 import com.base.auth.repository.TaskQuestionRepository;
@@ -33,6 +35,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -51,6 +54,9 @@ public class StudentTaskQuestionProgressController extends ABasicController{
 
   @Autowired
   StudentTaskQuestionProgressMapper studentTaskQuestionProgressMapper;
+
+  @Autowired
+  AccountRepository accountRepository;
 
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('STTQ_C')")
@@ -119,6 +125,25 @@ public class StudentTaskQuestionProgressController extends ABasicController{
     -> new NotFoundException("Student task question progress not found", ErrorCode.STUDENT_TASK_QUESTION_PROGRESS_ERROR_NOT_FOUND));
     studentTaskQuestionProgressRepository.delete(studentTaskQuestionProgress);
     apiMessageDto.setMessage("Delete success");
+    return apiMessageDto;
+  }
+
+  @GetMapping(value = "/answer-list", produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasRole('STTQ_ED_LR')")
+  public ApiMessageDto<ResponseListDto<List<StudentTaskQuestionProgressDisplayDto>>> getListAnswerByStudent(
+      @RequestParam("simulationId") Long simulationId,
+      @RequestParam("username") String username,
+      Pageable pageable){
+    ApiMessageDto<ResponseListDto<List<StudentTaskQuestionProgressDisplayDto>>> apiMessageDto = new ApiMessageDto<>();
+    ResponseListDto<List<StudentTaskQuestionProgressDisplayDto>> responseListDto = new ResponseListDto<>();
+    Account student = accountRepository.findAccountByUsername(username);
+    Page<StudentTaskQuestionProgress> taskQuestionProgresses = studentTaskQuestionProgressRepository.findAllByStudentIdAndSimulationId(student.getId(), simulationId, pageable);
+    List<StudentTaskQuestionProgressDisplayDto> taskQuestionProgressDisplayDtos = studentTaskQuestionProgressMapper.fromEntityToStudentTaskQuestionProgressDisplayDtoList(taskQuestionProgresses.getContent());
+    responseListDto.setContent(taskQuestionProgressDisplayDtos);
+    responseListDto.setTotalElements(taskQuestionProgresses.getTotalElements());
+    responseListDto.setTotalPages(taskQuestionProgresses.getTotalPages());
+    apiMessageDto.setData(responseListDto);
+    apiMessageDto.setMessage("Get list answer success");
     return apiMessageDto;
   }
 }

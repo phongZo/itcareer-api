@@ -213,6 +213,8 @@ public class AccountController extends ABasicController{
         Account account = accountRepository.findAccountByEmail(emailForm.getEmail());
         if (account == null) {
             apiMessageDto.setResult(false);
+            apiMessageDto.setHttpCode(404);
+            apiMessageDto.setMessage("Account not found");
             apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
             return apiMessageDto;
         }
@@ -232,7 +234,7 @@ public class AccountController extends ABasicController{
 
         apiMessageDto.setResult(true);
         apiMessageDto.setData(otpDto);
-        apiMessageDto.setMessage("Request forget password successfull, please check email.");
+        apiMessageDto.setMessage("Request forget password success, please check email.");
         return  apiMessageDto;
     }
 
@@ -252,6 +254,8 @@ public class AccountController extends ABasicController{
         Account account = accountRepository.findById(id).orElse(null);
         if (account == null ) {
             apiMessageDto.setResult(false);
+            apiMessageDto.setHttpCode(404);
+            apiMessageDto.setMessage("Account not found");
             apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
             return apiMessageDto;
         }
@@ -282,7 +286,7 @@ public class AccountController extends ABasicController{
 
         apiMessageDto.setResult(true);
         apiMessageDto.setMessage("Change password success.");
-        return  apiMessageDto;
+        return apiMessageDto;
     }
 
     @PostMapping(value = "/resend-verify", produces = MediaType.APPLICATION_JSON_VALUE)

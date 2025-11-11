@@ -68,10 +68,10 @@ public class ABasicController {
         return false;
     }
 
-    public boolean isShop(){
+    public boolean isAdmin(){
         UserBaseJwt userBaseJwt = userService.getAddInfoFromToken();
         if(userBaseJwt !=null){
-            return Objects.equals(userBaseJwt.getUserKind(), UserBaseConstant.USER_KIND_MANAGER);
+            return Objects.equals(userBaseJwt.getUserKind(), UserBaseConstant.USER_KIND_ADMIN);
         }
         return false;
     }

@@ -46,6 +46,10 @@ public interface StudentMapper {
   @Named("fromStudentToProfileDto")
   ProfileStudentDto fromStudentToProfileDto(Student student);
 
+  @IterableMapping(elementTargetType = ProfileStudentDto.class,qualifiedByName = "fromStudentToProfileDto")
+  @BeanMapping(ignoreByDefault = true)
+  List<ProfileStudentDto> fromStudentToProfileDtoList(List<Student> list);
+
   @Mapping(source = "birthday", target = "birthday")
   @BeanMapping(ignoreByDefault = true)
   void fromUpdateProfileStudentFormToEntity(

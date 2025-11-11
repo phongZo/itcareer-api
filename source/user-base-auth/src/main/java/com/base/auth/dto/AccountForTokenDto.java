@@ -19,13 +19,4 @@ public class AccountForTokenDto {
     private String fullName;
     @ApiModelProperty(name = "isSuperAdmin")
     private Boolean isSuperAdmin;
-//    @ApiModelProperty(name = "group")
-//    private GroupDto group;
-//    @ApiModelProperty(name = "lastLogin")
-//    private Date lastLogin;
-//    @ApiModelProperty(name = "avatar")
-//    private String avatar;
-
-
-
 }

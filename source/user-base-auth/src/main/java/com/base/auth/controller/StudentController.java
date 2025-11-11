@@ -5,6 +5,8 @@ import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.ErrorCode;
 import com.base.auth.dto.ResponseListDto;
 import com.base.auth.dto.account.OtpDto;
+import com.base.auth.dto.account.ProfileAccountDto;
+import com.base.auth.dto.reviewSubmission.ReviewedStudentProjection;
 import com.base.auth.dto.student.ProfileStudentDto;
 import com.base.auth.dto.student.StudentAutoCompleteDto;
 import com.base.auth.dto.student.StudentDto;
@@ -25,15 +27,20 @@ import com.base.auth.model.criteria.StudentCriteria;
 import com.base.auth.repository.AccountRepository;
 import com.base.auth.repository.GroupRepository;
 import com.base.auth.repository.ReviewRepository;
+import com.base.auth.repository.ReviewSubmissionRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.StudentRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
 import com.base.auth.repository.StudentTaskQuestionProgressRepository;
+import com.base.auth.repository.TaskRepository;
 import com.base.auth.utils.AESUtils;
 import com.base.auth.utils.ConvertUtils;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -54,6 +61,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -91,6 +99,12 @@ public class StudentController extends ABasicController{
   @Autowired
   SimulationRepository simulationRepository;
 
+  @Autowired
+  TaskRepository taskRepository;
+
+  @Autowired
+  ReviewSubmissionRepository reviewSubmissionRepository;
+
   @PostMapping(value = "/signup", produces= MediaType.APPLICATION_JSON_VALUE)
   public ApiMessageDto<OtpDto> create(@Valid @RequestBody SignUpStudentForm signUpStudentForm, BindingResult bindingResult)
   {
@@ -101,16 +115,16 @@ public class StudentController extends ABasicController{
       throw new BadRequestException("username already exists", ErrorCode.ACCOUNT_ERROR_USERNAME_EXIST);
     }
 
-    Account accountByPhone = accountRepository.findAccountByPhone(signUpStudentForm.getPhone());
-    if (accountByPhone!=null)
-    {
-      throw new BadRequestException("phone already exists", ErrorCode.ACCOUNT_ERROR_PHONE_EXIST);
-    }
-
     Account accountByEmail = accountRepository.findAccountByEmail(signUpStudentForm.getEmail());
     if (accountByEmail!=null)
     {
       throw new BadRequestException("email already exists", ErrorCode.ACCOUNT_ERROR_EMAIL_EXIST);
+    }
+
+    Account accountByPhone = accountRepository.findAccountByPhone(signUpStudentForm.getPhone());
+    if (accountByPhone!=null)
+    {
+      throw new BadRequestException("phone already exists", ErrorCode.ACCOUNT_ERROR_PHONE_EXIST);
     }
 
     Account account = accountMapper.fromSignUpStudentToAccount(signUpStudentForm);
@@ -388,5 +402,59 @@ public class StudentController extends ABasicController{
     accountRepository.save(account);
     apiMessageDto.setMessage("verify account student success");
     return apiMessageDto;
+  }
+
+  @GetMapping(value = "/complete-list", produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasRole('ST_ED_CL')")
+  public ApiMessageDto<ResponseListDto<List<ProfileStudentDto>>> getListStudentComplete(@RequestParam("simulationId") Long simulationId, Pageable pageable){
+    ApiMessageDto<ResponseListDto<List<ProfileStudentDto>>> apiMessageDto = new ApiMessageDto<>();
+    ResponseListDto<List<ProfileStudentDto>> responseListDto = new ResponseListDto<>();
+    Long totalTasks = taskRepository.countBySimulationId(simulationId);
+    Page<Student> students = studentRepository.findStudentsCompletedSimulation(simulationId, UserBaseConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, totalTasks, pageable);
+    List<ProfileStudentDto> studentDtos = studentMapper.fromStudentToProfileDtoList(students.getContent());
+    Map<String, Boolean> reviewedMap = createReviewedMapBySimulation(simulationId);
+    setIsReviewedByMap(studentDtos, reviewedMap);
+    responseListDto.setContent(studentDtos);
+    responseListDto.setTotalElements(students.getTotalElements());
+    responseListDto.setTotalPages(students.getTotalPages());
+    apiMessageDto.setData(responseListDto);
+    apiMessageDto.setMessage("Get list student complete simulation success");
+    return apiMessageDto;
+  }
+
+  // Chuyển nội dung từ DTO sang Map để dễ gán field isReviewed
+  private Map<String, Boolean> createReviewedMapBySimulation(Long simulationId){
+    List<ReviewedStudentProjection> reviewedList =
+        reviewSubmissionRepository.findReviewedStudentUsernamesBySimulationId(simulationId);
+
+    if (reviewedList == null || reviewedList.isEmpty()) {
+      return Collections.emptyMap();
+    }
+
+    return reviewedList.stream()
+        .filter(p -> p.getUsername() != null)
+        .collect(Collectors.toMap(
+            ReviewedStudentProjection::getUsername,
+            ReviewedStudentProjection::getIsReviewed,
+            (a, b) -> a // nếu trùng username, giữ giá trị đầu tiên
+        ));
+  }
+
+
+  // Gán isReviewed dựa trên username (nếu có trong map => lấy giá trị DB, nếu không => null)
+  private void  setIsReviewedByMap(List<ProfileStudentDto> dtos, Map<String, Boolean> reviewedMap){
+    for (ProfileStudentDto dto : dtos) {
+      ProfileAccountDto acc = dto.getProfileAccountDto();
+      if (acc != null) {
+        String username = acc.getUsername();
+        if (username != null && reviewedMap.containsKey(username)) {
+          dto.setIsReviewed(reviewedMap.get(username));
+        } else {
+          dto.setIsReviewed(null);
+        }
+      } else {
+        dto.setIsReviewed(null);
+      }
+    }
   }
 }
