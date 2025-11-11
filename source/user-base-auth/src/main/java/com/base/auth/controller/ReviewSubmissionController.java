@@ -1,5 +1,6 @@
 package com.base.auth.controller;
 
+import com.base.auth.constant.UserBaseConstant;
 import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.ErrorCode;
 import com.base.auth.dto.reviewSubmission.ReviewSubmissionClientDto;
@@ -16,7 +17,8 @@ import com.base.auth.model.Student;
 import com.base.auth.repository.AccountRepository;
 import com.base.auth.repository.ReviewSubmissionRepository;
 import com.base.auth.repository.SimulationRepository;
-import com.base.auth.repository.StudentRepository;
+import com.base.auth.repository.StudentSubTaskProgressRepository;
+import com.base.auth.repository.TaskRepository;
 import java.util.Objects;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +54,10 @@ public class ReviewSubmissionController extends ABasicController{
   AccountRepository accountRepository;
 
   @Autowired
-  StudentRepository studentRepository;
+  TaskRepository taskRepository;
+
+  @Autowired
+  StudentSubTaskProgressRepository studentSubTaskProgressRepository;
 
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('RESUB_C')")
@@ -75,6 +80,13 @@ public class ReviewSubmissionController extends ABasicController{
     boolean existReviewSubmission = reviewSubmissionRepository.existsBySimulationIdAndStudentId(simulation.getId(),student.getId());
     if (existReviewSubmission){
       throw new BadRequestException("Review submission already exist", ErrorCode.REVIEW_SUBMISSION_ERROR_EXIST);
+    }
+    Long totalTasks = taskRepository.countBySimulationId(simulation.getId());
+    Long completedTasks = studentSubTaskProgressRepository.countByStateAndStudentIdAndTaskSimulationId(
+        UserBaseConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, student.getId(),
+        simulation.getId());
+    if (totalTasks == 0 || completedTasks != totalTasks){
+      throw new BadRequestException("Unable to create a review submission", ErrorCode.REVIEW_SUBMISSION_ERROR_CREATE);
     }
     ReviewSubmission reviewSubmission = reviewSubmissionMapper.fromCreateReviewSubmissionToEntity(request);
     reviewSubmission.setSimulation(simulation);

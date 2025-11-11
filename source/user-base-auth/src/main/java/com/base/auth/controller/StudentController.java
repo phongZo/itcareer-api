@@ -412,20 +412,38 @@ public class StudentController extends ABasicController{
     Long totalTasks = taskRepository.countBySimulationId(simulationId);
     Page<Student> students = studentRepository.findStudentsCompletedSimulation(simulationId, UserBaseConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, totalTasks, pageable);
     List<ProfileStudentDto> studentDtos = studentMapper.fromStudentToProfileDtoList(students.getContent());
+    Map<String, Boolean> reviewedMap = createReviewedMapBySimulation(simulationId);
+    setIsReviewedByMap(studentDtos, reviewedMap);
+    responseListDto.setContent(studentDtos);
+    responseListDto.setTotalElements(students.getTotalElements());
+    responseListDto.setTotalPages(students.getTotalPages());
+    apiMessageDto.setData(responseListDto);
+    apiMessageDto.setMessage("Get list student complete simulation success");
+    return apiMessageDto;
+  }
+
+  // Chuyển nội dung từ DTO sang Map để dễ gán field isReviewed
+  private Map<String, Boolean> createReviewedMapBySimulation(Long simulationId){
     List<ReviewedStudentProjection> reviewedList =
         reviewSubmissionRepository.findReviewedStudentUsernamesBySimulationId(simulationId);
-    final Map<String, Boolean> reviewedMap;
+
     if (reviewedList == null || reviewedList.isEmpty()) {
-      reviewedMap = Collections.emptyMap();
-    } else {
-      reviewedMap = reviewedList.stream()
-          .filter(p -> p.getUsername() != null)
-          .collect(Collectors.toMap(ReviewedStudentProjection::getUsername,
-              ReviewedStudentProjection::getIsReviewed, (a, b) -> a));
+      return Collections.emptyMap();
     }
 
-    // Gán isReviewed dựa trên username (nếu có trong map => lấy giá trị DB, nếu không => null)
-    for (ProfileStudentDto dto : studentDtos) {
+    return reviewedList.stream()
+        .filter(p -> p.getUsername() != null)
+        .collect(Collectors.toMap(
+            ReviewedStudentProjection::getUsername,
+            ReviewedStudentProjection::getIsReviewed,
+            (a, b) -> a // nếu trùng username, giữ giá trị đầu tiên
+        ));
+  }
+
+
+  // Gán isReviewed dựa trên username (nếu có trong map => lấy giá trị DB, nếu không => null)
+  private void  setIsReviewedByMap(List<ProfileStudentDto> dtos, Map<String, Boolean> reviewedMap){
+    for (ProfileStudentDto dto : dtos) {
       ProfileAccountDto acc = dto.getProfileAccountDto();
       if (acc != null) {
         String username = acc.getUsername();
@@ -438,12 +456,5 @@ public class StudentController extends ABasicController{
         dto.setIsReviewed(null);
       }
     }
-
-    responseListDto.setContent(studentDtos);
-    responseListDto.setTotalElements(students.getTotalElements());
-    responseListDto.setTotalPages(students.getTotalPages());
-    apiMessageDto.setData(responseListDto);
-    apiMessageDto.setMessage("Get list student complete simulation success");
-    return apiMessageDto;
   }
 }
