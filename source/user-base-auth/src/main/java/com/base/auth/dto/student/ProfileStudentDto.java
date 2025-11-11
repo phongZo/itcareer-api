@@ -8,4 +8,5 @@ import lombok.Data;
 public class ProfileStudentDto {
   private ProfileAccountDto profileAccountDto;
   private Date birthday;
+  private Boolean isReviewed;
 }

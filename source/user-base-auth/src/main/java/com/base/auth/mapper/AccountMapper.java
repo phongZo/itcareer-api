@@ -65,7 +65,6 @@ public interface AccountMapper {
     @BeanMapping(ignoreByDefault = true)
     void fromUpdateEducatorFormToEntity(UpdateEducatorForm updateEducatorForm, @MappingTarget Account account );
 
-    @Mapping(source = "kind", target = "kind")
     @Mapping(source = "username", target = "username")
     @Mapping(source = "phone", target = "phone")
     @Mapping(source = "email", target = "email")

@@ -34,8 +34,6 @@ public class UserBaseConstant {
     public static final Integer STATE_SIMULATION_PROCESSING = 1;
     public static final Integer STATE_SIMULATION_DONE = 2;
     public static final Integer STATE_SIMULATION_FAIL = 3;
-    public static final String STATE_SIMULATION_IN_PROGRESS = "In progress";
-    public static final String STATE_SIMULATION_COMPLETE = "Complete";
 
     public static final Integer STATE_TASK_INIT = 0;
     public static final Integer STATE_TASK_PROCESSING = 1;

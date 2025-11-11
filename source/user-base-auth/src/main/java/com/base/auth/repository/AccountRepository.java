@@ -8,10 +8,10 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface AccountRepository extends JpaRepository<Account, Long>, JpaSpecificationExecutor<Account> {
 
-    public Account findAccountByUsername(String username);
-    public Account findAccountByEmail(String email);
-    public Account findAccountByPhone(String phone);
-    public Account findAccountByResetPwdCode(String resetPwdCode);
-    public Account findAccountByEmailOrUsername(String email, String username);
-    public Page<Account> findAllByKind(int kind, Pageable pageable);
+    Account findAccountByUsername(String username);
+    Account findAccountByEmail(String email);
+    Account findAccountByPhone(String phone);
+    Account findAccountByResetPwdCode(String resetPwdCode);
+    Account findAccountByEmailOrUsername(String email, String username);
+    Page<Account> findAllByKind(int kind, Pageable pageable);
 }

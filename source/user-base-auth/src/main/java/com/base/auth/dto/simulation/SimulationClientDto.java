@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 public class SimulationClientDto {
+  private Long id;
   private String title;
   private String overview;
   private String description;

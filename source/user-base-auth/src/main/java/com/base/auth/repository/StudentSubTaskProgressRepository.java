@@ -3,7 +3,6 @@ package com.base.auth.repository;
 import com.base.auth.model.StudentSubTaskProgress;
 import java.util.Optional;
 import javax.transaction.Transactional;
-import javax.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;

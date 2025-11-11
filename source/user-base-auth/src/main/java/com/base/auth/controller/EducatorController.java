@@ -107,16 +107,16 @@ public class EducatorController extends ABasicController{
       throw new BadRequestException("username already exists", ErrorCode.ACCOUNT_ERROR_USERNAME_EXIST);
     }
 
-    Account accountByPhone = accountRepository.findAccountByPhone(signUpEducatorForm.getPhone());
-    if (accountByPhone!=null)
-    {
-      throw new BadRequestException("phone already exists", ErrorCode.ACCOUNT_ERROR_PHONE_EXIST);
-    }
-
     Account accountByEmail = accountRepository.findAccountByEmail(signUpEducatorForm.getEmail());
     if (accountByEmail!=null)
     {
       throw new BadRequestException("email already exists", ErrorCode.ACCOUNT_ERROR_EMAIL_EXIST);
+    }
+
+    Account accountByPhone = accountRepository.findAccountByPhone(signUpEducatorForm.getPhone());
+    if (accountByPhone!=null)
+    {
+      throw new BadRequestException("phone already exists", ErrorCode.ACCOUNT_ERROR_PHONE_EXIST);
     }
 
     Account account = accountMapper.fromSignUpEducatorToAccount(signUpEducatorForm);

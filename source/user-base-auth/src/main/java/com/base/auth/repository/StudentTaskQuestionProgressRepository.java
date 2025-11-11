@@ -3,6 +3,8 @@ package com.base.auth.repository;
 import com.base.auth.model.StudentTaskQuestionProgress;
 import java.util.Optional;
 import javax.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -60,4 +62,15 @@ public interface StudentTaskQuestionProgressRepository extends JpaRepository<Stu
           "JOIN db_user_base_simulation sim ON t.simulation_id = sim.id " +
           "WHERE sim.educator_id = :educatorId", nativeQuery = true)
   void deleteAllByEducatorId(@Param("educatorId") Long educatorId);
+
+  @Query("SELECT stq FROM StudentTaskQuestionProgress stq " +
+      "JOIN stq.studentSubTaskProgress sstp " +
+      "JOIN stq.taskQuestion tq " +
+      "JOIN tq.task t " +
+      "WHERE sstp.student.id = :studentId AND t.simulation.id = :simulationId " +
+      "ORDER BY t.id, tq.id")
+  Page<StudentTaskQuestionProgress> findAllByStudentIdAndSimulationId(
+      @Param("studentId") Long studentId,
+      @Param("simulationId") Long simulationId,
+      Pageable pageable);
 }
