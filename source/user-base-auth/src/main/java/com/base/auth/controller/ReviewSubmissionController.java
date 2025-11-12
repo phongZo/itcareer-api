@@ -7,6 +7,7 @@ import com.base.auth.dto.reviewSubmission.ReviewSubmissionClientDto;
 import com.base.auth.dto.reviewSubmission.ReviewSubmissionDto;
 import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
+import com.base.auth.form.notification.CreateNotificationForm;
 import com.base.auth.form.reviewSubmission.CreateReviewSubmissionForm;
 import com.base.auth.form.reviewSubmission.UpdateReviewSubmissionForm;
 import com.base.auth.mapper.ReviewSubmissionMapper;
@@ -15,15 +16,20 @@ import com.base.auth.model.ReviewSubmission;
 import com.base.auth.model.Simulation;
 import com.base.auth.model.Student;
 import com.base.auth.repository.AccountRepository;
+import com.base.auth.repository.NotificationRepository;
 import com.base.auth.repository.ReviewSubmissionRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
 import com.base.auth.repository.TaskRepository;
+import com.base.auth.service.NotificationService;
 import java.util.Objects;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -59,8 +65,16 @@ public class ReviewSubmissionController extends ABasicController{
   @Autowired
   StudentSubTaskProgressRepository studentSubTaskProgressRepository;
 
+  @Autowired
+  NotificationService notificationService;
+
+  @Autowired
+  NotificationRepository notificationRepository;
+
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('RESUB_C')")
+  @MessageMapping("/send")
+  @SendTo("/topic/notification")
   ApiMessageDto<String> create(@RequestBody @Valid CreateReviewSubmissionForm request, BindingResult bindingResult){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     if (!isEducator()){
@@ -92,6 +106,7 @@ public class ReviewSubmissionController extends ABasicController{
     reviewSubmission.setSimulation(simulation);
     reviewSubmission.setStudent(student);
     reviewSubmissionRepository.save(reviewSubmission);
+    sendNotification(reviewSubmission.getStudent().getId(), reviewSubmission.getSimulation().getTitle(), reviewSubmission.getId());
     apiMessageDto.setMessage("Create review submission success");
     return apiMessageDto;
   }
@@ -124,6 +139,16 @@ public class ReviewSubmissionController extends ABasicController{
     return apiMessageDto;
   }
 
+  @GetMapping(value = "/student-get/{simulationId}", produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasRole('RESUB_ST_V')")
+  public ApiMessageDto<ReviewSubmissionClientDto> getForStudent(@PathVariable("simulationId") Long simulationId){
+    ApiMessageDto<ReviewSubmissionClientDto> apiMessageDto = new ApiMessageDto<>();
+    ReviewSubmission reviewSubmission = reviewSubmissionRepository.findBySimulationIdAndStudentId(simulationId, getCurrentUser()).orElse(null);
+    apiMessageDto.setData(reviewSubmissionMapper.fromEntityToReviewSubmissionDtoForClient(reviewSubmission));
+    apiMessageDto.setMessage("Get review submission success");
+    return apiMessageDto;
+  }
+
   @PutMapping(value = "/update", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('RESUB_U')")
   public ApiMessageDto<String> update(@RequestBody @Valid UpdateReviewSubmissionForm request, BindingResult bindingResult){
@@ -141,6 +166,7 @@ public class ReviewSubmissionController extends ABasicController{
 
   @DeleteMapping(value = "/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('RESUB_D')")
+  @Transactional
   public ApiMessageDto<String> delete(@PathVariable("id") Long id){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     if (!isEducator()){
@@ -148,8 +174,21 @@ public class ReviewSubmissionController extends ABasicController{
     }
     ReviewSubmission reviewSubmission = reviewSubmissionRepository.findById(id).orElseThrow(()
     -> new NotFoundException("Review submission not found", ErrorCode.REVIEW_SUBMISSION_ERROR_NOT_FOUND));
+    notificationRepository.deleteByReceiverIdAndRefId(reviewSubmission.getStudent().getId(), reviewSubmission.getId());
     reviewSubmissionRepository.delete(reviewSubmission);
     apiMessageDto.setMessage("Delete review submission success");
     return apiMessageDto;
+  }
+
+  private void sendNotification(Long receiverId, String simulationTitle, Long refId){
+    String title = "Bạn đã được đánh giá";
+    String message = String.format("Giảng viên đã gửi đánh giá cho bài mô phỏng '%s'.", simulationTitle);
+    CreateNotificationForm notificationForm = new CreateNotificationForm();
+    notificationForm.setReceiverId(receiverId);
+    notificationForm.setMessage(message);
+    notificationForm.setTitle(title);
+    notificationForm.setRefType(UserBaseConstant.NOTIFICATION_TYPE_REVIEW_SUBMISSION);
+    notificationForm.setRefId(refId);
+    notificationService.notifyStudent(notificationForm);
   }
 }

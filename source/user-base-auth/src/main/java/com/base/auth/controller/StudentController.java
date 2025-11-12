@@ -440,7 +440,6 @@ public class StudentController extends ABasicController{
         ));
   }
 
-
   // Gán isReviewed dựa trên username (nếu có trong map => lấy giá trị DB, nếu không => null)
   private void  setIsReviewedByMap(List<ProfileStudentDto> dtos, Map<String, Boolean> reviewedMap){
     for (ProfileStudentDto dto : dtos) {

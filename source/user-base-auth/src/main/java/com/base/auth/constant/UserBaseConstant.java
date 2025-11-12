@@ -65,6 +65,8 @@ public class UserBaseConstant {
     public static final String EMAIL_PATTERN = "^\\S+@\\S+\\.\\S+$";
     public static final String PHONE_PATTERN = "^0\\d{9}$";
 
+    public static final String NOTIFICATION_TYPE_REVIEW_SUBMISSION = "REVIEW_SUBMISSION";
+
     private UserBaseConstant(){
         throw new IllegalStateException("Utility class");
     }
