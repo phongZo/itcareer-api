@@ -52,6 +52,8 @@ public class UserBaseConstant {
 
     public static final String BACKEND_PROCESS_VIDEO_CMD = "BACKEND_PROCESS_VIDEO";
     public static final String MEDIA_COMPLETED_PROCESS_VIDEO_CMD = "MEDIA_COMPLETED_PROCESS_VIDEO";
+    public static final String BACKEND_POST_NOTIFICATION_CMD = "BACKEND_POST_NOTIFICATION";
+    public static final String CLIENT_RECEIVED_PUSH_NOTIFICATION = "CLIENT_RECEIVED_PUSH_NOTIFICATION";
 
     public static final Integer GROUP_KIND_ADMIN = 1;
     public static final Integer GROUP_KIND_MANAGER = 2;
@@ -64,6 +66,8 @@ public class UserBaseConstant {
     public static final String PASSWORD_PATTERN = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$";
     public static final String EMAIL_PATTERN = "^\\S+@\\S+\\.\\S+$";
     public static final String PHONE_PATTERN = "^0\\d{9}$";
+
+    public static final String NOTIFICATION_TYPE_REVIEW_SUBMISSION = "REVIEW_SUBMISSION";
 
     private UserBaseConstant(){
         throw new IllegalStateException("Utility class");

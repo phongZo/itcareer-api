@@ -176,4 +176,10 @@ public class ErrorCode {
     public static final String REVIEW_SUBMISSION_ERROR_NOT_FOUND = "REVIEW-SUBMISSION-ERROR-0000";
     public static final String REVIEW_SUBMISSION_ERROR_EXIST = "REVIEW-SUBMISSION-ERROR-0001";
     public static final String REVIEW_SUBMISSION_ERROR_CREATE = "REVIEW-SUBMISSION-ERROR-0002";
+
+    /**
+     * Starting error code Notification
+     * */
+    public static final String NOTIFICATION_ERROR_NOT_FOUND = "NOTIFICATION-ERROR-0000";
+    public static final String NOTIFICATION_ERROR_EXIST = "NOTIFICATION-ERROR-0001";
 }
