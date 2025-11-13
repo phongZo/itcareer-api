@@ -28,18 +28,12 @@ public class NotificationService {
   @Autowired
   RabbitMQService rabbitMQService;
 
-  @Autowired
-  ObjectMapper objectMapper;
-
-  @Value("${rabbitmq.backend.app}")
-  String msgApp;
-
   @Value("${rabbitmq.notification.queue}")
-  private String notificationQueue;
+  String notificationQueue;
 
   public void notifyStudent(@Valid CreateNotificationForm request){
     Boolean existNotification = notificationRepository.existsByReceiverIdAndRefId(
-        request.getReceiverId(), request.getRefId());
+        request.getUserId(), request.getRefId());
     if (existNotification){
       throw new BadRequestException("Notification already exist", ErrorCode.NOTIFICATION_ERROR_EXIST);
     }
@@ -49,7 +43,7 @@ public class NotificationService {
     // Lấy thông tin notification để gửi sang websocket
     CreateNotificationForm newForm = new CreateNotificationForm();
     newForm.setId(notification.getId());
-    newForm.setReceiverId(notification.getReceiverId());
+    newForm.setUserId(notification.getReceiverId());
     newForm.setTitle(notification.getTitle());
     newForm.setMessage(notification.getMessage());
     newForm.setRefType(notification.getRefType());

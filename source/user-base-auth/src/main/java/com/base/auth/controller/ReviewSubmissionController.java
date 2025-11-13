@@ -28,8 +28,6 @@ import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -73,8 +71,6 @@ public class ReviewSubmissionController extends ABasicController{
 
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('RESUB_C')")
-  @MessageMapping("/send")
-  @SendTo("/topic/notification")
   ApiMessageDto<String> create(@RequestBody @Valid CreateReviewSubmissionForm request, BindingResult bindingResult){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     if (!isEducator()){
@@ -184,7 +180,7 @@ public class ReviewSubmissionController extends ABasicController{
     String title = "Bạn đã được đánh giá";
     String message = String.format("Giảng viên đã gửi đánh giá cho bài mô phỏng '%s'.", simulationTitle);
     CreateNotificationForm notificationForm = new CreateNotificationForm();
-    notificationForm.setReceiverId(receiverId);
+    notificationForm.setUserId(receiverId);
     notificationForm.setMessage(message);
     notificationForm.setTitle(title);
     notificationForm.setRefType(UserBaseConstant.NOTIFICATION_TYPE_REVIEW_SUBMISSION);

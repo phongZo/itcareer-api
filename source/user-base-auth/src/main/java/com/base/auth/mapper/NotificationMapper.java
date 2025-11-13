@@ -15,7 +15,7 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE,
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface NotificationMapper {
-  @Mapping(source = "receiverId", target = "receiverId")
+  @Mapping(source = "userId", target = "receiverId")
   @Mapping(source = "title", target = "title")
   @Mapping(source = "message", target = "message")
   @Mapping(source = "refType", target = "refType")

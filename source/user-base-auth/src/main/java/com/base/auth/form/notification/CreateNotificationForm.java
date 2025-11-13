@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class CreateNotificationForm {
   private Long id;
-  private Long receiverId;
+  private Long userId;
   private String title;
   private String message;
   private String refType;
