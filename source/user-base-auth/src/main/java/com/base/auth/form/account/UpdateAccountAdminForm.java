@@ -2,6 +2,8 @@ package com.base.auth.form.account;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.Date;
+import javax.validation.constraints.Past;
 import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
@@ -23,6 +25,9 @@ public class UpdateAccountAdminForm {
     @NotEmpty(message = "fullName cant not be null")
     @ApiModelProperty(name = "fullName", required = true)
     private String fullName;
+    @ApiModelProperty(name = "birthday")
+    @Past(message = "birthday must be in the past")
+    private Date birthday;
     @ApiModelProperty(name = "avatarPath")
     private String avatarPath ;
     @NotNull(message = "groupId cant not be null")

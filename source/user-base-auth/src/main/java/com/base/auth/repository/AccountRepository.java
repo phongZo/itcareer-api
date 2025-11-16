@@ -1,6 +1,7 @@
 package com.base.auth.repository;
 
 import com.base.auth.model.Account;
+import javax.validation.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,4 +15,10 @@ public interface AccountRepository extends JpaRepository<Account, Long>, JpaSpec
     Account findAccountByResetPwdCode(String resetPwdCode);
     Account findAccountByEmailOrUsername(String email, String username);
     Page<Account> findAllByKind(int kind, Pageable pageable);
+
+    Boolean existsByUsername(String username);
+
+    Boolean existsByEmail(String email);
+
+    Boolean existsByPhone(String phone);
 }

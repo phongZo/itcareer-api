@@ -1,6 +1,6 @@
 package com.base.auth.controller;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.ErrorCode;
 import com.base.auth.dto.ResponseListDto;
@@ -68,32 +68,37 @@ public class StudentTaskQuestionProgressController extends ABasicController{
     StudentSubTaskProgress studentSubTaskProgress = studentSubTaskProgressRepository.findById(
         createStudentTaskQuestionProgressForm.getStudentSubTaskProgressId()).orElseThrow(()
     -> new NotFoundException("Student subtask progress not found", ErrorCode.STUDENT_SUBTASK_PROGRESS_ERROR_NOT_FOUND));
+    if (Objects.equals(studentSubTaskProgress.getStatus(), ITDreamConstant.STATUS_LOCK)){
+      throw new BadRequestException("Task fail. Please reset task", ErrorCode.TASK_ERROR_FAIL);
+    }
     TaskQuestion taskQuestion = taskQuestionRepository.findById(
         createStudentTaskQuestionProgressForm.getTaskQuestionId()).orElseThrow(()
     -> new NotFoundException("Task question not found", ErrorCode.TASK_QUESTION_ERROR_NOT_FOUND));
     if (!Objects.equals(taskQuestion.getTask().getId(), studentSubTaskProgress.getTask().getId())){
       throw new BadRequestException("Student task question progress cannot be created", ErrorCode.STUDENT_TASK_QUESTION_PROGRESS_ERROR_NOT_CREATE);
     }
-    StudentTaskQuestionProgress existStudentTaskQuestionProgress = studentTaskQuestionProgressRepository.findByTaskQuestionIdAndStudentSubTaskProgressIdAndIsCorrect(taskQuestion.getId(), studentSubTaskProgress.getId(), true).orElse(null);
-    if (existStudentTaskQuestionProgress != null){
+    boolean existStudentTaskQuestionProgress = studentTaskQuestionProgressRepository.existsByTaskQuestionIdAndStudentSubTaskProgressIdAndIsCorrect(taskQuestion.getId(), studentSubTaskProgress.getId(), true);
+    if (existStudentTaskQuestionProgress){
       throw new BadRequestException("Student task question progress already exist", ErrorCode.STUDENT_TASK_QUESTION_PROGRESS_ERROR_EXIST);
     }
     StudentTaskQuestionProgress studentTaskQuestionProgress = studentTaskQuestionProgressMapper.fromCreateStudentTaskQuestionProgressFormToEntity(createStudentTaskQuestionProgressForm);
     studentTaskQuestionProgress.setStudentSubTaskProgress(studentSubTaskProgress);
     studentTaskQuestionProgress.setTaskQuestion(taskQuestion);
-    if (Objects.equals(taskQuestion.getQuestionType(), UserBaseConstant.QUESTION_TYPE_FILE) || Objects.equals(taskQuestion.getQuestionType(), UserBaseConstant.QUESTION_TYPE_TEXT)){
+    if (Objects.equals(taskQuestion.getQuestionType(), ITDreamConstant.QUESTION_TYPE_FILE) || Objects.equals(taskQuestion.getQuestionType(), ITDreamConstant.QUESTION_TYPE_TEXT)){
       studentTaskQuestionProgress.setIsCorrect(true);
     } else {
       if (!createStudentTaskQuestionProgressForm.getIsCorrect()){
         if (studentSubTaskProgress.getErrorCount() >= studentSubTaskProgress.getTask().getMaxErrors()){
-          throw new BadRequestException("Subtask fail", ErrorCode.SUBTASK_ERROR_FAIL);
+          studentSubTaskProgress.setStatus(ITDreamConstant.STATUS_LOCK);
+          studentSubTaskProgressRepository.save(studentSubTaskProgress);
+          throw new BadRequestException("Task fail", ErrorCode.TASK_ERROR_FAIL);
         }
         studentSubTaskProgress.setErrorCount(studentSubTaskProgress.getErrorCount() + 1);
       }
       studentTaskQuestionProgress.setIsCorrect(createStudentTaskQuestionProgressForm.getIsCorrect());
     }
     studentTaskQuestionProgressRepository.save(studentTaskQuestionProgress);
-    apiMessageDto.setMessage("Create success");
+    apiMessageDto.setMessage("Create student task question progress success");
     return apiMessageDto;
   }
 
@@ -110,7 +115,7 @@ public class StudentTaskQuestionProgressController extends ABasicController{
     responseListDto.setTotalElements(studentTaskQuestionProgresses.getTotalElements());
     responseListDto.setTotalPages(studentTaskQuestionProgresses.getTotalPages());
     apiMessageDto.setData(responseListDto);
-    apiMessageDto.setMessage("Get list success");
+    apiMessageDto.setMessage("Get list task question progress success");
     return apiMessageDto;
   }
 
@@ -124,7 +129,7 @@ public class StudentTaskQuestionProgressController extends ABasicController{
     StudentTaskQuestionProgress studentTaskQuestionProgress = studentTaskQuestionProgressRepository.findById(id).orElseThrow(()
     -> new NotFoundException("Student task question progress not found", ErrorCode.STUDENT_TASK_QUESTION_PROGRESS_ERROR_NOT_FOUND));
     studentTaskQuestionProgressRepository.delete(studentTaskQuestionProgress);
-    apiMessageDto.setMessage("Delete success");
+    apiMessageDto.setMessage("Delete student task question progress success");
     return apiMessageDto;
   }
 

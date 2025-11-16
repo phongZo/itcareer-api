@@ -11,14 +11,13 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface SimulationRepository extends JpaRepository<Simulation, Long>,
     JpaSpecificationExecutor<Simulation> {
-
-  Optional<Simulation> findBySpecializationId(Long specializationId);
-
   Page<Simulation> findAllByStatus(Integer statusActive, Pageable pageable);
-
-  Optional<Simulation> findByTitleAndEducatorId(String title, long educatorId);
 
   void deleteAllByEducatorId(Long educatorId);
 
   List<Simulation> findAllByEducatorId(Long educatorId);
+
+  boolean existsBySpecializationId(Long specializationId);
+
+  boolean existsByTitleAndEducatorId(String title, long educatorId);
 }

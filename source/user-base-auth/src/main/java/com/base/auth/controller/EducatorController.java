@@ -1,15 +1,15 @@
 package com.base.auth.controller;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.ErrorCode;
 import com.base.auth.dto.ResponseListDto;
 import com.base.auth.dto.account.OtpDto;
-import com.base.auth.dto.educator.EducatorAutoCompleteDto;
 import com.base.auth.dto.educator.EducatorDto;
 import com.base.auth.dto.educator.ProfileEducatorDto;
 import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
+import com.base.auth.exception.UnauthorizationException;
 import com.base.auth.form.account.VerifyUserForm;
 import com.base.auth.form.educator.RequestEducatorIdForm;
 import com.base.auth.form.educator.SignUpEducatorForm;
@@ -24,14 +24,16 @@ import com.base.auth.model.Simulation;
 import com.base.auth.model.Task;
 import com.base.auth.model.criteria.EducatorCriteria;
 import com.base.auth.repository.AccountRepository;
+import com.base.auth.repository.AchievementRepository;
 import com.base.auth.repository.EducatorRepository;
 import com.base.auth.repository.GroupRepository;
+import com.base.auth.repository.ReviewRepository;
+import com.base.auth.repository.ReviewSubmissionRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
 import com.base.auth.repository.StudentTaskQuestionProgressRepository;
 import com.base.auth.repository.TaskQuestionRepository;
 import com.base.auth.repository.TaskRepository;
-import com.base.auth.service.UserBaseApiService;
 import com.base.auth.utils.AESUtils;
 import com.base.auth.utils.ConvertUtils;
 import java.util.Date;
@@ -42,7 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -97,34 +98,44 @@ public class EducatorController extends ABasicController{
   @Autowired
   StudentTaskQuestionProgressRepository studentTaskQuestionProgressRepository;
 
+  @Autowired
+  AchievementRepository achievementRepository;
+
+  @Autowired
+  ReviewRepository reviewRepository;
+
+  @Autowired
+  ReviewSubmissionRepository reviewSubmissionRepository;
+
   @PostMapping(value = "/signup", produces= MediaType.APPLICATION_JSON_VALUE)
   public ApiMessageDto<OtpDto> create(@Valid @RequestBody SignUpEducatorForm signUpEducatorForm, BindingResult bindingResult)
   {
     ApiMessageDto<OtpDto> apiMessageDto = new ApiMessageDto<>();
-
-    Account accountByUsername = accountRepository.findAccountByUsername(signUpEducatorForm.getUsername());
-    if (accountByUsername != null){
-      throw new BadRequestException("username already exists", ErrorCode.ACCOUNT_ERROR_USERNAME_EXIST);
+    Boolean existUsername = accountRepository.existsByUsername(signUpEducatorForm.getUsername());
+    if (existUsername){
+      throw new BadRequestException("Username already exists", ErrorCode.ACCOUNT_ERROR_USERNAME_EXIST);
     }
 
-    Account accountByEmail = accountRepository.findAccountByEmail(signUpEducatorForm.getEmail());
-    if (accountByEmail!=null)
+    Boolean existEmail = accountRepository.existsByEmail(signUpEducatorForm.getEmail());
+    if (existEmail)
     {
-      throw new BadRequestException("email already exists", ErrorCode.ACCOUNT_ERROR_EMAIL_EXIST);
+      throw new BadRequestException("Email already exists", ErrorCode.ACCOUNT_ERROR_EMAIL_EXIST);
     }
 
-    Account accountByPhone = accountRepository.findAccountByPhone(signUpEducatorForm.getPhone());
-    if (accountByPhone!=null)
+    Boolean existPhone = accountRepository.existsByPhone(signUpEducatorForm.getPhone());
+    if (existPhone)
     {
-      throw new BadRequestException("phone already exists", ErrorCode.ACCOUNT_ERROR_PHONE_EXIST);
+      throw new BadRequestException("Phone already exists", ErrorCode.ACCOUNT_ERROR_PHONE_EXIST);
     }
-
     Account account = accountMapper.fromSignUpEducatorToAccount(signUpEducatorForm);
     account.setPassword(passwordEncoder.encode(signUpEducatorForm.getPassword()));
-    account.setKind(UserBaseConstant.USER_KIND_EDUCATOR);
-    Group group = groupRepository.findFirstByKind(UserBaseConstant.USER_KIND_EDUCATOR);
+    account.setKind(ITDreamConstant.USER_KIND_EDUCATOR);
+    Group group = groupRepository.findFirstByKind(ITDreamConstant.USER_KIND_EDUCATOR);
+    if (group == null){
+      throw new NotFoundException("Group not found", ErrorCode.GROUP_ERROR_NOT_FOUND);
+    }
     account.setGroup(group);
-    account.setStatus(UserBaseConstant.STATUS_PENDING);
+    account.setStatus(ITDreamConstant.STATUS_PENDING);
     String otp = userBaseApiService.getRequestOTP();
     account.setAttemptCode(0);
     account.setResetPwdCode(otp);
@@ -133,50 +144,29 @@ public class EducatorController extends ABasicController{
 
     Educator educator = new Educator();
     educator.setAccount(account);
-    educator.setBirthday(signUpEducatorForm.getBirthday());
     educatorRepository.save(educator);
 
     sendVerifyAccount(account);
     OtpDto otpDto = new OtpDto();
     String hash = AESUtils.encrypt (account.getId()+";"+otp, true);
     otpDto.setIdHash(hash);
-
-    apiMessageDto.setResult(true);
     apiMessageDto.setData(otpDto);
-    apiMessageDto.setMessage("Sign Up Success, please check email.");
+    apiMessageDto.setMessage("Sign up success, please check email.");
     return apiMessageDto;
   }
 
   @GetMapping(value = "/list", produces= MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('ED_L')")
-  public ApiMessageDto<ResponseListDto<List<EducatorDto>>> getListEducator(
-      EducatorCriteria educatorCriteria , Pageable pageable)
+  public ApiMessageDto<ResponseListDto<List<EducatorDto>>> getListEducator(EducatorCriteria educatorCriteria , Pageable pageable)
   {
     ApiMessageDto<ResponseListDto<List<EducatorDto>>> apiMessageDto = new ApiMessageDto<>();
     ResponseListDto<List<EducatorDto>> responseListDto = new ResponseListDto<>();
     Page<Educator> listEducator = educatorRepository.findAll(educatorCriteria.getSpecification(),pageable);
     responseListDto.setContent(educatorMapper.fromEducatorListToEducatorDtoList(listEducator.getContent()));
-    responseListDto.setTotalPages(listEducator.getTotalPages());
     responseListDto.setTotalElements(listEducator.getTotalElements());
-
+    responseListDto.setTotalPages(listEducator.getTotalPages());
     apiMessageDto.setData(responseListDto);
     apiMessageDto.setMessage("Get list educator success");
-    return apiMessageDto;
-  }
-
-  @GetMapping(value = "/auto-complete",produces = MediaType.APPLICATION_JSON_VALUE)
-  public ApiMessageDto<ResponseListDto<List<EducatorAutoCompleteDto>>> ListEducatorAutoComplete(EducatorCriteria educatorCriteria)
-  {
-    ApiMessageDto<ResponseListDto<List<EducatorAutoCompleteDto>>> apiMessageDto = new ApiMessageDto<>();
-    ResponseListDto<List<EducatorAutoCompleteDto>> responseListDto = new ResponseListDto<>();
-    Pageable pageable = PageRequest.of(0,10);
-    Page<Educator> listEducator = educatorRepository.findAll(educatorCriteria.getSpecification(),pageable);
-    responseListDto.setContent(educatorMapper.fromEducatorListToEducatorDtoListAutocomplete(listEducator.getContent()));
-    responseListDto.setTotalPages(listEducator.getTotalPages());
-    responseListDto.setTotalElements(listEducator.getTotalElements());
-
-    apiMessageDto.setData(responseListDto);
-    apiMessageDto.setMessage("get success");
     return apiMessageDto;
   }
 
@@ -184,6 +174,9 @@ public class EducatorController extends ABasicController{
   @PreAuthorize("hasRole('ED_V')")
   public ApiMessageDto<EducatorDto> getEducator(@PathVariable("id") Long id)
   {
+    if (!isAdmin()){
+      throw new UnauthorizationException("User is not an admin");
+    }
     ApiMessageDto<EducatorDto> apiMessageDto = new ApiMessageDto<>();
     Educator educator = educatorRepository.findById(id).orElseThrow(()
         -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
@@ -196,51 +189,42 @@ public class EducatorController extends ABasicController{
   @PutMapping(value = "/update", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('ED_U')")
   public ApiMessageDto<String> updateEducator(@Valid @RequestBody UpdateEducatorForm updateEducatorForm, BindingResult bindingResult) {
-
+    if (!isAdmin()){
+      throw new UnauthorizationException("User is not an admin");
+    }
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
-    Educator educator = educatorRepository.findById(updateEducatorForm.getId()).orElse(null);
-    if (educator==null)
+    Educator educator = educatorRepository.findById(updateEducatorForm.getId()).orElseThrow(()
+    -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
+
+    Account account = accountRepository.findById(educator.getAccount().getId()).orElseThrow(()
+    -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
+
+    if (!Objects.equals(educator.getAccount().getUsername(), updateEducatorForm.getUsername())){
+      Boolean existUsername = accountRepository.existsByUsername(updateEducatorForm.getUsername());
+      if (existUsername){
+        throw new BadRequestException("Username already exist", ErrorCode.ACCOUNT_ERROR_USERNAME_EXIST);
+      }
+      account.setUsername(updateEducatorForm.getUsername());
+    }
+
+    if (!Objects.equals(educator.getAccount().getEmail(), updateEducatorForm.getEmail()))
     {
-      throw new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND);
-    }
-
-    Account account = accountRepository.findById(educator.getAccount().getId()).orElse(null);
-    if (account == null){
-      throw new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
-    }
-
-    if (StringUtils.isNotBlank(updateEducatorForm.getUsername())){
-      if (!Objects.equals(educator.getAccount().getUsername(), updateEducatorForm.getUsername())){
-        Account accountByUsername = accountRepository.findAccountByUsername(updateEducatorForm.getUsername());
-        if (accountByUsername != null){
-          throw new BadRequestException("username already exist", ErrorCode.ACCOUNT_ERROR_USERNAME_EXIST);
-        }
-        account.setUsername(updateEducatorForm.getUsername());
-      }
-    }
-
-    if (StringUtils.isNotBlank(updateEducatorForm.getPhone())){
-      if (!Objects.equals(educator.getAccount().getPhone(), updateEducatorForm.getPhone()))
+      Boolean existEmail = accountRepository.existsByEmail(updateEducatorForm.getEmail());
+      if(existEmail)
       {
-        Account accountByPhone = accountRepository.findAccountByPhone(updateEducatorForm.getPhone());
-        if(accountByPhone!=null)
-        {
-          throw new BadRequestException("phone already exist", ErrorCode.ACCOUNT_ERROR_PHONE_EXIST);
-        }
-        account.setPhone(updateEducatorForm.getPhone());
+        throw new BadRequestException("email already exist", ErrorCode.ACCOUNT_ERROR_EMAIL_EXIST);
       }
+      account.setEmail(updateEducatorForm.getEmail());
     }
 
-    if (StringUtils.isNotBlank(updateEducatorForm.getEmail())){
-      if (!Objects.equals(educator.getAccount().getEmail(), updateEducatorForm.getEmail()))
+    if (!Objects.equals(educator.getAccount().getPhone(), updateEducatorForm.getPhone()))
+    {
+      Boolean existPhone = accountRepository.existsByPhone(updateEducatorForm.getPhone());
+      if(existPhone)
       {
-        Account accountByEmail = accountRepository.findAccountByEmail(updateEducatorForm.getEmail());
-        if(accountByEmail!=null)
-        {
-          throw new BadRequestException("email already exist", ErrorCode.ACCOUNT_ERROR_EMAIL_EXIST);
-        }
-        account.setEmail(updateEducatorForm.getEmail());
+        throw new BadRequestException("phone already exist", ErrorCode.ACCOUNT_ERROR_PHONE_EXIST);
       }
+      account.setPhone(updateEducatorForm.getPhone());
     }
 
     if(StringUtils.isNoneBlank(updateEducatorForm.getPassword()))
@@ -251,13 +235,12 @@ public class EducatorController extends ABasicController{
     if (StringUtils.isNotBlank(updateEducatorForm.getAvatarPath())) {
       if (!updateEducatorForm.getAvatarPath().equals(account.getAvatarPath())){
         userBaseApiService.deleteByFilePath(account.getAvatarPath());
+        account.setAvatarPath(updateEducatorForm.getAvatarPath());
       }
-      account.setAvatarPath(updateEducatorForm.getAvatarPath());
     }
-
     accountMapper.fromUpdateEducatorFormToEntity(updateEducatorForm, account);
     accountRepository.save(account);
-    apiMessageDto.setMessage("update success");
+    apiMessageDto.setMessage("Update educator success");
     return apiMessageDto;
   }
 
@@ -266,6 +249,9 @@ public class EducatorController extends ABasicController{
   @Transactional
   public ApiMessageDto<String> deleteEducator(@PathVariable("id") Long id)
   {
+    if (!isAdmin()){
+      throw new UnauthorizationException("User is not an admin");
+    }
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Educator educator = educatorRepository.findById(id).orElseThrow(()
         -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
@@ -273,11 +259,8 @@ public class EducatorController extends ABasicController{
     Account account = accountRepository.findById(educator.getAccount().getId()).orElseThrow(()
         -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
 
-    if (account.getIsSuperAdmin()){
-      apiMessageDto.setResult(false);
-      apiMessageDto.setMessage("Not allow delete super admin");
-      apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_NOT_ALLOW_DELETE_SUPPER_ADMIN);
-      return apiMessageDto;
+    if (Objects.equals(account.getKind(), ITDreamConstant.USER_KIND_ADMIN)){
+      throw new BadRequestException("Not allow delete admin", ErrorCode.ACCOUNT_ERROR_NOT_ALLOW_DELETE_ADMIN);
     }
 
     List<Task> tasks = taskRepository.findAllByEducatorId(id);
@@ -288,11 +271,14 @@ public class EducatorController extends ABasicController{
     List<Simulation> simulations = simulationRepository.findAllByEducatorId(id);
     for (Simulation simulation : simulations){
       deleteSimulationFiles(simulation);
+      achievementRepository.setNullSimulationId(simulation.getId());
     }
 
     userBaseApiService.deleteByFilePath(educator.getAccount().getAvatarPath());
     studentTaskQuestionProgressRepository.deleteAllByEducatorId(id);
     studentSubTaskProgressRepository.deleteAllByEducatorId(id);
+    reviewSubmissionRepository.deleteAllByEducatorId(id);
+    reviewRepository.deleteAllByEducatorId(id);
     taskQuestionRepository.deleteAllByEducatorId(id);
     taskRepository.deleteAllSubTaskByEducatorId(id);
     taskRepository.deleteAllTaskByEducatorId(id);
@@ -313,7 +299,7 @@ public class EducatorController extends ABasicController{
         () -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
     ProfileEducatorDto educatorDto = educatorMapper.fromEducatorToProfileDto(educator);
     apiMessageDto.setData(educatorDto);
-    apiMessageDto.setMessage("Get profile success");
+    apiMessageDto.setMessage("Get profile educator success");
     return apiMessageDto;
   }
 
@@ -326,25 +312,30 @@ public class EducatorController extends ABasicController{
     Educator currentUser = educatorRepository.findById(currentAccount.getId()).orElseThrow(() ->
         new NotFoundException("educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
 
-    if (StringUtils.isNotBlank(updateEducatorForm.getUsername())){
-      if (!Objects.equals(currentAccount.getUsername(), updateEducatorForm.getUsername())){
-        Account accountByUsername = accountRepository.findAccountByUsername(updateEducatorForm.getUsername());
-        if (accountByUsername != null){
-          throw new BadRequestException("username already exists", ErrorCode.ACCOUNT_ERROR_USERNAME_EXIST);
-        }
-        currentAccount.setUsername(updateEducatorForm.getUsername());
+    if (!Objects.equals(currentAccount.getUsername(), updateEducatorForm.getUsername())){
+      Boolean existUsername = accountRepository.existsByUsername(updateEducatorForm.getUsername());
+      if (existUsername){
+        throw new BadRequestException("Username already exist", ErrorCode.ACCOUNT_ERROR_USERNAME_EXIST);
       }
+      currentAccount.setUsername(updateEducatorForm.getUsername());
+    }
+
+    if (!Objects.equals(currentAccount.getPhone(), updateEducatorForm.getPhone())){
+      Boolean existPhone = accountRepository.existsByPhone(updateEducatorForm.getPhone());
+      if (existPhone){
+        throw new BadRequestException("Phone already exist", ErrorCode.ACCOUNT_ERROR_PHONE_EXIST);
+      }
+      currentAccount.setPhone(updateEducatorForm.getPhone());
     }
 
     if (StringUtils.isNotBlank(updateEducatorForm.getAvatarPath())) {
       if (!updateEducatorForm.getAvatarPath().equals(currentAccount.getAvatarPath())){
         userBaseApiService.deleteByFilePath(currentAccount.getAvatarPath());
+        currentAccount.setAvatarPath(updateEducatorForm.getAvatarPath());
       }
-      currentAccount.setAvatarPath(updateEducatorForm.getAvatarPath());
     }
 
     accountMapper.fromUpdateProfileEducatorFormToEntity(updateEducatorForm, currentAccount);
-    educatorMapper.fromUpdateProfileEducatorFormToEntity(updateEducatorForm, currentUser);
     currentUser.setAccount(currentAccount);
     accountRepository.save(currentAccount);
     educatorRepository.save(currentUser);
@@ -358,39 +349,37 @@ public class EducatorController extends ABasicController{
     String[] hash = AESUtils.decrypt(verifyUserForm.getIdHash(),true).split(";",2);
     Long id = ConvertUtils.convertStringToLong(hash[0]);
     if(id <= 0){
-      throw new BadRequestException("incorrect hash verification", ErrorCode.ACCOUNT_ERROR_INCORRECT_HASH_VERIFICATION);
+      throw new BadRequestException("Incorrect hash verification", ErrorCode.ACCOUNT_ERROR_INCORRECT_HASH_VERIFICATION);
     }
 
     Account account = accountRepository.findById(id).orElse(null);
     if (account == null ) {
-      throw new NotFoundException("account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
+      throw new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
     }
 
-    if (!Objects.equals(UserBaseConstant.STATUS_PENDING, account.getStatus())){
-      throw new BadRequestException("educator cannot be verified", ErrorCode.USER_ERROR_VERIFY_FAILED);
+    if (!Objects.equals(ITDreamConstant.STATUS_PENDING, account.getStatus())){
+      throw new BadRequestException("Educator cannot be verified", ErrorCode.USER_ERROR_VERIFY_FAILED);
     }
 
-    if(account.getAttemptCode() >= UserBaseConstant.MAX_ATTEMPT_FORGET_PWD){
-      account.setStatus(UserBaseConstant.STATUS_LOCK);
-      throw new BadRequestException("account has been locked", ErrorCode.ACCOUNT_ERROR_LOCKED);
+    if(account.getAttemptCode() >= ITDreamConstant.MAX_ATTEMPT_FORGET_PWD){
+      account.setStatus(ITDreamConstant.STATUS_LOCK);
+      accountRepository.save(account);
+      throw new BadRequestException("Account has been locked", ErrorCode.ACCOUNT_ERROR_LOCKED);
     }
 
     if(!account.getResetPwdCode().equals(verifyUserForm.getOtp()) ||
-        (new Date().getTime() - account.getResetPwdTime().getTime() >= UserBaseConstant.MAX_TIME_FORGET_PWD)){
+        (new Date().getTime() - account.getResetPwdTime().getTime() >= ITDreamConstant.MAX_TIME_FORGET_PWD)){
 
       //tang so lan
       account.setAttemptCode(account.getAttemptCode()+1);
       accountRepository.save(account);
-
-      apiMessageDto.setResult(false);
-      apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_OPT_INVALID);
-      return apiMessageDto;
+      throw new BadRequestException("OTP invalid", ErrorCode.ACCOUNT_ERROR_OPT_INVALID);
     }
 
     account.setResetPwdTime(null);
     account.setResetPwdCode(null);
     account.setAttemptCode(null);
-    account.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
+    account.setStatus(ITDreamConstant.STATUS_WAITING_APPROVE);
     accountRepository.save(account);
     apiMessageDto.setMessage("verify account educator success. Please wait for approval");
     return apiMessageDto;
@@ -399,6 +388,9 @@ public class EducatorController extends ABasicController{
   @PutMapping(value = "/approve", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('ED_AP')")
   public ApiMessageDto<String> approveAccountEducator(@Valid @RequestBody RequestEducatorIdForm requestEducatorIdForm, BindingResult bindingResult){
+    if (!isAdmin()){
+      throw new UnauthorizationException("User is not an admin");
+    }
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Educator educator = educatorRepository.findById(requestEducatorIdForm.getId()).orElseThrow(()
         -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
@@ -406,11 +398,10 @@ public class EducatorController extends ABasicController{
     Account account = accountRepository.findById(educator.getAccount().getId()).orElseThrow(()
         -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
 
-    if (!Objects.equals(UserBaseConstant.STATUS_WAITING_APPROVE, account.getStatus())){
+    if (!Objects.equals(ITDreamConstant.STATUS_WAITING_APPROVE, account.getStatus())){
       throw new BadRequestException("Educator cannot be approved", ErrorCode.USER_ERROR_NOT_APPROVE);
     }
-
-    account.setStatus(UserBaseConstant.STATUS_ACTIVE);
+    account.setStatus(ITDreamConstant.STATUS_ACTIVE);
     accountRepository.save(account);
     apiMessageDto.setMessage("Approve educator success");
     return apiMessageDto;
@@ -419,6 +410,9 @@ public class EducatorController extends ABasicController{
   @PutMapping(value = "/reject", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('ED_RJ')")
   public ApiMessageDto<String> rejectAccountEducator(@Valid @RequestBody RequestEducatorIdForm requestEducatorIdForm, BindingResult bindingResult){
+    if (!isAdmin()){
+      throw new UnauthorizationException("User is not an admin");
+    }
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Educator educator = educatorRepository.findById(requestEducatorIdForm.getId()).orElseThrow(()
         -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
@@ -426,11 +420,10 @@ public class EducatorController extends ABasicController{
     Account account = accountRepository.findById(educator.getAccount().getId()).orElseThrow(()
         -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
 
-    if (!Objects.equals(UserBaseConstant.STATUS_WAITING_APPROVE, account.getStatus())){
+    if (!Objects.equals(ITDreamConstant.STATUS_WAITING_APPROVE, account.getStatus())){
       throw new BadRequestException("Educator cannot be rejected", ErrorCode.USER_ERROR_NOT_REJECT);
     }
-
-    account.setStatus(UserBaseConstant.STATUS_REJECT);
+    account.setStatus(ITDreamConstant.STATUS_REJECT);
     accountRepository.save(account);
     apiMessageDto.setMessage("Reject educator success");
     return apiMessageDto;

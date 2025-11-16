@@ -1,6 +1,6 @@
 package com.base.auth.service;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.model.Permission;
 import java.io.File;
 import java.io.IOException;
@@ -50,7 +50,7 @@ public class UserBaseApiService {
 
             String rootFolder = parts[0]; // video, avatar, image, document...
             String subPath = parts[1];
-            String basePath = uploadDir + UserBaseConstant.DIRECTORY_GENERAL + "/" + rootFolder;
+            String basePath = uploadDir + ITDreamConstant.DIRECTORY_GENERAL + "/" + rootFolder;
             Path subPathObj = Paths.get(subPath);
             boolean isFolderKind = !subPathObj.getFileName().toString().contains(".");
 

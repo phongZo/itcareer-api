@@ -4,5 +4,6 @@ import lombok.Data;
 
 @Data
 public class SpecializationAutoCompleteDto {
+  private Long id;
   private String name;
 }

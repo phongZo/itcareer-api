@@ -24,6 +24,7 @@ public interface ReviewMapper {
   @BeanMapping(ignoreByDefault = true)
   Review fromCreateReviewFormToEntity(CreateReviewForm createReviewForm);
 
+  @Mapping(source = "id", target = "id")
   @Mapping(source = "star", target = "star")
   @Mapping(source = "comment", target = "comment")
   @Mapping(source = "student", target = "student", qualifiedByName = "fromEntityToStudentDto")
@@ -32,6 +33,7 @@ public interface ReviewMapper {
   @Named("fromEntityToReviewDto")
   ReviewDto fromEntityToReviewDto(Review review);
 
+  @Mapping(source = "id", target = "id")
   @Mapping(source = "star", target = "star")
   @Mapping(source = "comment", target = "comment")
   @Mapping(source = "student", target = "student", qualifiedByName = "fromStudentToProfileDto")

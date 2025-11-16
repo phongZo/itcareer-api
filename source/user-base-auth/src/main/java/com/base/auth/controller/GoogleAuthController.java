@@ -1,6 +1,6 @@
 package com.base.auth.controller;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.ErrorCode;
 import com.base.auth.exception.BadRequestException;
@@ -78,11 +78,11 @@ public class GoogleAuthController{
       googleLoginForm.setUserRole("educator");
       Account account = googleAuthService.authenticateWithGoogle(googleLoginForm);
 
-      if (Objects.equals(account.getKind(), UserBaseConstant.USER_KIND_EDUCATOR)){
-        if (Objects.equals(account.getStatus(), UserBaseConstant.STATUS_WAITING_APPROVE)){
+      if (Objects.equals(account.getKind(), ITDreamConstant.USER_KIND_EDUCATOR)){
+        if (Objects.equals(account.getStatus(), ITDreamConstant.STATUS_WAITING_APPROVE)){
           apiMessageDto.setMessage("Login success. Please wait for admin approval");
           return apiMessageDto;
-        } else if (!Objects.equals(account.getStatus(), UserBaseConstant.STATUS_WAITING_APPROVE) && !Objects.equals(account.getStatus(), UserBaseConstant.STATUS_ACTIVE)){
+        } else if (!Objects.equals(account.getStatus(), ITDreamConstant.STATUS_WAITING_APPROVE) && !Objects.equals(account.getStatus(), ITDreamConstant.STATUS_ACTIVE)){
           throw new BadRequestException("Account is disabled", ErrorCode.ACCOUNT_ERROR_NOT_ACTIVE);
         }
       }

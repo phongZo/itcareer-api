@@ -1,6 +1,6 @@
 package com.base.auth.controller;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.ErrorCode;
 import com.base.auth.dto.ResponseListDto;
@@ -23,7 +23,6 @@ import com.base.auth.repository.StudentTaskQuestionProgressRepository;
 import com.base.auth.repository.TaskQuestionRepository;
 import com.base.auth.repository.TaskRepository;
 import com.base.auth.service.ProcessVideoService;
-import com.base.auth.service.UserBaseApiService;
 import java.util.List;
 import java.util.Objects;
 import javax.transaction.Transactional;
@@ -82,42 +81,48 @@ public class TaskController extends ABasicController{
     Simulation simulation = simulationRepository.findById(createTaskForm.getSimulationId()).orElseThrow(()
     -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
     if (!Objects.equals(simulation.getEducator().getId(), getCurrentUser())){
-      throw new BadRequestException("Simulation cannot be created", ErrorCode.SIMULATION_ERROR_NOT_AUTHORIZED);
+      throw new BadRequestException("Task in simulation cannot be created", ErrorCode.SIMULATION_ERROR_NOT_AUTHORIZED);
+    }
+    if (!Objects.equals(simulation.getStatus(), ITDreamConstant.STATUS_WAITING_APPROVE) && !Objects.equals(simulation.getStatus(), ITDreamConstant.STATUS_ACTIVE)){
+      throw new BadRequestException("Simulation cannot be activated or is awaiting approval", ErrorCode.SIMULATION_ERROR_NOT_ACTIVE);
     }
 
-    if (Objects.equals(createTaskForm.getKind(), UserBaseConstant.TASK_KIND_TASK)) {
+    if (Objects.equals(createTaskForm.getKind(), ITDreamConstant.TASK_KIND_TASK)) {
       if (createTaskForm.getParentId() != null) {
         throw new BadRequestException("Task cannot have parent", ErrorCode.TASK_ERROR_NOT_PARENT);
       }
-      Task task = taskRepository.findByNameAndKindAndSimulationId(createTaskForm.getName(), UserBaseConstant.TASK_KIND_TASK, createTaskForm.getSimulationId()).orElse(null);
-      if (task != null) {
+      // 1 simulation không thể tồn tại 2 task (kind = 1) có name giống nhau
+      // nhưng có thể tồn tại 1 task (kind = 1) và 1 subtask (kind = 2) có name giống nhau
+      Boolean existTask = taskRepository.existsByNameAndKindAndSimulationId(createTaskForm.getName(), ITDreamConstant.TASK_KIND_TASK, createTaskForm.getSimulationId());
+      if (existTask) {
         throw new BadRequestException("Task name already exist", ErrorCode.TASK_ERROR_EXIST);
       }
-
     } else {
       if (createTaskForm.getParentId() == null) {
         throw new BadRequestException("Subtask must include parent", ErrorCode.TASK_ERROR_PARENT);
       }
-
-      if (taskRepository.existsByTitleAndParentId(createTaskForm.getTitle(), createTaskForm.getParentId())) {
-        throw new BadRequestException("Subtask title already exists under this parent", ErrorCode.TASK_ERROR_EXIST);
+      boolean checkKindTask = taskRepository.existsByKindAndParentId(ITDreamConstant.TASK_KIND_TASK, createTaskForm.getParentId());
+      if (!checkKindTask){
+        throw new BadRequestException("Kind of parent cannot be a task", ErrorCode.TASK_ERROR_PARENT_NOT_KIND_TASK);
       }
-
-      if (taskRepository.existsByTitleAndKindAndSimulationId(createTaskForm.getTitle(), UserBaseConstant.TASK_KIND_TASK, createTaskForm.getSimulationId())){
-        throw new BadRequestException("Subtask title already exists in a task", ErrorCode.TASK_ERROR_EXIST);
+      // 1 simulation không thể tồn tại 2 subtask trong cùng 1 task có title giống nhau
+      // Nhưng có thể tồn tại 2 subtask có title giống nhau nhưng phải khác task
+      Boolean existSubtask = taskRepository.existsByTitleAndKindAndParentIdAndSimulationId(createTaskForm.getTitle(), ITDreamConstant.TASK_KIND_SUBTASK, createTaskForm.getParentId(), createTaskForm.getSimulationId());
+      if (existSubtask) {
+        throw new BadRequestException("Subtask title already exists", ErrorCode.TASK_ERROR_EXIST);
       }
     }
 
     Task task = taskMapper.fromCreateTaskFormToEntity(createTaskForm);
-    if (Objects.equals(createTaskForm.getKind(), UserBaseConstant.TASK_KIND_SUBTASK)){
-      Task parentTask = taskRepository.findByIdAndKind(createTaskForm.getParentId(), UserBaseConstant.TASK_KIND_TASK)
+    if (Objects.equals(createTaskForm.getKind(), ITDreamConstant.TASK_KIND_SUBTASK)){
+      Task parentTask = taskRepository.findByIdAndKind(createTaskForm.getParentId(), ITDreamConstant.TASK_KIND_TASK)
           .orElseThrow(() -> new NotFoundException("Task parent not found", ErrorCode.TASK_ERROR_PARENT_NOT_FOUND));
       task.setParent(parentTask);
     }
     if (StringUtils.isNotBlank(createTaskForm.getVideoPath())){
-      task.setState(UserBaseConstant.STATE_TASK_PROCESSING);
+      task.setState(ITDreamConstant.STATE_TASK_PROCESSING);
     } else {
-      task.setState(UserBaseConstant.STATE_TASK_DONE);
+      task.setState(ITDreamConstant.STATE_TASK_DONE);
     }
     task.setSimulation(simulation);
     taskRepository.save(task);
@@ -125,14 +130,14 @@ public class TaskController extends ABasicController{
     if (StringUtils.isNotBlank(createTaskForm.getVideoPath())){
       RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
       data.setId(task.getId());
-      data.setKind(UserBaseConstant.KIND_TASK);
+      data.setKind(ITDreamConstant.KIND_TASK);
       data.setUrl(createTaskForm.getVideoPath());
       data.setTsSecond(tsSecond);
       processVideoService.sendProcessVideoMessage(data);
     }
 
-    if (Objects.equals(UserBaseConstant.STATUS_ACTIVE, simulation.getStatus())){
-      simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
+    if (Objects.equals(ITDreamConstant.STATUS_ACTIVE, simulation.getStatus())){
+      simulation.setStatus(ITDreamConstant.STATUS_WAITING_APPROVE);
       simulationRepository.save(simulation);
     }
 
@@ -149,29 +154,27 @@ public class TaskController extends ABasicController{
     responseListDto.setContent(taskMapper.fromEntityToTaskDtoList(tasks.getContent()));
     responseListDto.setTotalElements(tasks.getTotalElements());
     responseListDto.setTotalPages(tasks.getTotalPages());
-
     apiMessageDto.setData(responseListDto);
     apiMessageDto.setMessage("Get list success");
     return apiMessageDto;
   }
 
-  @GetMapping(value = "student-list", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(value = "/student-list", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('TA_ST_L')")
   public ApiMessageDto<ResponseListDto<List<TaskDisplayDto>>> getListForStudent(@Valid TaskCriteria taskCriteria, Pageable pageable){
     ApiMessageDto<ResponseListDto<List<TaskDisplayDto>>> apiMessageDto = new ApiMessageDto<>();
     ResponseListDto<List<TaskDisplayDto>> responseListDto = new ResponseListDto<>();
-    taskCriteria.setStatus(UserBaseConstant.STATUS_ACTIVE);
+    taskCriteria.setStatus(ITDreamConstant.STATUS_ACTIVE);
     Page<Task> tasks = taskRepository.findAll(taskCriteria.getSpecification(), pageable);
     responseListDto.setContent(taskMapper.fromEntityToTaskDisplayDtoList(tasks.getContent()));
     responseListDto.setTotalElements(tasks.getTotalElements());
     responseListDto.setTotalPages(tasks.getTotalPages());
-
     apiMessageDto.setData(responseListDto);
     apiMessageDto.setMessage("Get list success");
     return apiMessageDto;
   }
 
-  @GetMapping(value = "educator-list", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(value = "/educator-list", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('TA_ED_L')")
   public ApiMessageDto<ResponseListDto<List<TaskDisplayDto>>> getListForEducator(@Valid TaskCriteria taskCriteria, Pageable pageable){
     ApiMessageDto<ResponseListDto<List<TaskDisplayDto>>> apiMessageDto = new ApiMessageDto<>();
@@ -184,7 +187,6 @@ public class TaskController extends ABasicController{
     responseListDto.setContent(taskMapper.fromEntityToTaskDisplayDtoList(tasks.getContent()));
     responseListDto.setTotalElements(tasks.getTotalElements());
     responseListDto.setTotalPages(tasks.getTotalPages());
-
     apiMessageDto.setData(responseListDto);
     apiMessageDto.setMessage("Get list success");
     return apiMessageDto;
@@ -196,9 +198,6 @@ public class TaskController extends ABasicController{
     ApiMessageDto<TaskDto> apiMessageDto = new ApiMessageDto<>();
     Task task = taskRepository.findById(id).orElseThrow(()
     -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
-    if (!simulationRepository.existsById(task.getSimulation().getId())){
-      throw new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND);
-    }
     TaskDto taskDto = taskMapper.fromEntityToTaskDto(task);
     apiMessageDto.setData(taskDto);
     apiMessageDto.setMessage("Get success");
@@ -214,9 +213,6 @@ public class TaskController extends ABasicController{
     }
     Task task = taskRepository.findById(id).orElseThrow(()
         -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
-    if (!simulationRepository.existsById(task.getSimulation().getId())){
-      throw new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND);
-    }
     TaskEducatorDto taskDto = taskMapper.fromEntityToTaskEducatorDto(task);
     apiMessageDto.setData(taskDto);
     apiMessageDto.setMessage("Get success");
@@ -232,9 +228,6 @@ public class TaskController extends ABasicController{
     }
     Task task = taskRepository.findById(id).orElseThrow(()
         -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
-    if (!simulationRepository.existsById(task.getSimulation().getId())){
-      throw new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND);
-    }
     TaskStudentDto taskDto = taskMapper.fromEntityToTaskStudentDto(task);
     apiMessageDto.setData(taskDto);
     apiMessageDto.setMessage("Get success");
@@ -248,33 +241,51 @@ public class TaskController extends ABasicController{
     if (!isEducator()){
       throw new BadRequestException("User is not educator", ErrorCode.USER_ERROR_NOT_EDUCATOR);
     }
-    Simulation simulation = simulationRepository.findById(updateTaskForm.getSimulationId()).orElseThrow(()
-        -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-    if (!Objects.equals(simulation.getEducator().getId(), getCurrentUser())){
-      throw new BadRequestException("Simulation cannot be updated", ErrorCode.SIMULATION_ERROR_NOT_AUTHORIZED);
-    }
     Task task = taskRepository.findById(updateTaskForm.getId()).orElseThrow(()
     -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
-    if (!Objects.equals(updateTaskForm.getName(), task.getName()) && Objects.equals(task.getKind(), UserBaseConstant.TASK_KIND_TASK)){
-        if (updateTaskForm.getParentId() != null){
-          throw new BadRequestException("Task cannot have parent", ErrorCode.TASK_ERROR_NOT_PARENT);
-        }
-        if (taskRepository.existsByNameAndKindAndSimulationId(updateTaskForm.getName(), UserBaseConstant.TASK_KIND_TASK, updateTaskForm.getSimulationId())){
+
+    Simulation simulation = task.getSimulation();
+    if (simulation == null){
+      throw new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND);
+    }
+
+    if (!Objects.equals(simulation.getEducator().getId(), getCurrentUser())){
+      throw new BadRequestException("Task in simulation cannot be updated", ErrorCode.SIMULATION_ERROR_NOT_AUTHORIZED);
+    }
+
+    // Trường hợp nếu task tìm được có kind task (kind = 1)
+    if (Objects.equals(task.getKind(), ITDreamConstant.TASK_KIND_TASK)){
+      if (!Objects.equals(updateTaskForm.getName(), task.getName())){
+        Boolean existTask = taskRepository.existsByNameAndKindAndSimulationId(updateTaskForm.getName(), ITDreamConstant.TASK_KIND_TASK, task.getSimulation().getId());
+        if (existTask){
           throw new BadRequestException("Task name already exist", ErrorCode.TASK_ERROR_EXIST);
         }
-    } else if (Objects.equals(updateTaskForm.getName(), task.getName()) && Objects.equals(task.getKind(), UserBaseConstant.TASK_KIND_SUBTASK)){
+      }
+
+      if (updateTaskForm.getParentId() != null){
+        throw new BadRequestException("Task cannot have parent", ErrorCode.TASK_ERROR_NOT_PARENT);
+      }
+    }
+    // Trường hợp task tìm được có kind subtask (kind = 2)
+    else {
+      if (!Objects.equals(task.getTitle(), updateTaskForm.getTitle())){
+        Boolean existSubtask = taskRepository.existsByTitleAndKindAndParentIdAndSimulationId(
+            updateTaskForm.getTitle(), ITDreamConstant.TASK_KIND_SUBTASK, updateTaskForm.getParentId(), task.getSimulation().getId());
+        if (existSubtask){
+          throw new BadRequestException("Subtask title already exist", ErrorCode.TASK_ERROR_EXIST);
+        }
+      }
+
       if (updateTaskForm.getParentId() == null) {
         throw new BadRequestException("Subtask must include parent", ErrorCode.TASK_ERROR_PARENT);
       }
-      if (!Objects.equals(task.getParent() != null ? task.getParent().getId() : null, updateTaskForm.getParentId())){
-        throw new NotFoundException("Task parent not found", ErrorCode.TASK_ERROR_PARENT_NOT_FOUND);
+
+      Task parent = taskRepository.findById(updateTaskForm.getParentId()).orElseThrow(()
+      -> new NotFoundException("Task parent not found", ErrorCode.TASK_ERROR_NOT_FOUND));
+      if (!Objects.equals(parent.getKind(), ITDreamConstant.TASK_KIND_TASK)){
+        throw new BadRequestException("Kind of parent cannot be a task", ErrorCode.TASK_ERROR_PARENT_NOT_KIND_TASK);
       }
-      if (taskRepository.existsByTitleAndParentId(updateTaskForm.getTitle(), updateTaskForm.getParentId())) {
-        throw new BadRequestException("Subtask title already exists under this parent", ErrorCode.TASK_ERROR_EXIST);
-      }
-      if (taskRepository.existsByTitleAndKindAndSimulationId(updateTaskForm.getTitle(), UserBaseConstant.TASK_KIND_TASK, updateTaskForm.getSimulationId())){
-        throw new BadRequestException("Subtask title already exists in a task", ErrorCode.TASK_ERROR_EXIST);
-      }
+      task.setParent(parent);
     }
 
     if (StringUtils.isNotBlank(updateTaskForm.getVideoPath())){
@@ -284,7 +295,7 @@ public class TaskController extends ABasicController{
           RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
           data.setId(updateTaskForm.getId());
           data.setUrl(updateTaskForm.getVideoPath());
-          data.setKind(UserBaseConstant.KIND_TASK);
+          data.setKind(ITDreamConstant.KIND_TASK);
           data.setTsSecond(tsSecond);
           processVideoService.sendProcessVideoMessage(data);
         }
@@ -292,7 +303,7 @@ public class TaskController extends ABasicController{
         RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
         data.setId(updateTaskForm.getId());
         data.setUrl(updateTaskForm.getVideoPath());
-        data.setKind(UserBaseConstant.KIND_TASK);
+        data.setKind(ITDreamConstant.KIND_TASK);
         data.setTsSecond(tsSecond);
         processVideoService.sendProcessVideoMessage(data);
       }
@@ -315,8 +326,8 @@ public class TaskController extends ABasicController{
     taskMapper.fromUpdateTaskFormToEntity(updateTaskForm, task);
     taskRepository.save(task);
 
-    if (Objects.equals(UserBaseConstant.STATUS_ACTIVE, task.getSimulation().getStatus())){
-      simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
+    if (Objects.equals(ITDreamConstant.STATUS_ACTIVE, task.getSimulation().getStatus())){
+      simulation.setStatus(ITDreamConstant.STATUS_WAITING_APPROVE);
       simulationRepository.save(simulation);
     }
 
@@ -331,8 +342,10 @@ public class TaskController extends ABasicController{
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Task task = taskRepository.findById(id).orElseThrow(()
     -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
-    Simulation simulation = simulationRepository.findById(task.getSimulation().getId()).orElseThrow(()
-    -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
+    Simulation simulation = task.getSimulation();
+    if (simulation == null){
+      throw new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND);
+    }
     if (!Objects.equals(simulation.getEducator().getId(), getCurrentUser())){
       throw new BadRequestException("Task in simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_AUTHORIZED);
     }
@@ -340,10 +353,10 @@ public class TaskController extends ABasicController{
     studentSubTaskProgressRepository.deleteAllByTaskAndSubtask(id);
     taskQuestionRepository.deleteAllByTaskAndSubtask(id);
 
-    if (Objects.equals(task.getKind(), UserBaseConstant.TASK_KIND_SUBTASK)) {
+    if (Objects.equals(task.getKind(), ITDreamConstant.TASK_KIND_SUBTASK)) {
       deleteTaskFiles(task);
       taskRepository.delete(task);
-    } else if (Objects.equals(task.getKind(), UserBaseConstant.TASK_KIND_TASK)) {
+    } else if (Objects.equals(task.getKind(), ITDreamConstant.TASK_KIND_TASK)) {
       deleteTaskFiles(task);
       List<Task> subTasks = taskRepository.findAllByParentId(id);
       for (Task subTask : subTasks) {
@@ -353,8 +366,8 @@ public class TaskController extends ABasicController{
       taskRepository.delete(task);
     }
 
-    if (Objects.equals(simulation.getStatus(), UserBaseConstant.STATUS_ACTIVE)){
-      simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
+    if (Objects.equals(simulation.getStatus(), ITDreamConstant.STATUS_ACTIVE)){
+      simulation.setStatus(ITDreamConstant.STATUS_WAITING_APPROVE);
       simulationRepository.save(simulation);
     }
     apiMessageDto.setMessage("Delete task success");

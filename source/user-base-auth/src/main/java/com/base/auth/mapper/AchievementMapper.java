@@ -17,18 +17,18 @@ import org.mapstruct.ReportingPolicy;
     uses = {SimulationMapper.class, StudentMapper.class})
 public interface AchievementMapper {
   @Mapping(source = "id", target = "id")
-  @Mapping(source = "simulation", target = "simulation", qualifiedByName = "fromEntityToSimulationDto")
-  @Mapping(source = "student", target = "student", qualifiedByName = "fromEntityToStudentDto")
   @Mapping(source = "filePath", target = "filePath")
   @Mapping(source = "createdDate", target = "createdDate")
   @Mapping(source = "modifiedDate", target = "modifiedDate")
+  @Mapping(source = "simulation", target = "simulation", qualifiedByName = "fromEntityToSimulationDto")
+  @Mapping(source = "student", target = "student", qualifiedByName = "fromEntityToStudentDto")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToAchievementDto")
   AchievementDto fromEntityToAchievementDto(Achievement achievement);
 
   @Mapping(source = "id", target = "id")
-  @Mapping(source = "simulation", target = "simulation", qualifiedByName = "fromEntityToSimulationDisplayDto")
   @Mapping(source = "filePath", target = "filePath")
+  @Mapping(source = "simulation", target = "simulation", qualifiedByName = "fromEntityToSimulationDisplayDto")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToAchievementStudentDto")
   AchievementStudentDto fromEntityToAchievementStudentDto(Achievement achievement);

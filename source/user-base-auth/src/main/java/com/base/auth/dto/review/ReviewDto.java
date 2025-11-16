@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 public class ReviewDto {
+  private Long id;
   private Integer star;
   private String comment;
   private StudentDto student;

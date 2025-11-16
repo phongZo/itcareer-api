@@ -12,19 +12,19 @@ import lombok.Data;
 @Data
 public class SignUpEducatorForm {
   @ApiModelProperty(name = "username", required = true)
-  @NotEmpty(message = "username cant not be null")
+  @NotEmpty(message = "username cannot be null")
   private String username;
-  @ApiModelProperty(name = "email")
+  @ApiModelProperty(name = "email", required = true)
   @Email
   private String email;
-  @ApiModelProperty(name = "phone",required = true)
+  @ApiModelProperty(name = "phone", required = true)
   @Phone
   private String phone;
   @ApiModelProperty(name = "password", required = true)
   @Password
   private String password;
-  @NotEmpty(message = "fullName cant not be null")
-  @ApiModelProperty(name = "fullName",example = "Tam Nguyen",required = true)
+  @NotEmpty(message = "fullName cannot be null")
+  @ApiModelProperty(name = "fullName",example = "Hao Trinh", required = true)
   private String fullName;
   @ApiModelProperty(name = "birthday")
   @Past(message = "birthday must be in the past")

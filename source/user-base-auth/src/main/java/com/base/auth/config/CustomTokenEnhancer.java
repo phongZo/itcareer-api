@@ -118,7 +118,7 @@ public class CustomTokenEnhancer implements TokenEnhancer {
     public AccountForTokenDto getAccountByUsername(String username) {
         try {
             String query = "SELECT id, kind, username, email, full_name, is_super_admin " +
-                    "FROM db_user_base_account WHERE username = ? and status = 1 limit 1";
+                    "FROM db_it_dream_account WHERE username = ? and status = 1 limit 1";
             log.debug(query);
             List<AccountForTokenDto> dto = jdbcTemplate.query(query, new Object[]{username},  new BeanPropertyRowMapper<>(AccountForTokenDto.class));
             if (dto.size() > 0)return dto.get(0);
@@ -132,7 +132,7 @@ public class CustomTokenEnhancer implements TokenEnhancer {
     public AccountForTokenDto getUserByEmail(String email) {
         try {
             String query = "SELECT id, kind, username, email, phone, full_name, is_super_admin " +
-                    "FROM db_user_base_account WHERE email = ? and status = 1 limit 1";
+                    "FROM db_it_dream_account WHERE email = ? and status = 1 limit 1";
             log.debug(query);
             List<AccountForTokenDto> dto = jdbcTemplate.query(query, new Object[]{email},  new BeanPropertyRowMapper<>(AccountForTokenDto.class));
             if (dto.size() > 0)return dto.get(0);
@@ -146,9 +146,9 @@ public class CustomTokenEnhancer implements TokenEnhancer {
     public List<Permission> getListPermissionByUserKind(Integer kind) {
         try{
             String query = "select * " +
-                    "from db_user_base_permission p " +
-                    "join db_user_base_permission_group g on p.id = g.permission_id " +
-                    "join db_user_base_account a on a.group_id = g.group_id " +
+                    "from db_it_dream_permission p " +
+                    "join db_it_dream_permission_group g on p.id = g.permission_id " +
+                    "join db_it_dream_account a on a.group_id = g.group_id " +
                     "where a.kind = ?";
             return jdbcTemplate.query(query, new BeanPropertyRowMapper<>(Permission.class), kind);
         }catch (Exception e) {

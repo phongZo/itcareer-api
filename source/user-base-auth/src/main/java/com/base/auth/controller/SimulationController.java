@@ -1,6 +1,6 @@
 package com.base.auth.controller;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.ErrorCode;
 import com.base.auth.dto.ResponseListDto;
@@ -19,8 +19,10 @@ import com.base.auth.model.Simulation;
 import com.base.auth.model.Specialization;
 import com.base.auth.model.Task;
 import com.base.auth.model.criteria.SimulationCriteria;
+import com.base.auth.repository.AchievementRepository;
 import com.base.auth.repository.EducatorRepository;
 import com.base.auth.repository.ReviewRepository;
+import com.base.auth.repository.ReviewSubmissionRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.SpecializationRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
@@ -85,6 +87,12 @@ public class SimulationController extends ABasicController{
   @Autowired
   ReviewRepository reviewRepository;
 
+  @Autowired
+  AchievementRepository achievementRepository;
+
+  @Autowired
+  ReviewSubmissionRepository reviewSubmissionRepository;
+
   @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('SI_C')")
   public ApiMessageDto<String> create(@Valid @RequestBody CreateSimulationForm createSimulationForm, BindingResult bindingResult){
@@ -92,28 +100,28 @@ public class SimulationController extends ABasicController{
     Educator educator = educatorRepository.findById(getCurrentUser()).orElseThrow(()
         -> new NotFoundException("Educator not found"));
     if (!isEducator()){
-      throw new BadRequestException("User is not an educator", ErrorCode.USER_ERROR_NOT_FOUND);
+      throw new BadRequestException("User is not an educator", ErrorCode.USER_ERROR_NOT_EDUCATOR);
     }
     Specialization specialization = specializationRepository.findById(createSimulationForm.getSpecializationId()).orElseThrow(()
     -> new NotFoundException("Specialization not found", ErrorCode.SPECIALIZATION_ERROR_NOT_FOUND));
-    Simulation simulation = simulationRepository.findByTitleAndEducatorId(createSimulationForm.getTitle(), getCurrentUser()).orElse(null);
-    if (simulation != null){
+    boolean existSimulation = simulationRepository.existsByTitleAndEducatorId(createSimulationForm.getTitle(), getCurrentUser());
+    if (existSimulation){
       throw new BadRequestException("Simulation already exist", ErrorCode.SIMULATION_ERROR_EXIST);
     }
-    simulation = simulationMapper.fromCreateSimulationFormToEntity(createSimulationForm);
-    simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
+    Simulation simulation = simulationMapper.fromCreateSimulationFormToEntity(createSimulationForm);
+    simulation.setStatus(ITDreamConstant.STATUS_WAITING_APPROVE);
     simulation.setSpecialization(specialization);
     simulation.setEducator(educator);
     if (createSimulationForm.getVideoPath() != null){
-      simulation.setState(UserBaseConstant.STATE_SIMULATION_PROCESSING);
+      simulation.setState(ITDreamConstant.STATE_SIMULATION_PROCESSING);
     } else {
-      simulation.setState(UserBaseConstant.STATE_SIMULATION_DONE);
+      simulation.setState(ITDreamConstant.STATE_SIMULATION_DONE);
     }
     simulationRepository.save(simulation);
     if (createSimulationForm.getVideoPath() != null){
       RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
       data.setId(simulation.getId());
-      data.setKind(UserBaseConstant.KIND_SIMULATION);
+      data.setKind(ITDreamConstant.KIND_SIMULATION);
       data.setUrl(createSimulationForm.getVideoPath());
       data.setTsSecond(tsSecond);
       processVideoService.sendProcessVideoMessage(data);
@@ -131,9 +139,8 @@ public class SimulationController extends ABasicController{
     responseListDto.setContent(simulationMapper.fromEntityToSimulationDtoList(simulations.getContent()));
     responseListDto.setTotalElements(simulations.getTotalElements());
     responseListDto.setTotalPages(simulations.getTotalPages());
-
     apiMessageDto.setData(responseListDto);
-    apiMessageDto.setMessage("Get list success");
+    apiMessageDto.setMessage("Get list simulation success");
     return apiMessageDto;
   }
 
@@ -143,12 +150,6 @@ public class SimulationController extends ABasicController{
     ApiMessageDto<SimulationDto> apiMessageDto = new ApiMessageDto<>();
     Simulation simulation = simulationRepository.findById(id).orElseThrow(() ->
         new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-    if (!specializationRepository.existsById(simulation.getSpecialization().getId())){
-      throw new NotFoundException("Specialization not found", ErrorCode.SPECIALIZATION_ERROR_NOT_FOUND);
-    }
-    if (!educatorRepository.existsById(simulation.getEducator().getId())){
-      throw new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND);
-    }
     SimulationDto simulationDto = simulationMapper.fromEntityToSimulationDto(simulation);
     apiMessageDto.setData(simulationDto);
     apiMessageDto.setMessage("Get success");
@@ -163,11 +164,12 @@ public class SimulationController extends ABasicController{
     if (!isStudent()){
       throw new BadRequestException("User is not a student", ErrorCode.USER_ERROR_NOT_STUDENT);
     }
-    Page<Simulation> simulations = simulationRepository.findAllByStatus(UserBaseConstant.STATUS_ACTIVE, pageable);
+    Page<Simulation> simulations = simulationRepository.findAllByStatus(ITDreamConstant.STATUS_ACTIVE, pageable);
     List<SimulationDisplayDto> simulationDtos =simulationMapper.fromEntityToSimulationDisplayDtoList(simulations.getContent());
     for (SimulationDisplayDto simulationDto : simulationDtos){
       Long countTask = taskRepository.countBySimulationId(simulationDto.getId());
-      Long countProgress = studentSubTaskProgressRepository.countByStateAndStudentIdAndTaskSimulationId(UserBaseConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, getCurrentUser(), simulationDto.getId());
+      Long countProgress = studentSubTaskProgressRepository.countByStateAndStudentIdAndTaskSimulationId(
+          ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, getCurrentUser(), simulationDto.getId());
       if (countTask > 0){
         Float progress = ((countProgress * 1F) / countTask) * 100;
         simulationDto.setPercent(progress);
@@ -187,9 +189,6 @@ public class SimulationController extends ABasicController{
       SimulationCriteria simulationCriteria, Pageable pageable){
     ApiMessageDto<ResponseListDto<List<SimulationDisplayDto>>> apiMessageDto = new ApiMessageDto<>();
     ResponseListDto<List<SimulationDisplayDto>> responseListDto = new ResponseListDto<>();
-    if (!isEducator()){
-      throw new BadRequestException("User is not an educator", ErrorCode.USER_ERROR_NOT_EDUCATOR);
-    }
     simulationCriteria.setEducatorId(getCurrentUser());
     Page<Simulation> simulations = simulationRepository.findAll(simulationCriteria.getSpecification(), pageable);
     responseListDto.setContent(simulationMapper.fromEntityToSimulationDisplayDtoList(simulations.getContent()));
@@ -209,9 +208,6 @@ public class SimulationController extends ABasicController{
     }
     Simulation simulation = simulationRepository.findById(id).orElseThrow(()
         -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-    if (!specializationRepository.existsById(simulation.getSpecialization().getId())){
-      throw new NotFoundException("Specialization not found", ErrorCode.SPECIALIZATION_ERROR_NOT_FOUND);
-    }
     SimulationClientDto simulationDto = simulationMapper.fromEntityToSimulationClientDto(simulation);
     apiMessageDto.setData(simulationDto);
     apiMessageDto.setMessage("Get success");
@@ -227,8 +223,8 @@ public class SimulationController extends ABasicController{
     }
     Simulation simulation = simulationRepository.findById(id).orElseThrow(()
     -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-    if (!specializationRepository.existsById(simulation.getSpecialization().getId())){
-      throw new NotFoundException("Specialization not found", ErrorCode.SPECIALIZATION_ERROR_NOT_FOUND);
+    if (!Objects.equals(simulation.getEducator().getId(), getCurrentUser())){
+      throw new BadRequestException("Simulation cannot be read", ErrorCode.SIMULATION_ERROR_NOT_AUTHORIZED);
     }
     SimulationClientDto simulationDto = simulationMapper.fromEntityToSimulationClientDto(simulation);
     apiMessageDto.setData(simulationDto);
@@ -253,9 +249,6 @@ public class SimulationController extends ABasicController{
           -> new NotFoundException("Specialization not found", ErrorCode.SPECIALIZATION_ERROR_NOT_FOUND));
       simulation.setSpecialization(specialization);
     }
-    if (!Objects.equals(UserBaseConstant.STATUS_ACTIVE, simulation.getStatus())){
-      throw new BadRequestException("Simulation cannot active", ErrorCode.SIMULATION_ERROR_NOT_ACTIVE);
-    }
 
     if (StringUtils.isNotBlank(updateSimulationForm.getVideoPath())){
       if (StringUtils.isNotBlank(simulation.getVideoPath())){
@@ -263,7 +256,7 @@ public class SimulationController extends ABasicController{
           userBaseApiService.deleteByFilePath(simulation.getVideoPath());
           RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
           data.setId(simulation.getId());
-          data.setKind(UserBaseConstant.KIND_SIMULATION);
+          data.setKind(ITDreamConstant.KIND_SIMULATION);
           data.setUrl(updateSimulationForm.getVideoPath());
           data.setTsSecond(tsSecond);
           processVideoService.sendProcessVideoMessage(data);
@@ -271,7 +264,7 @@ public class SimulationController extends ABasicController{
       } else {
         RequestProcessVideoMessageForm data = new RequestProcessVideoMessageForm();
         data.setId(simulation.getId());
-        data.setKind(UserBaseConstant.KIND_SIMULATION);
+        data.setKind(ITDreamConstant.KIND_SIMULATION);
         data.setUrl(updateSimulationForm.getVideoPath());
         data.setTsSecond(tsSecond);
         processVideoService.sendProcessVideoMessage(data);
@@ -286,7 +279,7 @@ public class SimulationController extends ABasicController{
     }
 
     simulationMapper.fromUpdateSimulationFormToEntity(updateSimulationForm, simulation);
-    simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
+    simulation.setStatus(ITDreamConstant.STATUS_WAITING_APPROVE);
     simulationRepository.save(simulation);
     apiMessageDto.setMessage("Update success. Please wait for approval");
     return apiMessageDto;
@@ -299,7 +292,7 @@ public class SimulationController extends ABasicController{
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Simulation simulation = simulationRepository.findById(id).orElseThrow(()
     -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-    if (!Objects.equals(UserBaseConstant.STATUS_WAITING_APPROVE, simulation.getStatus())){
+    if (!Objects.equals(ITDreamConstant.STATUS_WAITING_APPROVE_DELETE, simulation.getStatus())){
       throw new BadRequestException("Simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_DELETE);
     }
     List<Task> tasks = taskRepository.findAllBySimulationId(id);
@@ -314,6 +307,8 @@ public class SimulationController extends ABasicController{
     taskRepository.deleteAllSubTaskBySimulationId(id);
     taskRepository.deleteAllTaskBySimulationId(id);
     reviewRepository.deleteBySimulationId(id);
+    reviewSubmissionRepository.deleteBySimulationId(id);
+    achievementRepository.setNullSimulationId(id);
     simulationRepository.delete(simulation);
     apiMessageDto.setMessage("Approve delete simulation success");
     return apiMessageDto;
@@ -325,17 +320,17 @@ public class SimulationController extends ABasicController{
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Simulation simulation = simulationRepository.findById(id).orElseThrow(()
         -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-    if (!Objects.equals(UserBaseConstant.STATUS_WAITING_APPROVE, simulation.getStatus())){
+    if (!Objects.equals(ITDreamConstant.STATUS_WAITING_APPROVE_DELETE, simulation.getStatus())){
       throw new BadRequestException("Simulation can not be deleted", ErrorCode.SIMULATION_ERROR_NOT_DELETE);
     }
-    simulation.setStatus(UserBaseConstant.STATUS_ACTIVE);
+    simulation.setStatus(ITDreamConstant.STATUS_ACTIVE);
     simulationRepository.save(simulation);
     apiMessageDto.setMessage("Reject delete simulation success");
     return apiMessageDto;
   }
 
   @DeleteMapping(value = "/educator-request-delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasRole('SI_E_RED')")
+  @PreAuthorize("hasRole('SI_ED_RED')")
   public ApiMessageDto<String> requestDelete(@PathVariable("id") Long id){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     if (!isEducator()){
@@ -343,10 +338,10 @@ public class SimulationController extends ABasicController{
     }
     Simulation simulation = simulationRepository.findById(id).orElseThrow(()
         -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-    if (!Objects.equals(UserBaseConstant.STATUS_ACTIVE, simulation.getStatus())){
+    if (!Objects.equals(ITDreamConstant.STATUS_ACTIVE, simulation.getStatus())){
       throw new BadRequestException("Request for deletion is currently being approved", ErrorCode.SIMULATION_ERROR_APPROVE);
     }
-    simulation.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
+    simulation.setStatus(ITDreamConstant.STATUS_WAITING_APPROVE_DELETE);
     simulationRepository.save(simulation);
     apiMessageDto.setMessage("Request delete simulation success");
     return apiMessageDto;
@@ -358,10 +353,10 @@ public class SimulationController extends ABasicController{
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Simulation simulation = simulationRepository.findById(requestSimulationIdForm.getId()).orElseThrow(()
     -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-    if (!Objects.equals(UserBaseConstant.STATUS_WAITING_APPROVE, simulation.getStatus())){
+    if (!Objects.equals(ITDreamConstant.STATUS_WAITING_APPROVE, simulation.getStatus())){
       throw new BadRequestException("Simulation cannot approve", ErrorCode.SIMULATION_ERROR_APPROVE);
     }
-    simulation.setStatus(UserBaseConstant.STATUS_ACTIVE);
+    simulation.setStatus(ITDreamConstant.STATUS_ACTIVE);
     simulationRepository.save(simulation);
     apiMessageDto.setMessage("Approve simulation success");
     return apiMessageDto;
@@ -373,10 +368,10 @@ public class SimulationController extends ABasicController{
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Simulation simulation = simulationRepository.findById(requestSimulationIdForm.getId()).orElseThrow(()
         -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-    if (!Objects.equals(UserBaseConstant.STATUS_WAITING_APPROVE, simulation.getStatus())){
+    if (!Objects.equals(ITDreamConstant.STATUS_WAITING_APPROVE, simulation.getStatus())){
       throw new BadRequestException("Simulation cannot approve", ErrorCode.SIMULATION_ERROR_APPROVE);
     }
-    simulation.setStatus(UserBaseConstant.STATUS_REJECT);
+    simulation.setStatus(ITDreamConstant.STATUS_REJECT);
     simulationRepository.save(simulation);
     apiMessageDto.setMessage("Reject simulation success");
     return apiMessageDto;

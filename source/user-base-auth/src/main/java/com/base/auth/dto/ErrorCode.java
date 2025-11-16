@@ -2,16 +2,6 @@ package com.base.auth.dto;
 
 public class ErrorCode {
     /**
-     * General error code
-     * */
-    public static final String GENERAL_ERROR_REQUIRE_PARAMS = "ERROR-GENERAL-0000";
-    public static final String GENERAL_ERROR_STORE_LOCKED = "ERROR-GENERAL-0001";
-    public static final String GENERAL_ERROR_ACCOUNT_LOCKED = "ERROR-GENERAL-0002";
-    public static final String GENERAL_ERROR_SHOP_LOCKED = "ERROR-GENERAL-0003";
-    public static final String GENERAL_ERROR_STORE_NOT_FOUND = "ERROR-GENERAL-0004";
-    public static final String GENERAL_ERROR_ACCOUNT_NOT_FOUND = "ERROR-GENERAL-0005";
-
-    /**
      * Starting error code Account
      * */
     public static final String ACCOUNT_ERROR_UNKNOWN = "ERROR-ACCOUNT-0000";
@@ -22,48 +12,25 @@ public class ErrorCode {
     public static final String ACCOUNT_ERROR_LOCKED = "ERROR-ACCOUNT-0005";
     public static final String ACCOUNT_ERROR_OPT_INVALID = "ERROR-ACCOUNT-0006";
     public static final String ACCOUNT_ERROR_LOGIN = "ERROR-ACCOUNT-0007";
-    public static final String ACCOUNT_ERROR_MERCHANT_LOGIN_ERROR_DEVICE = "ERROR-ACCOUNT-0008";
-    public static final String ACCOUNT_ERROR_MERCHANT_LOGIN_ERROR_STORE = "ERROR-ACCOUNT-0009";
-    public static final String ACCOUNT_ERROR_MERCHANT_LOGIN_WRONG_STORE = "ERROR-ACCOUNT-0010";
-    public static final String ACCOUNT_ERROR_MERCHANT_SERVICE_NOT_REGISTER = "ERROR-ACCOUNT-0011";
+    public static final String ACCOUNT_ERROR_NOT_ALLOW_DELETE_ADMIN = "ERROR-ACCOUNT-0011";
     public static final String ACCOUNT_ERROR_NOT_ALLOW_DELETE_SUPPER_ADMIN = "ERROR-ACCOUNT-0012";
     public static final String ACCOUNT_ERROR_EMAIL_EXIST = "ERROR-ACCOUNT-0013";
     public static final String ACCOUNT_ERROR_PHONE_EXIST = "ERROR-ACCOUNT-0014";
     public static final String ACCOUNT_ERROR_NOT_ACTIVE = "ERROR-ACCOUNT-0015";
     public static final String ACCOUNT_ERROR_INCORRECT_HASH_VERIFICATION = "ERROR-ACCOUNT-0016";
-
-
-    /**
-     * Starting error code Store
-     * */
-    public static final String SERVICE_ERROR_UNKNOWN = "ERROR-SERVICE-0000";
-    public static final String SERVICE_ERROR_NOT_FOUND = "ERROR-SERVICE-0001";
-    public static final String SERVICE_ERROR_DUPLICATE_PATH = "ERROR-SERVICE-0002";
-    public static final String SERVICE_ERROR_USERNAME_EXIST = "ERROR-SERVICE-0003";
-    public static final String SERVICE_ERROR_WRONG_OLD_PWD = "ERROR-SERVICE-0004";
-    public static final String SERVICE_ERROR_TENANT_ID_EXIST = "ERROR-SERVICE-0005";
+    public static final String ACCOUNT_ERROR_NOT_PENDING = "ERROR-ACCOUNT-0017";
 
     /**
-     * Starting error code SHOP ACCOUNT
+     * Starting error code Group
      * */
-    public static final String SHOP_ACCOUNT_ERROR_UNKNOWN = "ERROR-SHOP_ACCOUNT-0000";
+    public static final String GROUP_ERROR_NOT_FOUND = "ERROR-GROUP-0000";
+    public static final String GROUP_ERROR_EXIST = "ERROR-GROUP-0001";
+
     /**
-     * Starting error code NATION
+     * Starting error code Permission
      * */
-    public static final String NATION_ERROR_NOT_FOUND = "ERROR-NATION-0001";
-    public static final String NATION_ERROR_NOT_ALLOW_HAVE_PARENT = "ERROR-NATION-0002";
-    public static final String NATION_ERROR_PARENT_INVALID = "ERROR-NATION-0003";
-    public static final String NATION_ERROR_NOT_ALLOW_UPDATE_KIND = "ERROR-NATION-0004";
-    public static final String NATION_ERROR_CANT_DELETE_RELATIONSHIP_WITH_ADDRESS = "ERROR-NATION-0005";
-    /**
-     * Starting error code ADDRESS
-     * */
-    public static final String ADDRESS_ERROR_NOT_FOUND = "ERROR-ADDRESS-0001";
-    /**
-     * Starting error code Settings
-     * */
-    public static final String SETTINGS_ERROR_NOT_FOUND = "ERROR-SETTING-0000";
-    public static final String SETTINGS_ERROR_SETTING_KEY_EXISTED = "ERROR-SETTING-0001";
+    public static final String PERMISSION_ERROR_NOT_FOUND = "ERROR-PERMISSION-0000";
+    public static final String PERMISSION_ERROR_EXIST = "ERROR-PERMISSION-0001";
 
     /**
      * Starting error code USER
@@ -117,14 +84,8 @@ public class ErrorCode {
     public static final String TASK_ERROR_NOT_PARENT = "TASK-ERROR-0002";
     public static final String TASK_ERROR_PARENT = "TASK-ERROR-0003";
     public static final String TASK_ERROR_PARENT_NOT_FOUND = "TASK-ERROR-0004";
-
-    /**
-     * Starting error code SubTask
-     * */
-    public static final String SUBTASK_ERROR_NOT_FOUND = "SUBTASK-ERROR-0000";
-    public static final String SUBTASK_ERROR_EXIST = "SUBTASK-ERROR-0001";
-    public static final String SUBTASK_ERROR_FAIL = "SUBTASK-ERROR-0002";
-    public static final String SUBTASK_ERROR_NOT_BELONG_SIMULATION = "SUBTASK-ERROR-0003";
+    public static final String TASK_ERROR_PARENT_NOT_KIND_TASK = "TASK-ERROR-0005";
+    public static final String TASK_ERROR_FAIL = "TASK-ERROR-0006";
 
     /**
      * Starting error code TaskQuestion

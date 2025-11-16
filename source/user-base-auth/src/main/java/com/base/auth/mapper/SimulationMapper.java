@@ -51,6 +51,7 @@ public interface SimulationMapper {
   @Mapping(source = "title", target = "title")
   @Mapping(source = "level", target = "level")
   @Mapping(source = "totalEstimatedTime", target = "totalEstimatedTime")
+  @Mapping(source = "participantQuantity", target = "participantQuantity")
   @Mapping(source = "imagePath", target = "imagePath")
   @Mapping(source = "avgRating", target = "avgRating")
   @Mapping(source = "educator", target = "educator", qualifiedByName = "fromEducatorToProfileDto")

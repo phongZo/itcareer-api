@@ -20,6 +20,8 @@ public class AccountDto {
     private String email;
     @ApiModelProperty(name = "fullName")
     private String fullName;
+    @ApiModelProperty(name = "birthday")
+    private Date birthday;
     @ApiModelProperty(name = "group")
     private GroupDto group;
     @ApiModelProperty(name = "lastLogin")

@@ -25,7 +25,7 @@ public interface StudentSubTaskProgressMapper {
   StudentSubTaskProgressDto fromEntityToStudentSubTaskProgressDto(StudentSubTaskProgress studentSubTaskProgress);
 
   @Mapping(source = "id", target = "id")
-  @Mapping(source = "task", target = "task", qualifiedByName = "fromEntityToTaskDisplayDto")
+  @Mapping(source = "state", target = "state")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToStudentSubTaskProgressDisplayDto")
   StudentSubTaskProgressDisplayDto fromEntityToStudentSubTaskProgressDisplayDto(StudentSubTaskProgress studentSubTaskProgress);

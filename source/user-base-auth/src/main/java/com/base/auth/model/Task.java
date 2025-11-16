@@ -1,6 +1,6 @@
 package com.base.auth.model;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
@@ -15,7 +15,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(name = "db_user_base_task")
+@Table(name = "db_it_dream_task")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -35,7 +35,7 @@ public class Task{
   private String imagePath;
   private String filePath;
   private String videoPath;
-  private Integer state = UserBaseConstant.STATE_TASK_INIT;
+  private Integer state = ITDreamConstant.STATE_TASK_INIT;
   private Integer maxErrors = 0;
   private Integer totalQuestion = 0;
   private Integer kind;

@@ -8,6 +8,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface SpecializationRepository extends JpaRepository<Specialization, Long>,
     JpaSpecificationExecutor<Specialization> {
-
-  Optional<Specialization> findByName(String name);
+  Boolean existsByName(String name);
 }

@@ -1,6 +1,6 @@
 package com.base.auth.validation.impl;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.validation.TaskKind;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
@@ -16,6 +16,6 @@ public class TaskKindValidation implements ConstraintValidator<TaskKind, Integer
 
   @Override
   public boolean isValid(Integer value, ConstraintValidatorContext constraintValidatorContext) {
-    return value == null ? allowNull : UserBaseConstant.TASK_KINDS.contains(value);
+    return value == null ? allowNull : ITDreamConstant.TASK_KINDS.contains(value);
   }
 }

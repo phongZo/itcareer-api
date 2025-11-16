@@ -39,17 +39,17 @@ public class StudentCriteria {
           Join<Student, Account> joinAccount = root.join("account", JoinType.INNER);
           predicates.add(cb.equal(joinAccount.get("status"),getStatus()));
         }
-        if (!StringUtils.isBlank(getPhone()))
+        if (StringUtils.isNotBlank(getPhone()))
         {
           Join<Student, Account> joinAccount = root.join("account", JoinType.INNER);
           predicates.add(cb.like(cb.lower(joinAccount.get("phone")),"%"+ getPhone()+"%"));
         }
-        if (!StringUtils.isBlank(getEmail()))
+        if (StringUtils.isNotBlank(getEmail()))
         {
           Join<Student, Account> joinAccount = root.join("account",JoinType.INNER);
           predicates.add(cb.like(cb.lower(joinAccount.get("email")),"%"+ getEmail()+"%"));
         }
-        if (!StringUtils.isBlank(getFullName()))
+        if (StringUtils.isNotBlank(getFullName()))
         {
           Join<Student, Account> joinAccount = root.join("account",JoinType.INNER);
           predicates.add(cb.like(cb.lower(joinAccount.get("fullName")),"%"+ getFullName()+"%"));

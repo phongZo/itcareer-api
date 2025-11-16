@@ -10,7 +10,6 @@ import com.base.auth.exception.NotFoundException;
 import com.base.auth.form.specialization.CreateSpecializationForm;
 import com.base.auth.form.specialization.UpdateSpecializationForm;
 import com.base.auth.mapper.SpecializationMapper;
-import com.base.auth.model.Simulation;
 import com.base.auth.model.Specialization;
 import com.base.auth.model.criteria.SpecializationCriteria;
 import com.base.auth.repository.SimulationRepository;
@@ -53,11 +52,11 @@ public class SpecializationController extends ABasicController{
   @PreAuthorize("hasRole('SP_C')")
   public ApiMessageDto<String> create(@Valid @RequestBody CreateSpecializationForm createSpecializationForm, BindingResult bindingResult){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
-    Specialization specialization = specializationRepository.findByName(createSpecializationForm.getName()).orElse(null);
-    if (specialization != null){
+    Boolean existSpecialization = specializationRepository.existsByName(createSpecializationForm.getName());
+    if (existSpecialization){
       throw new BadRequestException("Specialization already exist", ErrorCode.SPECIALIZATION_ERROR_EXIST);
     }
-    specialization = specializationMapper.fromCreateSpecializationFormToEntity(createSpecializationForm);
+    Specialization specialization = specializationMapper.fromCreateSpecializationFormToEntity(createSpecializationForm);
     specializationRepository.save(specialization);
     apiMessageDto.setMessage("Create specialization success");
     return apiMessageDto;
@@ -72,7 +71,6 @@ public class SpecializationController extends ABasicController{
     responseListDto.setContent(specializationMapper.fromEntityToSpecializationDtoList(specializations.getContent()));
     responseListDto.setTotalElements(specializations.getTotalElements());
     responseListDto.setTotalPages(specializations.getTotalPages());
-
     apiMessageDto.setData(responseListDto);
     apiMessageDto.setMessage("Get list success");
     return apiMessageDto;
@@ -99,8 +97,8 @@ public class SpecializationController extends ABasicController{
     Specialization specialization = specializationRepository.findById(updateSpecializationForm.getId()).orElseThrow(()
     -> new NotFoundException("Specialization not found"));
     if (!Objects.equals(updateSpecializationForm.getName(), specialization.getName())){
-      Specialization newSpecialization = specializationRepository.findByName(updateSpecializationForm.getName()).orElse(null);
-      if (newSpecialization != null){
+      Boolean existSpecialization = specializationRepository.existsByName(updateSpecializationForm.getName());
+      if (existSpecialization){
         throw new BadRequestException("Specialization already exist", ErrorCode.SPECIALIZATION_ERROR_EXIST);
       }
     }
@@ -116,8 +114,8 @@ public class SpecializationController extends ABasicController{
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Specialization specialization = specializationRepository.findById(id).orElseThrow(()
     -> new NotFoundException("Specialization not found", ErrorCode.SPECIALIZATION_ERROR_NOT_FOUND));
-    Simulation simulation = simulationRepository.findBySpecializationId(id).orElse(null);
-    if (simulation != null){
+    Boolean existSimulation = simulationRepository.existsBySpecializationId(id);
+    if (existSimulation){
       throw new BadRequestException("Specialization cannot be deleted", ErrorCode.SPECIALIZATION_ERROR_DELETE);
     }
     specializationRepository.delete(specialization);

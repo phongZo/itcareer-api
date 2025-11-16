@@ -67,12 +67,14 @@ public class ReviewController extends ABasicController{
     if (!isStudent()){
       throw new BadRequestException("User is not a student", ErrorCode.USER_ERROR_NOT_STUDENT);
     }
-    if (reviewRepository.existsByStudentIdAndSimulationId(getCurrentUser(), createReviewForm.getSimulationId())){
+    boolean existReview =reviewRepository.existsByStudentIdAndSimulationId(getCurrentUser(), createReviewForm.getSimulationId());
+    if (existReview){
       throw new BadRequestException("Review was created by this student", ErrorCode.REVIEW_ERROR_EXIST);
     }
     Simulation simulation = simulationRepository.findById(createReviewForm.getSimulationId()).orElseThrow(()
     -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
-    if (!subTaskProgressRepository.existsByStudentIdAndTaskSimulationId(getCurrentUser(), createReviewForm.getSimulationId())){
+    boolean existTaskProgress = subTaskProgressRepository.existsByStudentIdAndTaskSimulationId(getCurrentUser(), createReviewForm.getSimulationId());
+    if (!existTaskProgress){
       throw new BadRequestException("Student didn't participate in this simulation", ErrorCode.REVIEW_ERROR_NOT_CREATE);
     }
     int totalReviewer = reviewRepository.countBySimulationId(createReviewForm.getSimulationId());
@@ -87,7 +89,7 @@ public class ReviewController extends ABasicController{
       simulation.setAvgRating((float) createReviewForm.getStar());
     }
     simulationRepository.save(simulation);
-    apiMessageDto.setMessage("create success");
+    apiMessageDto.setMessage("Create review success");
     return apiMessageDto;
   }
 
@@ -101,11 +103,11 @@ public class ReviewController extends ABasicController{
     responseListDto.setTotalElements(reviews.getTotalElements());
     responseListDto.setTotalPages(reviews.getTotalPages());
     apiMessageDto.setData(responseListDto);
-    apiMessageDto.setMessage("get list success");
+    apiMessageDto.setMessage("Get list review success");
     return apiMessageDto;
   }
 
-  @GetMapping(value = "client-list", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(value = "/client-list", produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiMessageDto<ResponseListDto<List<ReviewClientDto>>> getListForClient(ReviewCriteria reviewCriteria, Pageable pageable){
     ApiMessageDto<ResponseListDto<List<ReviewClientDto>>> apiMessageDto = new ApiMessageDto<>();
     ResponseListDto<List<ReviewClientDto>> responseListDto = new ResponseListDto<>();
@@ -114,7 +116,7 @@ public class ReviewController extends ABasicController{
     responseListDto.setTotalElements(reviews.getTotalElements());
     responseListDto.setTotalPages(reviews.getTotalPages());
     apiMessageDto.setData(responseListDto);
-    apiMessageDto.setMessage("get list success");
+    apiMessageDto.setMessage("Get list review success");
     return apiMessageDto;
   }
 
@@ -146,7 +148,7 @@ public class ReviewController extends ABasicController{
     reviewMapper.fromUpdateReviewFormToEntity(updateReviewForm, review);
     reviewRepository.save(review);
     simulationRepository.save(simulation);
-    apiMessageDto.setMessage("Update success");
+    apiMessageDto.setMessage("Update review success");
     return apiMessageDto;
   }
 
@@ -175,7 +177,7 @@ public class ReviewController extends ABasicController{
       simulation.setAvgRating(0F);
     }
     simulationRepository.save(simulation);
-    apiMessageDto.setMessage("delete success");
+    apiMessageDto.setMessage("Delete review success");
     return apiMessageDto;
   }
 }

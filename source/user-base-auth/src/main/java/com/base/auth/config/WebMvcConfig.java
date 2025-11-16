@@ -1,7 +1,7 @@
 package com.base.auth.config;
 
 import com.base.auth.component.LogInterceptor;
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,9 +45,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
         Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
         builder.serializationInclusion(JsonInclude.Include.NON_NULL);
         builder.serializationInclusion(JsonInclude.Include.NON_EMPTY);
-        builder.dateFormat(new SimpleDateFormat(UserBaseConstant.DATE_TIME_FORMAT));
-        builder.serializers(new LocalDateSerializer(DateTimeFormatter.ofPattern(UserBaseConstant.DATE_FORMAT)));
-        builder.serializers(new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(UserBaseConstant.DATE_TIME_FORMAT)));
+        builder.dateFormat(new SimpleDateFormat(ITDreamConstant.DATE_TIME_FORMAT));
+        builder.serializers(new LocalDateSerializer(DateTimeFormatter.ofPattern(ITDreamConstant.DATE_FORMAT)));
+        builder.serializers(new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(ITDreamConstant.DATE_TIME_FORMAT)));
         builder.indentOutput(true);
         converters.add(new MappingJackson2HttpMessageConverter(builder.build()));
         converters.add(new MappingJackson2XmlHttpMessageConverter(builder.createXmlMapper(true).build()));
@@ -56,7 +56,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addFormatters(FormatterRegistry registry) {
-        DateFormatter dateFormatter = new DateFormatter(UserBaseConstant.DATE_TIME_FORMAT);
+        DateFormatter dateFormatter = new DateFormatter(ITDreamConstant.DATE_TIME_FORMAT);
         dateFormatter.setLenient(true);
         registry.addFormatter(dateFormatter);
     }

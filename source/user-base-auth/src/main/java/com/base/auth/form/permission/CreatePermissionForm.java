@@ -11,23 +11,23 @@ import javax.validation.constraints.NotNull;
 @ApiModel
 public class CreatePermissionForm {
 
-    @NotEmpty(message = "name cant not be null")
+    @NotEmpty(message = "name cannot be null")
     @ApiModelProperty(name = "name", required = true)
     private String name;
-    @NotEmpty(message = "action cant not be null")
+    @NotEmpty(message = "action cannot be null")
     @ApiModelProperty(name = "action", required = true)
     private String action;
-    @NotNull(message = "showMenu cant not be null")
+    @NotNull(message = "showMenu cannot be null")
     @ApiModelProperty(name = "showMenu", required = true)
     private Boolean showMenu;
-    @NotEmpty(message = "description cant not be null")
+    @NotEmpty(message = "description cannot be null")
     @ApiModelProperty(name = "description", required = true)
     private String description;
-    @NotEmpty(message = "nameGroup cant not be null")
+    @NotEmpty(message = "nameGroup cannot be null")
     @ApiModelProperty(name = "nameGroup", required = true)
     private String nameGroup;
 
-    @NotEmpty(message = "permissionCode cant not be null")
+    @NotEmpty(message = "permissionCode cannot be null")
     @ApiModelProperty(name = "permissionCode", required = true)
     private String permissionCode;
 }

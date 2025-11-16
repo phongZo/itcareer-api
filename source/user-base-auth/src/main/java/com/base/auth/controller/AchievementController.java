@@ -24,7 +24,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,17 +40,18 @@ public class AchievementController extends ABasicController{
   @Autowired
   AchievementMapper achievementMapper;
 
+  // Hàm update lại achievement sau khi upload file certificate
   @PutMapping(value = "/update", produces = MediaType.APPLICATION_JSON_VALUE)
   public ApiMessageDto<String> update(@Valid @RequestBody UpdateAchievementForm updateAchievementForm, BindingResult bindingResult){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Achievement achievement = achievementRepository.findById(updateAchievementForm.getId()).orElseThrow(()
     -> new NotFoundException("Achievement not found", ErrorCode.ACHIEVEMENT_ERROR_NOT_FOUND));
     if (!Objects.equals(achievement.getStudent().getId(), getCurrentUser())){
-      throw new BadRequestException("Achievement cannot be updated", ErrorCode.ACHIEVEMENT_ERROR_NOT_AUTHORIZE);
+      throw new BadRequestException("Student cannot allowed update", ErrorCode.ACHIEVEMENT_ERROR_NOT_AUTHORIZE);
     }
     achievement.setFilePath(updateAchievementForm.getFilePath());
     achievementRepository.save(achievement);
-    apiMessageDto.setMessage("Update success");
+    apiMessageDto.setMessage("Update achievement success");
     return apiMessageDto;
   }
 
@@ -65,7 +65,7 @@ public class AchievementController extends ABasicController{
     responseListDto.setTotalElements(achievements.getTotalElements());
     responseListDto.setTotalPages(achievements.getTotalPages());
     apiMessageDto.setData(responseListDto);
-    apiMessageDto.setMessage("Get list success");
+    apiMessageDto.setMessage("Get list achievement success");
     return apiMessageDto;
   }
 
@@ -80,7 +80,7 @@ public class AchievementController extends ABasicController{
     responseListDto.setTotalElements(achievements.getTotalElements());
     responseListDto.setTotalPages(achievements.getTotalPages());
     apiMessageDto.setData(responseListDto);
-    apiMessageDto.setMessage("Get list success");
+    apiMessageDto.setMessage("Get list achievement success");
     return apiMessageDto;
   }
 }
