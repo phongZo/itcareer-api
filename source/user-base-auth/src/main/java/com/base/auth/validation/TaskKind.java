@@ -1,6 +1,6 @@
 package com.base.auth.validation;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.validation.impl.TaskKindValidation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -17,7 +17,7 @@ import javax.validation.Payload;
 public @interface TaskKind {
   boolean allowNull() default false;
 
-  String pattern() default UserBaseConstant.PHONE_PATTERN;
+  String pattern() default ITDreamConstant.PHONE_PATTERN;
 
   String message() default "Task kind: 1 - Task, 2 - Subtask";
 

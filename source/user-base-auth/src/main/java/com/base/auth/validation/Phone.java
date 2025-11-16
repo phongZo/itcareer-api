@@ -1,6 +1,6 @@
 package com.base.auth.validation;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.validation.impl.PhoneValidation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -17,7 +17,7 @@ import javax.validation.Payload;
 public @interface Phone {
   boolean allowNull() default false;
 
-  String pattern() default UserBaseConstant.PHONE_PATTERN;
+  String pattern() default ITDreamConstant.PHONE_PATTERN;
 
   String message() default "The phone number should begin with 0 and have exactly 10 digits";
 

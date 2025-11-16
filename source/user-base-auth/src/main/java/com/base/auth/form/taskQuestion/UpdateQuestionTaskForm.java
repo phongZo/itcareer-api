@@ -17,7 +17,4 @@ public class UpdateQuestionTaskForm {
   private String question;
   @ApiModelProperty(name = "options")
   private String options;
-  @NotNull(message = "taskId cannot be null")
-  @ApiModelProperty(name = "taskId")
-  private Long taskId;
 }

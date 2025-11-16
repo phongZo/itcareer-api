@@ -1,12 +1,15 @@
 package com.base.auth.controller;
 
-
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.dto.ApiMessageDto;
+import com.base.auth.dto.ResponseListDto;
 import com.base.auth.dto.account.AccountDto;
 import com.base.auth.dto.account.OtpDto;
+import com.base.auth.dto.account.ProfileAccountDto;
 import com.base.auth.dto.account.RequestEmailForm;
+import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
+import com.base.auth.exception.UnauthorizationException;
 import com.base.auth.form.account.CreateAccountAdminForm;
 import com.base.auth.form.account.ForgetPasswordForm;
 import com.base.auth.form.account.UpdateAccountAdminForm;
@@ -14,22 +17,23 @@ import com.base.auth.form.account.UpdateProfileAdminForm;
 import com.base.auth.mapper.AccountMapper;
 import com.base.auth.model.Account;
 import com.base.auth.model.Group;
+import com.base.auth.model.criteria.AccountCriteria;
 import com.base.auth.repository.*;
-import com.base.auth.service.UserBaseApiService;
 import com.base.auth.utils.AESUtils;
 import com.base.auth.utils.ConvertUtils;
-import com.base.auth.dto.ApiResponse;
 import com.base.auth.dto.ErrorCode;
+import java.util.List;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.Date;
 
@@ -49,180 +53,201 @@ public class AccountController extends ABasicController{
     @Autowired
     AccountMapper accountMapper;
 
-    @Autowired
-    StudentRepository studentRepository;
-
-    @Autowired
-    EducatorRepository educatorRepository;
-
     @PostMapping(value = "/create_admin", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('ACC_C_AD')")
-    public ApiResponse<String> createAdmin(@Valid @RequestBody CreateAccountAdminForm createAccountAdminForm, BindingResult bindingResult) {
-        ApiResponse<String> apiMessageDto = new ApiResponse<>();
-        Account account = accountRepository.findAccountByUsername(createAccountAdminForm.getUsername());
-        if (account != null) {
-            apiMessageDto.setResult(false);
-            apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_USERNAME_EXIST);
-            return apiMessageDto;
+    @PreAuthorize("hasRole('ACC_C')")
+    public ApiMessageDto<String> createAdmin(@Valid @RequestBody CreateAccountAdminForm createAccountAdminForm, BindingResult bindingResult) {
+        if (!isSuperAdmin()){
+            throw new UnauthorizationException("User is not a super admin");
         }
-        Group group = groupRepository.findById(createAccountAdminForm.getGroupId()).orElse(null);
-        if (group == null) {
-            apiMessageDto.setResult(false);
-            apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_UNKNOWN);
-            return apiMessageDto;
+        ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
+        Boolean existUsername = accountRepository.existsByUsername(createAccountAdminForm.getUsername());
+        if (existUsername) {
+            throw new BadRequestException("Username already exist", ErrorCode.ACCOUNT_ERROR_USERNAME_EXIST);
         }
-        account = new Account();
-        account.setUsername(createAccountAdminForm.getUsername());
+        Group group = groupRepository.findById(createAccountAdminForm.getGroupId()).orElseThrow(()
+        -> new NotFoundException("Group not found", ErrorCode.GROUP_ERROR_NOT_FOUND));
+        
+        Account account = accountMapper.fromCreateAccountAdmiFormToAccount(createAccountAdminForm);
         account.setPassword(passwordEncoder.encode(createAccountAdminForm.getPassword()));
-        account.setFullName(createAccountAdminForm.getFullName());
-        account.setKind(UserBaseConstant.USER_KIND_ADMIN);
-        account.setEmail(createAccountAdminForm.getEmail());
+        account.setKind(ITDreamConstant.USER_KIND_ADMIN);
         account.setGroup(group);
-        account.setStatus(createAccountAdminForm.getStatus());
-        account.setPhone(createAccountAdminForm.getPhone());
         accountRepository.save(account);
-
         apiMessageDto.setMessage("Create account admin success");
         return apiMessageDto;
-
     }
 
     @PutMapping(value = "/update_admin", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasRole('ACC_U_AD')")
-    public ApiResponse<String> updateAdmin(@Valid @RequestBody UpdateAccountAdminForm updateAccountAdminForm, BindingResult bindingResult) {
+    @PreAuthorize("hasRole('ACC_U')")
+    public ApiMessageDto<String> updateAdmin(@Valid @RequestBody UpdateAccountAdminForm updateAccountAdminForm, BindingResult bindingResult) {
+        if (!isSuperAdmin()){
+            throw new UnauthorizationException("User is not a super admin");
+        }
+        ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
+        Account account = accountRepository.findById(updateAccountAdminForm.getId()).orElseThrow(()
+        -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
+        Group group = groupRepository.findById(updateAccountAdminForm.getGroupId()).orElseThrow(()
+            -> new NotFoundException("Group not found", ErrorCode.GROUP_ERROR_NOT_FOUND));
 
-        ApiResponse<String> apiMessageDto = new ApiResponse<>();
-        Account account = accountRepository.findById(updateAccountAdminForm.getId()).orElse(null);
-        if (account == null) {
-            apiMessageDto.setResult(false);
-            apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
-            return apiMessageDto;
+        if (!Objects.equals(account.getEmail(), updateAccountAdminForm.getEmail())){
+            Boolean existEmail = accountRepository.existsByEmail(updateAccountAdminForm.getEmail());
+            if (existEmail){
+                throw new BadRequestException("Email already exist", ErrorCode.ACCOUNT_ERROR_EMAIL_EXIST);
+            }
+            account.setEmail(updateAccountAdminForm.getEmail());
         }
-        Group group = groupRepository.findById(updateAccountAdminForm.getGroupId()).orElse(null);
-        if (group == null) {
-            apiMessageDto.setResult(false);
-            apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_UNKNOWN);
-            return apiMessageDto;
+        
+        if (!Objects.equals(account.getPhone(), updateAccountAdminForm.getPhone())){
+            Boolean existPhone = accountRepository.existsByPhone(updateAccountAdminForm.getPhone());
+            if (existPhone){
+                throw new BadRequestException("Phone already exist", ErrorCode.ACCOUNT_ERROR_PHONE_EXIST);
+            }
+            account.setPhone(updateAccountAdminForm.getPhone());
         }
+        
         if (StringUtils.isNoneBlank(updateAccountAdminForm.getPassword())) {
             account.setPassword(passwordEncoder.encode(updateAccountAdminForm.getPassword()));
         }
-        account.setFullName(updateAccountAdminForm.getFullName());
+        
         if (StringUtils.isNoneBlank(updateAccountAdminForm.getAvatarPath())) {
             if(!updateAccountAdminForm.getAvatarPath().equals(account.getAvatarPath())){
                 //delete old image
                 userBaseApiService.deleteByFilePath(account.getAvatarPath());
+                account.setAvatarPath(updateAccountAdminForm.getAvatarPath());
             }
-            account.setAvatarPath(updateAccountAdminForm.getAvatarPath());
         }
+        
         account.setGroup(group);
-        account.setStatus(updateAccountAdminForm.getStatus());
-        account.setEmail(updateAccountAdminForm.getEmail());
-        account.setPhone(updateAccountAdminForm.getPhone());
+        accountMapper.fromUpdateAccountAdminFormToAccount(updateAccountAdminForm, account);
         accountRepository.save(account);
-
         apiMessageDto.setMessage("Update account admin success");
         return apiMessageDto;
 
     }
 
+    @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('ACC_L')")
+    public ApiMessageDto<ResponseListDto<List<AccountDto>>> listDtoApiMessageDto(AccountCriteria criteria, Pageable pageable){
+        ApiMessageDto<ResponseListDto<List<AccountDto>>> apiMessageDto = new ApiMessageDto<>();
+        ResponseListDto<List<AccountDto>> responseListDto = new ResponseListDto<>();
+        Page<Account> accounts = accountRepository.findAll(criteria.getSpecification(), pageable);
+        List<AccountDto> accountDtos = accountMapper.fromAccountToDtoList(accounts.getContent());
+        responseListDto.setContent(accountDtos);
+        responseListDto.setTotalElements(accounts.getTotalElements());
+        responseListDto.setTotalPages(accounts.getTotalPages());
+        apiMessageDto.setData(responseListDto);
+        apiMessageDto.setMessage("Get list admin success");
+        return apiMessageDto;
+    }
 
     @GetMapping(value = "/get/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ACC_V')")
-    public ApiResponse<Account> get(@PathVariable("id") Long id) {
-        Account shopProfile = accountRepository.findById(id).orElse(null);
-        ApiResponse<Account> apiMessageDto = new ApiResponse<>();
-        apiMessageDto.setData(shopProfile);
-        apiMessageDto.setMessage("Get shop profile success");
+    public ApiMessageDto<AccountDto> get(@PathVariable("id") Long id) {
+        if (!isSuperAdmin()){
+            throw new UnauthorizationException("User is not a super admin");
+        }
+        ApiMessageDto<AccountDto> apiMessageDto = new ApiMessageDto<>();
+        Account account = accountRepository.findById(id).orElseThrow(()
+            -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
+        AccountDto accountDto = accountMapper.fromAccountToDto(account);
+        apiMessageDto.setData(accountDto);
+        apiMessageDto.setMessage("Get account admin success");
         return apiMessageDto;
-
     }
 
     @DeleteMapping(value = "/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ACC_D')")
-    public ApiResponse<String> delete(@PathVariable("id") Long id) {
-        ApiResponse<String> apiMessageDto = new ApiResponse<>();
-        Account account = accountRepository.findById(id).orElse(null);
-        if (account == null) {
-            apiMessageDto.setResult(false);
-            apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
-            return apiMessageDto;
+    public ApiMessageDto<String> delete(@PathVariable("id") Long id) {
+        if (!isSuperAdmin()){
+            throw new UnauthorizationException("User is not a super admin");
         }
+        ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
+        Account account = accountRepository.findById(id).orElseThrow(()
+            -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
+
         if (account.getIsSuperAdmin()){
-            apiMessageDto.setResult(false);
-            apiMessageDto.setMessage("Not allow delete super admin");
-            apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_NOT_ALLOW_DELETE_SUPPER_ADMIN);
-            return apiMessageDto;
+            throw new BadRequestException("Not allow delete super admin", ErrorCode.ACCOUNT_ERROR_NOT_ALLOW_DELETE_SUPPER_ADMIN);
         }
         //delete avatar file
         userBaseApiService.deleteByFilePath(account.getAvatarPath());
-        studentRepository.deleteAllByAccountId(id);
         accountRepository.deleteById(id);
-        apiMessageDto.setMessage("Delete Account success");
+        apiMessageDto.setMessage("Delete account success");
         return apiMessageDto;
     }
 
     @GetMapping(value = "/profile", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse<AccountDto> profile() {
-        long id = getCurrentUser();
-        Account account = accountRepository.findById(id).orElse(null);
-        ApiResponse<AccountDto> apiMessageDto = new ApiResponse<>();
-        if (account == null) {
-            apiMessageDto.setResult(false);
-            apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
-            return apiMessageDto;
+    @PreAuthorize("hasRole('ACC_AD_P')")
+    public ApiMessageDto<ProfileAccountDto> profile() {
+        if (!isAdmin()){
+            throw new BadRequestException("User is not an admin");
         }
-        apiMessageDto.setData(accountMapper.fromAccountToDto(account));
-        apiMessageDto.setMessage("Get Account success");
+        ApiMessageDto<ProfileAccountDto> apiMessageDto = new ApiMessageDto<>();
+        Account account = accountRepository.findById(getCurrentUser()).orElseThrow(()
+            -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
+        apiMessageDto.setData(accountMapper.fromAccountToProfileDto(account));
+        apiMessageDto.setMessage("Get account profile success");
         return apiMessageDto;
     }
 
     @PutMapping(value = "/update_profile_admin", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse<String> updateProfileAdmin(final HttpServletRequest request, @Valid @RequestBody UpdateProfileAdminForm updateProfileAdminForm, BindingResult bindingResult) {
-
-        ApiResponse<String> apiMessageDto = new ApiResponse<>();
-        long id =getCurrentUser();
-        var account = accountRepository.findById(id).orElse(null);
-        if (account == null) {
-            apiMessageDto.setResult(false);
-            apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
-            return apiMessageDto;
+    @PreAuthorize("hasRole('ACC_AD_U')")
+    public ApiMessageDto<String> updateProfileAdmin(@Valid @RequestBody UpdateProfileAdminForm updateProfileAdminForm, BindingResult bindingResult) {
+        if (!isAdmin()){
+            throw new BadRequestException("User is not an admin");
         }
+        ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
+        Account account = accountRepository.findById(getCurrentUser()).orElseThrow(()
+            -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
+
+        if (!Objects.equals(account.getEmail(), updateProfileAdminForm.getEmail())){
+            Boolean existEmail = accountRepository.existsByEmail(updateProfileAdminForm.getEmail());
+            if (existEmail){
+                throw new BadRequestException("Email already exist", ErrorCode.ACCOUNT_ERROR_EMAIL_EXIST);
+            }
+            account.setEmail(updateProfileAdminForm.getEmail());
+        }
+
+        if (!Objects.equals(account.getPhone(), updateProfileAdminForm.getPhone())){
+            Boolean existPhone = accountRepository.existsByPhone(updateProfileAdminForm.getPhone());
+            if (existPhone){
+                throw new BadRequestException("Phone already exist", ErrorCode.ACCOUNT_ERROR_PHONE_EXIST);
+            }
+            account.setPhone(updateProfileAdminForm.getPhone());
+        }
+
         if(!passwordEncoder.matches(updateProfileAdminForm.getOldPassword(), account.getPassword())){
-            apiMessageDto.setResult(false);
-            apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_WRONG_PASSWORD);
-            return apiMessageDto;
+            throw new BadRequestException("Password invalid", ErrorCode.ACCOUNT_ERROR_WRONG_PASSWORD);
         }
 
         if (StringUtils.isNoneBlank(updateProfileAdminForm.getPassword())) {
             account.setPassword(passwordEncoder.encode(updateProfileAdminForm.getPassword()));
         }
-        account.setPhone(updateProfileAdminForm.getPhone());
-        account.setFullName(updateProfileAdminForm.getFullName());
-        account.setAvatarPath(updateProfileAdminForm.getAvatarPath());
-        accountRepository.save(account);
 
-        apiMessageDto.setMessage("Update admin account success");
+        if (StringUtils.isNoneBlank(updateProfileAdminForm.getAvatarPath())){
+            if (!Objects.equals(account.getAvatarPath(), updateProfileAdminForm.getAvatarPath())){
+                userBaseApiService.deleteByFilePath(account.getAvatarPath());
+                account.setAvatarPath(updateProfileAdminForm.getAvatarPath());
+            }
+        }
+        accountMapper.fromUpdateProfileAdminFormToAccount(updateProfileAdminForm, account);
+        accountRepository.save(account);
+        apiMessageDto.setMessage("Update profile admin success");
         return apiMessageDto;
 
     }
 
     @PostMapping(value = "/request_forget_password", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse<OtpDto> requestForgetPassword(@Valid @RequestBody RequestEmailForm emailForm, BindingResult bindingResult){
-        ApiResponse<OtpDto> apiMessageDto = new ApiResponse<>();
+    public ApiMessageDto<OtpDto> requestForgetPassword(@Valid @RequestBody RequestEmailForm emailForm, BindingResult bindingResult){
+        ApiMessageDto<OtpDto> apiMessageDto = new ApiMessageDto<>();
         Account account = accountRepository.findAccountByEmail(emailForm.getEmail());
         if (account == null) {
-            apiMessageDto.setResult(false);
-            apiMessageDto.setHttpCode(404);
-            apiMessageDto.setMessage("Account not found");
-            apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
-            return apiMessageDto;
+            throw new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
         }
 
         String otp = userBaseApiService.getRequestOTP();
         account.setAttemptCode(0);
         account.setResetPwdCode(otp);
         account.setResetPwdTime(new Date());
+        account.setStatus(ITDreamConstant.STATUS_PENDING);
         accountRepository.save(account);
 
         //send email
@@ -232,50 +257,36 @@ public class AccountController extends ABasicController{
         String hash = AESUtils.encrypt (account.getId()+";"+otp, true);
         otpDto.setIdHash(hash);
 
-        apiMessageDto.setResult(true);
         apiMessageDto.setData(otpDto);
         apiMessageDto.setMessage("Request forget password success, please check email.");
-        return  apiMessageDto;
+        return apiMessageDto;
     }
 
     @PostMapping(value = "/forget_password", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApiResponse<Long> forgetPassword(@Valid @RequestBody ForgetPasswordForm forgetForm, BindingResult bindingResult){
-        ApiResponse<Long> apiMessageDto = new ApiResponse<>();
-
+    public ApiMessageDto<Long> forgetPassword(@Valid @RequestBody ForgetPasswordForm forgetForm, BindingResult bindingResult){
+        ApiMessageDto<Long> apiMessageDto = new ApiMessageDto<>();
         String[] hash = AESUtils.decrypt(forgetForm.getIdHash(),true).split(";",2);
         Long id = ConvertUtils.convertStringToLong(hash[0]);
         if(id <= 0){
-            apiMessageDto.setResult(false);
-            apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_WRONG_HASH_RESET_PASS);
-            return apiMessageDto;
+            throw new BadRequestException("Wrong password hash", ErrorCode.ACCOUNT_ERROR_WRONG_HASH_RESET_PASS);
         }
 
+        Account account = accountRepository.findById(id).orElseThrow(()
+        -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
 
-        Account account = accountRepository.findById(id).orElse(null);
-        if (account == null ) {
-            apiMessageDto.setResult(false);
-            apiMessageDto.setHttpCode(404);
-            apiMessageDto.setMessage("Account not found");
-            apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
-            return apiMessageDto;
-        }
-
-        if(account.getAttemptCode() >= UserBaseConstant.MAX_ATTEMPT_FORGET_PWD){
-            apiMessageDto.setResult(false);
-            apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_LOCKED);
-            return apiMessageDto;
+        if(account.getAttemptCode() >= ITDreamConstant.MAX_ATTEMPT_FORGET_PWD){
+            account.setStatus(ITDreamConstant.STATUS_LOCK);
+            accountRepository.save(account);
+            throw new BadRequestException("Account has been locked", ErrorCode.ACCOUNT_ERROR_LOCKED);
         }
 
         if(!account.getResetPwdCode().equals(forgetForm.getOtp()) ||
-                (new Date().getTime() - account.getResetPwdTime().getTime() >= UserBaseConstant.MAX_TIME_FORGET_PWD)){
+                (new Date().getTime() - account.getResetPwdTime().getTime() >= ITDreamConstant.MAX_TIME_FORGET_PWD)){
 
             //tang so lan
             account.setAttemptCode(account.getAttemptCode()+1);
             accountRepository.save(account);
-
-            apiMessageDto.setResult(false);
-            apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_OPT_INVALID);
-            return apiMessageDto;
+            throw new BadRequestException("OTP invalid", ErrorCode.ACCOUNT_ERROR_OPT_INVALID);
         }
 
         account.setResetPwdTime(null);
@@ -283,8 +294,6 @@ public class AccountController extends ABasicController{
         account.setAttemptCode(null);
         account.setPassword(passwordEncoder.encode(forgetForm.getNewPassword()));
         accountRepository.save(account);
-
-        apiMessageDto.setResult(true);
         apiMessageDto.setMessage("Change password success.");
         return apiMessageDto;
     }
@@ -292,12 +301,14 @@ public class AccountController extends ABasicController{
     @PostMapping(value = "/resend-verify", produces = MediaType.APPLICATION_JSON_VALUE)
     public ApiMessageDto<OtpDto> resendVerification(@Valid @RequestBody RequestEmailForm emailForm, BindingResult bindingResult){
         ApiMessageDto<OtpDto> apiMessageDto = new ApiMessageDto<>();
-
         Account account = accountRepository.findAccountByEmail(emailForm.getEmail());
         if (account == null) {
-            throw new NotFoundException("account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
+            throw new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
         }
 
+        if (!Objects.equals(account.getStatus(), ITDreamConstant.STATUS_PENDING)){
+            throw new BadRequestException("Account is not pending", ErrorCode.ACCOUNT_ERROR_NOT_PENDING);
+        }
         String otp = userBaseApiService.getRequestOTP();
         account.setAttemptCode(0);
         account.setResetPwdCode(otp);
@@ -309,10 +320,8 @@ public class AccountController extends ABasicController{
         OtpDto otpDto = new OtpDto();
         String hash = AESUtils.encrypt (account.getId()+";"+otp, true);
         otpDto.setIdHash(hash);
-
-        apiMessageDto.setResult(true);
         apiMessageDto.setData(otpDto);
-        apiMessageDto.setMessage("resend verify email success");
+        apiMessageDto.setMessage("Resend verify email success");
         return apiMessageDto;
     }
 

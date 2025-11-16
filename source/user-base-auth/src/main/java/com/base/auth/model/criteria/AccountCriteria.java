@@ -1,11 +1,9 @@
 package com.base.auth.model.criteria;
 
-
 import com.base.auth.model.Account;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.util.StringUtils;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
@@ -42,13 +40,13 @@ public class AccountCriteria implements Serializable{
                 if(getStatus() != null){
                     predicates.add(cb.equal(root.get("status"), getStatus()));
                 }
-                if(!StringUtils.isEmpty(getUsername())){
+                if(StringUtils.isNotBlank(getUsername())){
                     predicates.add(cb.like(cb.lower(root.get("username")), "%"+getUsername().toLowerCase()+"%"));
                 }
-                if(!StringUtils.isEmpty(getEmail())){
+                if(StringUtils.isNotBlank(getEmail())){
                     predicates.add(cb.like(cb.lower(root.get("email")), "%"+getEmail().toLowerCase()+"%"));
                 }
-                if(!StringUtils.isEmpty(getFullName())){
+                if(StringUtils.isNotBlank(getFullName())){
                     predicates.add(cb.like(cb.lower(root.get("fullName")), "%"+getFullName().toLowerCase()+"%"));
                 }
                 return cb.and(predicates.toArray(new Predicate[predicates.size()]));

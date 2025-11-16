@@ -1,13 +1,12 @@
 package com.base.auth.service;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.dto.ErrorCode;
 import com.base.auth.exception.BadRequestException;
 import com.base.auth.form.notification.CreateNotificationForm;
 import com.base.auth.mapper.NotificationMapper;
 import com.base.auth.model.Notification;
 import com.base.auth.repository.NotificationRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +52,6 @@ public class NotificationService {
 
   // Gửi message notification vào queue
   private void sendNotificationMessage(CreateNotificationForm request){
-    rabbitMQService.handleSendMsg(request, UserBaseConstant.BACKEND_POST_NOTIFICATION_CMD, notificationQueue);
+    rabbitMQService.handleSendMsg(request, ITDreamConstant.BACKEND_POST_NOTIFICATION_CMD, notificationQueue);
   }
 }

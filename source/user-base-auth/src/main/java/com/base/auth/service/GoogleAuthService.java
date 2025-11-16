@@ -1,6 +1,6 @@
 package com.base.auth.service;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.dto.ErrorCode;
 import com.base.auth.exception.BadRequestException;
 import com.base.auth.form.GoogleLoginForm;
@@ -55,21 +55,21 @@ public class GoogleAuthService {
       newAccount.setFullName(googleUserInfoForm.getFullName());
       newAccount.setAvatarPath(googleUserInfoForm.getAvatarPath());
       if ("educator".equalsIgnoreCase(googleLoginForm.getUserRole())){
-        Group group = groupRepository.findFirstByKind(UserBaseConstant.USER_KIND_EDUCATOR);
+        Group group = groupRepository.findFirstByKind(ITDreamConstant.USER_KIND_EDUCATOR);
         if (group != null){
           newAccount.setGroup(group);
         }
-        newAccount.setStatus(UserBaseConstant.STATUS_WAITING_APPROVE);
-        newAccount.setKind(UserBaseConstant.USER_KIND_EDUCATOR);
+        newAccount.setStatus(ITDreamConstant.STATUS_WAITING_APPROVE);
+        newAccount.setKind(ITDreamConstant.USER_KIND_EDUCATOR);
       } else {
-        Group group = groupRepository.findFirstByKind(UserBaseConstant.USER_KIND_STUDENT);
+        Group group = groupRepository.findFirstByKind(ITDreamConstant.USER_KIND_STUDENT);
         if (group != null){
           newAccount.setGroup(group);
         }
-        newAccount.setKind(UserBaseConstant.USER_KIND_STUDENT);
+        newAccount.setKind(ITDreamConstant.USER_KIND_STUDENT);
       }
       accountRepository.save(newAccount);
-      if (Objects.equals(newAccount.getKind(), UserBaseConstant.USER_KIND_STUDENT)){
+      if (Objects.equals(newAccount.getKind(), ITDreamConstant.USER_KIND_STUDENT)){
         Student student = new Student();
         student.setAccount(newAccount);
         studentRepository.save(student);

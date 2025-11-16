@@ -24,10 +24,13 @@ public interface SpecializationMapper {
 
   @Mapping(source = "id", target = "id")
   @Mapping(source = "name", target = "name")
+  @Mapping(source = "createdDate", target = "createdDate")
+  @Mapping(source = "modifiedDate", target = "modifiedDate")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToSpecializationDto")
   SpecializationDto fromEntityToSpecializationDto(Specialization specialization);
 
+  @Mapping(source = "id", target = "id")
   @Mapping(source = "name", target = "name")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToSpecializationAutoCompleteDto")

@@ -14,7 +14,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(name = "db_user_base_task_question")
+@Table(name = "db_it_dream_task_question")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

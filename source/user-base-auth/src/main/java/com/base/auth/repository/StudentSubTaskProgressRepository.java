@@ -18,23 +18,23 @@ public interface StudentSubTaskProgressRepository extends JpaRepository<StudentS
 
   @Modifying
   @Transactional
-  @Query(value = "DELETE sstp FROM db_user_base_student_subtask_progress sstp " +
+  @Query(value = "DELETE sstp FROM db_it_dream_student_subtask_progress sstp " +
       "WHERE sstp.task_id = :taskId " +
-      "OR sstp.task_id IN (SELECT id FROM db_user_base_task WHERE parent_id = :taskId)", nativeQuery = true)
+      "OR sstp.task_id IN (SELECT id FROM db_it_dream_task WHERE parent_id = :taskId)", nativeQuery = true)
   void deleteAllByTaskAndSubtask(@Param("taskId") Long taskId);
 
   @Modifying
   @Transactional
-  @Query(value = "DELETE sstp FROM db_user_base_student_subtask_progress sstp " +
-          "JOIN db_user_base_task t ON sstp.task_id = t.id " +
+  @Query(value = "DELETE sstp FROM db_it_dream_student_subtask_progress sstp " +
+          "JOIN db_it_dream_task t ON sstp.task_id = t.id " +
           "WHERE t.simulation_id = :simulationId", nativeQuery = true)
   void deleteAllBySimulationId(@Param("simulationId") Long simulationId);
 
   @Modifying
   @Transactional
-  @Query(value = "DELETE sstp FROM db_user_base_student_subtask_progress sstp " +
-          "JOIN db_user_base_task t ON sstp.task_id = t.id " +
-          "JOIN db_user_base_simulation sim ON t.simulation_id = sim.id " +
+  @Query(value = "DELETE sstp FROM db_it_dream_student_subtask_progress sstp " +
+          "JOIN db_it_dream_task t ON sstp.task_id = t.id " +
+          "JOIN db_it_dream_simulation sim ON t.simulation_id = sim.id " +
           "WHERE sim.educator_id = :educatorId", nativeQuery = true)
   void deleteAllByEducatorId(@Param("educatorId") Long educatorId);
 

@@ -3,17 +3,16 @@ package com.base.auth.constant;
 import java.io.File;
 import java.util.List;
 
-public class UserBaseConstant {
+public class ITDreamConstant {
     public static final String DATE_FORMAT = "dd/MM/yyyy";
     public static final String DATE_TIME_FORMAT = "dd/MM/yyyy HH:mm:ss";
 
     public static final String DIRECTORY_GENERAL = File.separator + "general";
 
     public static final Integer USER_KIND_ADMIN = 1;
-    public static final Integer USER_KIND_MANAGER = 2;
+    public static final Integer USER_KIND_EDUCATOR = 2;
     public static final Integer USER_KIND_STUDENT = 3;
-    public static final Integer USER_KIND_EDUCATOR = 5;
-    public static final Integer USER_KIND_ENTERISE = 6;
+    public static final Integer USER_KIND_COMPANY = 4;
 
     public static final Integer TASK_KIND_TASK = 1;
     public static final Integer TASK_KIND_SUBTASK = 2;
@@ -24,6 +23,7 @@ public class UserBaseConstant {
     public static final Integer STATUS_ACTIVE = 1;
     public static final Integer STATUS_PENDING = 0;
     public static final Integer STATUS_WAITING_APPROVE = 2;
+    public static final Integer STATUS_WAITING_APPROVE_DELETE = 3;
     public static final Integer STATUS_LOCK = -1;
     public static final Integer STATUS_REJECT = -2;
 
@@ -53,7 +53,6 @@ public class UserBaseConstant {
     public static final String BACKEND_PROCESS_VIDEO_CMD = "BACKEND_PROCESS_VIDEO";
     public static final String MEDIA_COMPLETED_PROCESS_VIDEO_CMD = "MEDIA_COMPLETED_PROCESS_VIDEO";
     public static final String BACKEND_POST_NOTIFICATION_CMD = "BACKEND_POST_NOTIFICATION";
-    public static final String CLIENT_RECEIVED_PUSH_NOTIFICATION = "CLIENT_RECEIVED_PUSH_NOTIFICATION";
 
     public static final Integer GROUP_KIND_ADMIN = 1;
     public static final Integer GROUP_KIND_MANAGER = 2;
@@ -63,13 +62,15 @@ public class UserBaseConstant {
     public static final int MAX_TIME_FORGET_PWD = 5 * 60 * 1000; //5 minutes
     public static final Integer MAX_ATTEMPT_LOGIN = 5;
 
-    public static final String PASSWORD_PATTERN = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$";
-    public static final String EMAIL_PATTERN = "^\\S+@\\S+\\.\\S+$";
+    public static final String PASSWORD_PATTERN = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,15}$";
+    public static final String EMAIL_PATTERN = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
     public static final String PHONE_PATTERN = "^0\\d{9}$";
+    public static final String FILE_PATH_PATTERN = "^(https?:\\/\\/|\\/)?([\\w\\-]+\\/?)+\\.[A-Za-z0-9]{2,6}$";
+
 
     public static final String NOTIFICATION_TYPE_REVIEW_SUBMISSION = "REVIEW_SUBMISSION";
 
-    private UserBaseConstant(){
+    private ITDreamConstant(){
         throw new IllegalStateException("Utility class");
     }
 }

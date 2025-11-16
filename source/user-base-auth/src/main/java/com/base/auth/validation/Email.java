@@ -1,6 +1,6 @@
 package com.base.auth.validation;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.validation.impl.EmailValidation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -17,7 +17,7 @@ import javax.validation.Payload;
 public @interface Email {
   boolean allowNull() default false;
 
-  String pattern() default UserBaseConstant.EMAIL_PATTERN;
+  String pattern() default ITDreamConstant.EMAIL_PATTERN;
 
   String message() default "Please enter a valid email address in the correct format, such as test@example.com";
 

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "db_user_base_group")
+@Table(name = "db_it_dream_group")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -28,7 +28,7 @@ public class Group extends Auditable<String> {
     @Column(name = "is_system_role")
     private Boolean isSystemRole = false;
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
-    @JoinTable(name = "db_user_base_permission_group",
+    @JoinTable(name = "db_it_dream_permission_group",
             joinColumns = @JoinColumn(name = "group_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "permission_id",
                     referencedColumnName = "id"))

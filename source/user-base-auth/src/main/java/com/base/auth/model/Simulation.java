@@ -1,6 +1,6 @@
 package com.base.auth.model;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
@@ -15,7 +15,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(name = "db_user_base_simulation")
+@Table(name = "db_it_dream_simulation")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -33,7 +33,7 @@ public class Simulation extends Auditable<String>{
   private String totalEstimatedTime = "0";
   private String imagePath;
   private String videoPath;
-  private Integer state = UserBaseConstant.STATE_SIMULATION_INIT;
+  private Integer state = ITDreamConstant.STATE_SIMULATION_INIT;
   private Float avgRating = 0F;
   private Integer participantQuantity = 0;
   @ManyToOne

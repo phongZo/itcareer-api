@@ -9,6 +9,7 @@ public class SimulationDisplayDto {
   private String title;
   private Integer level;
   private String totalEstimatedTime;
+  private Integer participantQuantity;
   private String imagePath;
   private Float avgRating;
   private Float percent;

@@ -5,7 +5,7 @@
  */
 package com.base.auth.config;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.trace.http.HttpTraceRepository;
@@ -33,7 +33,7 @@ public class RestClientConfig {
     public RestTemplate restTemplate() {
         RestTemplate restTemplate = new RestTemplate();
         ObjectMapper objectMapper = new ObjectMapper();
-        SimpleDateFormat format = new SimpleDateFormat(UserBaseConstant.DATE_TIME_FORMAT);
+        SimpleDateFormat format = new SimpleDateFormat(ITDreamConstant.DATE_TIME_FORMAT);
         objectMapper.setDateFormat(format);
 
         for(HttpMessageConverter<?> converter : restTemplate.getMessageConverters()){

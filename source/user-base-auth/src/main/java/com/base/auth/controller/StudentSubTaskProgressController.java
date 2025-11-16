@@ -1,6 +1,6 @@
 package com.base.auth.controller;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.ErrorCode;
 import com.base.auth.dto.achievement.AchievementDisplayDto;
@@ -15,11 +15,13 @@ import com.base.auth.model.Student;
 import com.base.auth.model.StudentSubTaskProgress;
 import com.base.auth.model.StudentTaskQuestionProgress;
 import com.base.auth.model.Task;
+import com.base.auth.model.TaskQuestion;
 import com.base.auth.repository.AchievementRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.StudentRepository;
 import com.base.auth.repository.StudentSubTaskProgressRepository;
 import com.base.auth.repository.StudentTaskQuestionProgressRepository;
+import com.base.auth.repository.TaskQuestionRepository;
 import com.base.auth.repository.TaskRepository;
 import java.util.Objects;
 import javax.transaction.Transactional;
@@ -63,6 +65,9 @@ public class StudentSubTaskProgressController extends ABasicController{
   @Autowired
   AchievementRepository achievementRepository;
 
+  @Autowired
+  TaskQuestionRepository taskQuestionRepository;
+
   @GetMapping(value = "/student-get/{taskId}", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('STSP_ST_V')")
   public ApiMessageDto<StudentSubTaskProgressDisplayDto> getForStudent(@PathVariable("taskId") Long taskId){
@@ -78,28 +83,37 @@ public class StudentSubTaskProgressController extends ABasicController{
     if (simulation == null){
       throw new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND);
     }
+    boolean existTaskQuestion = taskQuestionRepository.existsByTaskId(task.getId());
     StudentSubTaskProgress existStudentSubTaskProgress = studentSubTaskProgressRepository.findByTaskIdAndStudentId(
         task.getId(), getCurrentUser()).orElse(null);
     if (existStudentSubTaskProgress != null){
+      if (!existTaskQuestion){
+        existStudentSubTaskProgress.setState(ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED);
+      }
       apiMessageDto.setData(studentSubTaskProgressMapper.fromEntityToStudentSubTaskProgressDisplayDto(existStudentSubTaskProgress));
       existStudentSubTaskProgress.setCurrentAttempt(existStudentSubTaskProgress.getCurrentAttempt() + 1);
       studentSubTaskProgressRepository.save(existStudentSubTaskProgress);
-      apiMessageDto.setMessage("Get success");
+      apiMessageDto.setMessage("Get student subtask progress success");
     } else {
       StudentSubTaskProgress studentSubTaskProgress = new StudentSubTaskProgress();
       studentSubTaskProgress.setStudent(student);
       studentSubTaskProgress.setTask(task);
-      studentSubTaskProgress.setState(UserBaseConstant.STATE_STUDENT_SUBTASK_PROGRESS_IN_PROGRESS);
+      if (!existTaskQuestion){
+        studentSubTaskProgress.setState(ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED);
+      } else {
+        studentSubTaskProgress.setState(ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_IN_PROGRESS);
+      }
       studentSubTaskProgressRepository.save(studentSubTaskProgress);
       simulation.setParticipantQuantity(simulation.getParticipantQuantity() + 1);
       simulationRepository.save(simulation);
-      apiMessageDto.setMessage("Create success");
+      apiMessageDto.setData(studentSubTaskProgressMapper.fromEntityToStudentSubTaskProgressDisplayDto(studentSubTaskProgress));
+      apiMessageDto.setMessage("Create student subtask progress success");
     }
     return apiMessageDto;
   }
 
   @PutMapping(value = "/complete", produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasRole('STSP_CPL')")
+  @PreAuthorize("hasRole('STSP_ST_CPL')")
   @Transactional
   public ApiMessageDto<AchievementDisplayDto> complete(@Valid @RequestBody RequestStudentSubTaskProgressForm requestStudentSubTaskProgressForm, BindingResult bindingResult){
     ApiMessageDto<AchievementDisplayDto> apiMessageDto = new ApiMessageDto<>();
@@ -114,35 +128,39 @@ public class StudentSubTaskProgressController extends ABasicController{
     if (count != task.getTotalQuestion()){
       throw new BadRequestException("Student subtask progress cannot be completed", ErrorCode.STUDENT_SUBTASK_PROGRESS_ERROR_NOT_COMPLETED);
     }
-    studentSubTaskProgress.setState(UserBaseConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED);
-    studentSubTaskProgress.setErrorCount(UserBaseConstant.RESTART_ERROR_COUNT);
+    studentSubTaskProgress.setState(ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED);
+    studentSubTaskProgress.setErrorCount(ITDreamConstant.RESTART_ERROR_COUNT);
     StudentTaskQuestionProgress studentTaskQuestionProgress = studentTaskQuestionProgressRepository.findFirstByStudentSubTaskProgressId(studentSubTaskProgress.getId()).orElse(null);
-    if (studentTaskQuestionProgress != null && Objects.equals(studentTaskQuestionProgress.getTaskQuestion().getQuestionType(), UserBaseConstant.QUESTION_TYPE_MULTIPLE_CHOICE)){
+    if (studentTaskQuestionProgress != null && Objects.equals(studentTaskQuestionProgress.getTaskQuestion().getQuestionType(), ITDreamConstant.QUESTION_TYPE_MULTIPLE_CHOICE)){
       studentTaskQuestionProgressRepository.deleteAllByStudentSubTaskProgressId(studentSubTaskProgress.getId());
     }
     studentSubTaskProgressRepository.save(studentSubTaskProgress);
     Long countTask = taskRepository.countBySimulationId(task.getSimulation().getId());
-    Long countStudentSubTaskProgress = studentSubTaskProgressRepository.countByStateAndStudentIdAndTaskSimulationId(UserBaseConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, getCurrentUser(), task.getSimulation().getId());
+    Long countStudentSubTaskProgress = studentSubTaskProgressRepository.countByStateAndStudentIdAndTaskSimulationId(
+        ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, getCurrentUser(), task.getSimulation().getId());
     if (Objects.equals(countTask, countStudentSubTaskProgress)){
       Student student = studentRepository.findById(getCurrentUser()).orElseThrow(()
       -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
-      Achievement achievement = new Achievement();
-      achievement.setSimulation(task.getSimulation());
-      achievement.setStudent(student);
-      achievementRepository.save(achievement);
+      boolean existAchievement = achievementRepository.existsByStudentIdAndSimulationId(student.getId(), task.getSimulation().getId());
+      if (!existAchievement){
+        Achievement achievement = new Achievement();
+        achievement.setSimulation(task.getSimulation());
+        achievement.setStudent(student);
+        achievementRepository.save(achievement);
 
-      AchievementDisplayDto achievementDisplayDto = new AchievementDisplayDto();
-      achievementDisplayDto.setId(achievement.getId());
-      achievementDisplayDto.setUsername(student.getAccount().getUsername());
-      achievementDisplayDto.setSimulationName(task.getSimulation().getTitle());
-      apiMessageDto.setData(achievementDisplayDto);
+        AchievementDisplayDto achievementDisplayDto = new AchievementDisplayDto();
+        achievementDisplayDto.setId(achievement.getId());
+        achievementDisplayDto.setUsername(student.getAccount().getUsername());
+        achievementDisplayDto.setSimulationName(task.getSimulation().getTitle());
+        apiMessageDto.setData(achievementDisplayDto);
+      }
     }
     apiMessageDto.setMessage("Complete student subtask progress");
     return apiMessageDto;
   }
 
   @PutMapping(value = "/restart", produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasRole('STSP_RES')")
+  @PreAuthorize("hasRole('STSP_ST_RES')")
   @Transactional
   public ApiMessageDto<String> restart(@Valid @RequestBody RequestStudentSubTaskProgressForm requestStudentSubTaskProgressForm, BindingResult bindingResult){
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
@@ -154,8 +172,10 @@ public class StudentSubTaskProgressController extends ABasicController{
     StudentSubTaskProgress studentSubTaskProgress = studentSubTaskProgressRepository.findByTaskIdAndStudentId(task.getId(), getCurrentUser()).orElseThrow(()
         -> new NotFoundException("Student subtask progress not found", ErrorCode.STUDENT_SUBTASK_PROGRESS_ERROR_NOT_FOUND));
     studentSubTaskProgress.setCurrentAttempt(studentSubTaskProgress.getCurrentAttempt() + 1);
-    studentSubTaskProgress.setErrorCount(UserBaseConstant.RESTART_ERROR_COUNT);
+    studentSubTaskProgress.setErrorCount(ITDreamConstant.RESTART_ERROR_COUNT);
+    studentSubTaskProgress.setStatus(ITDreamConstant.STATUS_ACTIVE);
     studentTaskQuestionProgressRepository.deleteAllByStudentSubTaskProgressId(studentSubTaskProgress.getId());
+    studentSubTaskProgressRepository.save(studentSubTaskProgress);
     apiMessageDto.setMessage("Restart student subtask progress success");
     return apiMessageDto;
   }

@@ -2,6 +2,8 @@ package com.base.auth.form.account;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.Date;
+import javax.validation.constraints.Past;
 import lombok.Data;
 
 import javax.validation.constraints.Email;
@@ -28,6 +30,9 @@ public class CreateAccountAdminForm {
     @NotEmpty(message = "fullName cant not be null")
     @ApiModelProperty(name = "fullName",example = "Tam Nguyen",required = true)
     private String fullName;
+    @ApiModelProperty(name = "birthday")
+    @Past(message = "birthday must be in the past")
+    private Date birthday;
     private String avatarPath;
     @NotNull(message = "status cant not be null")
     @ApiModelProperty(name = "status", required = true)

@@ -1,6 +1,8 @@
 package com.base.auth.controller;
 
 import com.base.auth.dto.ApiMessageDto;
+import com.base.auth.dto.ErrorCode;
+import com.base.auth.exception.BadRequestException;
 import com.base.auth.form.permission.CreatePermissionForm;
 import com.base.auth.model.Permission;
 import com.base.auth.repository.PermissionRepository;
@@ -30,13 +32,13 @@ public class PermissionController extends ABasicController{
     @PostMapping(value = "/create", produces= MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('PER_C')")
     public ApiMessageDto<String> create(@Valid @RequestBody CreatePermissionForm createPermissionForm, BindingResult bindingResult) {
+        if (!isSuperAdmin()){
+            throw new UnauthorizationException("Not allowed create");
+        }
         ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
-
         Permission permission = permissionRepository.findFirstByName(createPermissionForm.getName());
         if(permission != null){
-            apiMessageDto.setResult(false);
-            apiMessageDto.setMessage("Permission name is exist");
-            return apiMessageDto;
+            throw new BadRequestException("Permission name is exist", ErrorCode.PERMISSION_ERROR_EXIST);
         }
         permission = new Permission();
         permission.setName(createPermissionForm.getName());

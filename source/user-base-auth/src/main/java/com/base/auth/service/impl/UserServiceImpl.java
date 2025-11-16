@@ -1,7 +1,7 @@
 package com.base.auth.service.impl;
 
 import com.base.auth.config.SecurityConstant;
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.exception.BadRequestException;
 import com.base.auth.form.GoogleLoginForm;
 import com.base.auth.jwt.UserBaseJwt;
@@ -36,7 +36,6 @@ import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.stream.Collectors;
-import org.springframework.web.server.ResponseStatusException;
 
 @Transactional
 @Service(value = "userService")
@@ -44,16 +43,16 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserServiceImpl implements UserDetailsService {
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder;
 
     @Autowired
-    private AccountRepository accountRepository;
+    AccountRepository accountRepository;
 
     @Autowired
-    private GroupRepository groupRepository;
+    GroupRepository groupRepository;
 
     @Autowired
-    private GoogleAuthService googleAuthService;
+    GoogleAuthService googleAuthService;
 
     @Override
     public UserDetails loadUserByUsername(String userId) {
@@ -117,11 +116,11 @@ public class UserServiceImpl implements UserDetailsService {
             throw new UsernameNotFoundException("Invalid password.");
         }
 
-        if (!Objects.equals(UserBaseConstant.STATUS_ACTIVE, user.getStatus())){
+        if (!Objects.equals(ITDreamConstant.STATUS_ACTIVE, user.getStatus())){
             throw new BadRequestException("< ERROR-ACCOUNT-0015 > - User is not active");
         }
 
-        if(!Objects.equals(user.getKind(), UserBaseConstant.USER_KIND_STUDENT)){
+        if(!Objects.equals(user.getKind(), ITDreamConstant.USER_KIND_STUDENT)){
             throw new BadRequestException("< ERROR-ACCOUNT-0017 > - User is not a student");
         }
 
@@ -167,11 +166,11 @@ public class UserServiceImpl implements UserDetailsService {
             throw new UsernameNotFoundException("Invalid password.");
         }
 
-        if (!Objects.equals(UserBaseConstant.STATUS_ACTIVE, user.getStatus())){
+        if (!Objects.equals(ITDreamConstant.STATUS_ACTIVE, user.getStatus())){
             throw new BadRequestException("< ERROR-ACCOUNT-0015 > - User is not active");
         }
 
-        if(!Objects.equals(user.getKind(), UserBaseConstant.USER_KIND_EDUCATOR)){
+        if(!Objects.equals(user.getKind(), ITDreamConstant.USER_KIND_EDUCATOR)){
             throw new BadRequestException("< ERROR-ACCOUNT-0018 > - User is not a educator");
         }
 
@@ -209,11 +208,11 @@ public class UserServiceImpl implements UserDetailsService {
         Account user = googleAuthService.authenticateWithGoogle(googleLoginForm);
         user.setPassword("N/A");
 
-        if (!Objects.equals(UserBaseConstant.STATUS_ACTIVE, user.getStatus())){
+        if (!Objects.equals(ITDreamConstant.STATUS_ACTIVE, user.getStatus())){
             throw new BadRequestException("< ERROR-ACCOUNT-0015 > - User is not active");
         }
 
-        if(!Objects.equals(user.getKind(), UserBaseConstant.USER_KIND_STUDENT)){
+        if(!Objects.equals(user.getKind(), ITDreamConstant.USER_KIND_STUDENT)){
             throw new BadRequestException("< ERROR-ACCOUNT-0017 > - User is not a student");
         }
 
@@ -251,11 +250,11 @@ public class UserServiceImpl implements UserDetailsService {
         Account user = googleAuthService.authenticateWithGoogle(googleLoginForm);
         user.setPassword("N/A");
 
-        if (!Objects.equals(UserBaseConstant.STATUS_ACTIVE, user.getStatus())){
+        if (!Objects.equals(ITDreamConstant.STATUS_ACTIVE, user.getStatus())){
             throw new BadRequestException("< ERROR-ACCOUNT-0015 > - User is not active");
         }
 
-        if(!Objects.equals(user.getKind(), UserBaseConstant.USER_KIND_EDUCATOR)){
+        if(!Objects.equals(user.getKind(), ITDreamConstant.USER_KIND_EDUCATOR)){
             throw new BadRequestException("< ERROR-ACCOUNT-0018 > - User is not a educator");
         }
 

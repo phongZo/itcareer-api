@@ -1,6 +1,9 @@
 package com.base.auth.controller;
 
 import com.base.auth.dto.ApiMessageDto;
+import com.base.auth.dto.ErrorCode;
+import com.base.auth.exception.BadRequestException;
+import com.base.auth.exception.NotFoundException;
 import com.base.auth.exception.UnauthorizationException;
 import com.base.auth.form.group.CreateGroupForm;
 import com.base.auth.form.group.UpdateGroupForm;
@@ -45,9 +48,7 @@ public class GroupController extends ABasicController{
         ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
         Group group = groupRepository.findFirstByName(createGroupForm.getName());
         if(group != null){
-            apiMessageDto.setResult(false);
-            apiMessageDto.setMessage("Group name is exist");
-            return apiMessageDto;
+            throw new BadRequestException("Group name already exist", ErrorCode.GROUP_ERROR_EXIST);
         }
         group = new Group();
         group.setName(createGroupForm.getName());
@@ -60,7 +61,6 @@ public class GroupController extends ABasicController{
                 permissions.add(permission);
             }
         }
-        group.setStatus(1);
         group.setPermissions(permissions);
         groupRepository.save(group);
         apiMessageDto.setMessage("Create group success");
@@ -74,20 +74,16 @@ public class GroupController extends ABasicController{
             throw new UnauthorizationException("Not allowed update.");
         }
         ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
-        Group group = groupRepository.findById(updateGroupForm.getId()).orElse(null);
-        if(group == null){
-            apiMessageDto.setResult(false);
-            apiMessageDto.setMessage("Group name doesnt exist");
-            return apiMessageDto;
-        }
+        Group group = groupRepository.findById(updateGroupForm.getId()).orElseThrow(()
+        -> new NotFoundException("Group not found", ErrorCode.GROUP_ERROR_NOT_FOUND));
         //check su ton tai cua group name khac khi dat ten.
-        Group otherGroup = groupRepository.findFirstByName(updateGroupForm.getName());
-        if(otherGroup != null && !Objects.equals( updateGroupForm.getId(),otherGroup.getId()) ){
-            apiMessageDto.setResult(false);
-            apiMessageDto.setMessage("Cant update this group name because it is exist");
-            return apiMessageDto;
+        if (!Objects.equals(group.getName(), updateGroupForm.getName())){
+            Boolean existName = groupRepository.existsByName(updateGroupForm.getName());
+            if (existName){
+                throw new BadRequestException("Group name already exist", ErrorCode.GROUP_ERROR_EXIST);
+            }
+            group.setName(updateGroupForm.getName());
         }
-        group.setName(updateGroupForm.getName());
         group.setDescription(updateGroupForm.getDescription());
         List<Permission> permissions = new ArrayList<>();
         for(int i=0;i< updateGroupForm.getPermissions().length;i++){
@@ -128,7 +124,7 @@ public class GroupController extends ABasicController{
                 .findAllByKind(kind, PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(new Sort.Order(Sort.Direction.DESC, "createdDate"))));
         ResponseListDto<Group> responseListDto = new ResponseListDto(groups.getContent() , groups.getTotalElements(), groups.getTotalPages());
         apiMessageDto.setData(responseListDto);
-        apiMessageDto.setMessage("list group success");
+        apiMessageDto.setMessage("Get list group success");
         return apiMessageDto;
     }
 }

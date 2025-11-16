@@ -1,6 +1,6 @@
 package com.base.auth.validation;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.validation.impl.PasswordValidation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -17,9 +17,9 @@ import javax.validation.Payload;
 public @interface Password {
   boolean allowNull() default false;
 
-  String pattern() default UserBaseConstant.PASSWORD_PATTERN;
+  String pattern() default ITDreamConstant.PASSWORD_PATTERN;
 
-  String message() default "The password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number and one special character";
+  String message() default "The password must be between 8 and 15 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character";
 
   Class<?>[] groups() default {};
 

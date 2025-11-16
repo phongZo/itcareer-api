@@ -12,7 +12,7 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "db_user_base_account")
+@Table(name = "db_it_dream_account")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -31,10 +31,10 @@ public class Account extends Auditable<String> {
     private String password;
     @Column(name = "full_name")
     private String fullName;
+    private Date birthday;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id")
     private Group group;
-
     @Column(name = "last_login")
     private Date lastLogin;
     @Column(name = "avatar_path")

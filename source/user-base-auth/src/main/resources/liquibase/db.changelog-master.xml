@@ -5,22 +5,5 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
     <include file="db.changelog-1.0.0.xml" relativeToChangelogFile="true"/>
-    <include file="20231101153924_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20231102152656_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20250623093229_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20250716021140_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20250717010117_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20250719020347_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20250721022531_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20250723153556_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20250724011737_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20250725034817_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20250726033222_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20250729085714_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20250804153320_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20250806073722_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20250816031913_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20250830134449_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20251103133357_changelog.xml" relativeToChangelogFile="true"/>
-    <include file="20251112022613_changelog.xml" relativeToChangelogFile="true"/>
+    <include file="20251113172755_changelog.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

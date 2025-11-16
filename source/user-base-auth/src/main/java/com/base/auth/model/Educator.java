@@ -15,7 +15,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(name = "db_user_base_educator")
+@Table(name = "db_it_dream_educator")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -26,5 +26,4 @@ public class Educator{
   @MapsId
   @JoinColumn(name = "id")
   private Account account;
-  private Date birthday;
 }

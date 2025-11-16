@@ -30,7 +30,7 @@ public class NotificationController extends ABasicController{
   NotificationMapper notificationMapper;
 
   @GetMapping(value = "/student-list", produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasRole('NO_STL')")
+  @PreAuthorize("hasRole('NO_ST_L')")
   public ApiMessageDto<List<NotificationDto>> getListForStudent(){
     ApiMessageDto<List<NotificationDto>> apiMessageDto = new ApiMessageDto<>();
     List<Notification> notifications = notificationRepository.findTop20ByReceiverIdOrderByCreatedDateDesc(getCurrentUser());
@@ -41,7 +41,7 @@ public class NotificationController extends ABasicController{
   }
 
   @GetMapping(value = "/student-get/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasRole('NO_STV')")
+  @PreAuthorize("hasRole('NO_ST_V')")
   public ApiMessageDto<NotificationDto> getForStudent(@PathVariable("id") Long id){
     ApiMessageDto<NotificationDto> apiMessageDto = new ApiMessageDto<>();
     Notification notification = notificationRepository.findById(id).orElseThrow(()

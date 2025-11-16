@@ -1,6 +1,6 @@
 package com.base.auth.controller;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.ErrorCode;
 import com.base.auth.dto.reviewSubmission.ReviewSubmissionClientDto;
@@ -93,7 +93,7 @@ public class ReviewSubmissionController extends ABasicController{
     }
     Long totalTasks = taskRepository.countBySimulationId(simulation.getId());
     Long completedTasks = studentSubTaskProgressRepository.countByStateAndStudentIdAndTaskSimulationId(
-        UserBaseConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, student.getId(),
+        ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, student.getId(),
         simulation.getId());
     if (totalTasks == 0 || completedTasks != totalTasks){
       throw new BadRequestException("Unable to create a review submission", ErrorCode.REVIEW_SUBMISSION_ERROR_CREATE);
@@ -104,20 +104,6 @@ public class ReviewSubmissionController extends ABasicController{
     reviewSubmissionRepository.save(reviewSubmission);
     sendNotification(reviewSubmission.getStudent().getId(), reviewSubmission.getSimulation().getTitle(), reviewSubmission.getId());
     apiMessageDto.setMessage("Create review submission success");
-    return apiMessageDto;
-  }
-
-  @GetMapping(value = "/get/{simulationId}/student/{studentId}", produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("hasRole('RESUB_V')")
-  public ApiMessageDto<ReviewSubmissionDto> get(@PathVariable("simulationId") Long simulationId, @PathVariable("studentId") Long studentId){
-    ApiMessageDto<ReviewSubmissionDto> apiMessageDto = new ApiMessageDto<>();
-    if (!isAdmin()){
-      throw new BadRequestException("User is not an admin", ErrorCode.USER_ERROR_NOT_ADMIN);
-    }
-    ReviewSubmission reviewSubmission = reviewSubmissionRepository.findBySimulationIdAndStudentId(simulationId, studentId).orElseThrow(()
-    -> new NotFoundException("Review submission not found", ErrorCode.REVIEW_SUBMISSION_ERROR_NOT_FOUND));
-    apiMessageDto.setData(reviewSubmissionMapper.fromEntityToReviewSubmissionDto(reviewSubmission));
-    apiMessageDto.setMessage("Get review submission success");
     return apiMessageDto;
   }
 
@@ -178,12 +164,12 @@ public class ReviewSubmissionController extends ABasicController{
 
   private void sendNotification(Long receiverId, String simulationTitle, Long refId){
     String title = "Bạn đã được đánh giá";
-    String message = String.format("Giảng viên đã gửi đánh giá cho bài mô phỏng '%s'.", simulationTitle);
+    String message = String.format("Giảng viên đã gửi đánh giá cho bài mô phỏng: " + simulationTitle);
     CreateNotificationForm notificationForm = new CreateNotificationForm();
     notificationForm.setUserId(receiverId);
     notificationForm.setMessage(message);
     notificationForm.setTitle(title);
-    notificationForm.setRefType(UserBaseConstant.NOTIFICATION_TYPE_REVIEW_SUBMISSION);
+    notificationForm.setRefType(ITDreamConstant.NOTIFICATION_TYPE_REVIEW_SUBMISSION);
     notificationForm.setRefId(refId);
     notificationService.notifyStudent(notificationForm);
   }

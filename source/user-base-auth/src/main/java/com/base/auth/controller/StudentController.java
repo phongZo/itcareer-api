@@ -1,6 +1,6 @@
 package com.base.auth.controller;
 
-import com.base.auth.constant.UserBaseConstant;
+import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.ErrorCode;
 import com.base.auth.dto.ResponseListDto;
@@ -8,10 +8,10 @@ import com.base.auth.dto.account.OtpDto;
 import com.base.auth.dto.account.ProfileAccountDto;
 import com.base.auth.dto.reviewSubmission.ReviewedStudentProjection;
 import com.base.auth.dto.student.ProfileStudentDto;
-import com.base.auth.dto.student.StudentAutoCompleteDto;
 import com.base.auth.dto.student.StudentDto;
 import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
+import com.base.auth.exception.UnauthorizationException;
 import com.base.auth.form.student.SignUpStudentForm;
 import com.base.auth.form.student.UpdateProfileStudentForm;
 import com.base.auth.form.student.UpdateStudentForm;
@@ -19,12 +19,15 @@ import com.base.auth.form.account.VerifyUserForm;
 import com.base.auth.mapper.AccountMapper;
 import com.base.auth.mapper.StudentMapper;
 import com.base.auth.model.Account;
+import com.base.auth.model.Achievement;
 import com.base.auth.model.Group;
 import com.base.auth.model.Review;
 import com.base.auth.model.Simulation;
 import com.base.auth.model.Student;
+import com.base.auth.model.StudentTaskQuestionProgress;
 import com.base.auth.model.criteria.StudentCriteria;
 import com.base.auth.repository.AccountRepository;
+import com.base.auth.repository.AchievementRepository;
 import com.base.auth.repository.GroupRepository;
 import com.base.auth.repository.ReviewRepository;
 import com.base.auth.repository.ReviewSubmissionRepository;
@@ -46,7 +49,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -70,31 +72,31 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class StudentController extends ABasicController{
   @Autowired
-  private StudentRepository studentRepository;
+  StudentRepository studentRepository;
 
   @Autowired
-  private AccountRepository accountRepository;
+  AccountRepository accountRepository;
 
   @Autowired
-  private StudentMapper studentMapper;
+  StudentMapper studentMapper;
 
   @Autowired
-  private AccountMapper accountMapper;
+  AccountMapper accountMapper;
 
   @Autowired
-  private PasswordEncoder passwordEncoder;
+  PasswordEncoder passwordEncoder;
 
   @Autowired
-  private GroupRepository groupRepository;
+  GroupRepository groupRepository;
 
   @Autowired
-  private StudentSubTaskProgressRepository studentSubTaskProgressRepository;
+  StudentSubTaskProgressRepository studentSubTaskProgressRepository;
 
   @Autowired
-  private StudentTaskQuestionProgressRepository studentTaskQuestionProgressRepository;
+  StudentTaskQuestionProgressRepository studentTaskQuestionProgressRepository;
 
   @Autowired
-  private ReviewRepository reviewRepository;
+  ReviewRepository reviewRepository;
 
   @Autowired
   SimulationRepository simulationRepository;
@@ -105,34 +107,38 @@ public class StudentController extends ABasicController{
   @Autowired
   ReviewSubmissionRepository reviewSubmissionRepository;
 
+  @Autowired
+  AchievementRepository achievementRepository;
+
   @PostMapping(value = "/signup", produces= MediaType.APPLICATION_JSON_VALUE)
   public ApiMessageDto<OtpDto> create(@Valid @RequestBody SignUpStudentForm signUpStudentForm, BindingResult bindingResult)
   {
     ApiMessageDto<OtpDto> apiMessageDto = new ApiMessageDto<>();
-
-    Account accountByUsername = accountRepository.findAccountByUsername(signUpStudentForm.getUsername());
-    if (accountByUsername != null){
-      throw new BadRequestException("username already exists", ErrorCode.ACCOUNT_ERROR_USERNAME_EXIST);
+    Boolean existUsername = accountRepository.existsByUsername(signUpStudentForm.getUsername());
+    if (existUsername){
+      throw new BadRequestException("Username already exists", ErrorCode.ACCOUNT_ERROR_USERNAME_EXIST);
     }
 
-    Account accountByEmail = accountRepository.findAccountByEmail(signUpStudentForm.getEmail());
-    if (accountByEmail!=null)
+    Boolean existEmail = accountRepository.existsByEmail(signUpStudentForm.getEmail());
+    if (existEmail)
     {
-      throw new BadRequestException("email already exists", ErrorCode.ACCOUNT_ERROR_EMAIL_EXIST);
+      throw new BadRequestException("Email already exists", ErrorCode.ACCOUNT_ERROR_EMAIL_EXIST);
     }
 
-    Account accountByPhone = accountRepository.findAccountByPhone(signUpStudentForm.getPhone());
-    if (accountByPhone!=null)
+    Boolean existPhone = accountRepository.existsByPhone(signUpStudentForm.getPhone());
+    if (existPhone)
     {
-      throw new BadRequestException("phone already exists", ErrorCode.ACCOUNT_ERROR_PHONE_EXIST);
+      throw new BadRequestException("Phone already exists", ErrorCode.ACCOUNT_ERROR_PHONE_EXIST);
     }
-
     Account account = accountMapper.fromSignUpStudentToAccount(signUpStudentForm);
     account.setPassword(passwordEncoder.encode(signUpStudentForm.getPassword()));
-    account.setKind(UserBaseConstant.USER_KIND_STUDENT);
-    Group group = groupRepository.findFirstByKind(UserBaseConstant.USER_KIND_STUDENT);
+    account.setKind(ITDreamConstant.USER_KIND_STUDENT);
+    Group group = groupRepository.findFirstByKind(ITDreamConstant.USER_KIND_STUDENT);
+    if (group == null){
+      throw new NotFoundException("Group not found", ErrorCode.GROUP_ERROR_NOT_FOUND);
+    }
     account.setGroup(group);
-    account.setStatus(UserBaseConstant.STATUS_PENDING);
+    account.setStatus(ITDreamConstant.STATUS_PENDING);
     String otp = userBaseApiService.getRequestOTP();
     account.setAttemptCode(0);
     account.setResetPwdCode(otp);
@@ -141,17 +147,14 @@ public class StudentController extends ABasicController{
 
     Student student = new Student();
     student.setAccount(account);
-    student.setBirthday(signUpStudentForm.getBirthday());
     studentRepository.save(student);
 
     sendVerifyAccount(account);
     OtpDto otpDto = new OtpDto();
     String hash = AESUtils.encrypt (account.getId()+";"+otp, true);
     otpDto.setIdHash(hash);
-
-    apiMessageDto.setResult(true);
     apiMessageDto.setData(otpDto);
-    apiMessageDto.setMessage("Sign Up Success, please check email.");
+    apiMessageDto.setMessage("Sign up success, please check email.");
     return apiMessageDto;
   }
 
@@ -163,27 +166,10 @@ public class StudentController extends ABasicController{
     ResponseListDto<List<StudentDto>> responseListDto = new ResponseListDto<>();
     Page<Student> listStudent = studentRepository.findAll(studentCriteria.getSpecification(),pageable);
     responseListDto.setContent(studentMapper.fromStudentListToStudentDtoList(listStudent.getContent()));
-    responseListDto.setTotalPages(listStudent.getTotalPages());
     responseListDto.setTotalElements(listStudent.getTotalElements());
-
+    responseListDto.setTotalPages(listStudent.getTotalPages());
     apiMessageDto.setData(responseListDto);
     apiMessageDto.setMessage("Get list student success");
-    return apiMessageDto;
-  }
-
-  @GetMapping(value = "/auto-complete",produces = MediaType.APPLICATION_JSON_VALUE)
-  public ApiMessageDto<ResponseListDto<List<StudentAutoCompleteDto>>> ListStudentAutoComplete(StudentCriteria studentCriteria)
-  {
-    ApiMessageDto<ResponseListDto<List<StudentAutoCompleteDto>>> apiMessageDto = new ApiMessageDto<>();
-    ResponseListDto<List<StudentAutoCompleteDto>> responseListDto = new ResponseListDto<>();
-    Pageable pageable = PageRequest.of(0,10);
-    Page<Student> listStudent = studentRepository.findAll(studentCriteria.getSpecification(),pageable);
-    responseListDto.setContent(studentMapper.fromStudentListToStudentDtoListAutocomplete(listStudent.getContent()));
-    responseListDto.setTotalPages(listStudent.getTotalPages());
-    responseListDto.setTotalElements(listStudent.getTotalElements());
-
-    apiMessageDto.setData(responseListDto);
-    apiMessageDto.setMessage("get success");
     return apiMessageDto;
   }
 
@@ -191,11 +177,14 @@ public class StudentController extends ABasicController{
   @PreAuthorize("hasRole('ST_V')")
   public ApiMessageDto<StudentDto> getStudent(@PathVariable("id") Long id)
   {
+    if (!isAdmin()){
+      throw new UnauthorizationException("User is not an admin");
+    }
     ApiMessageDto<StudentDto> apiMessageDto = new ApiMessageDto<>();
     Student student = studentRepository.findById(id).orElseThrow(()
     -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
     apiMessageDto.setData(studentMapper.fromEntityToStudentDto(student));
-    apiMessageDto.setMessage("get student success");
+    apiMessageDto.setMessage("Get student success");
     return apiMessageDto;
   }
 
@@ -203,68 +192,54 @@ public class StudentController extends ABasicController{
   @PutMapping(value = "/update", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('ST_U')")
   public ApiMessageDto<String> updateStudent(@Valid @RequestBody UpdateStudentForm updateStudentForm, BindingResult bindingResult) {
-
+    if (!isAdmin()){
+      throw new UnauthorizationException("User is not an admin");
+    }
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
-    Student student = studentRepository.findById(updateStudentForm.getId()).orElse(null);
-    if (student==null)
-    {
-      throw new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND);
-    }
+    Student student = studentRepository.findById(updateStudentForm.getId()).orElseThrow(()
+    -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
 
-    Account account = accountRepository.findById(student.getAccount().getId()).orElse(null);
-    if (account == null){
-      throw new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
-    }
+    Account account = accountRepository.findById(student.getAccount().getId()).orElseThrow(()
+    -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
 
-    if (StringUtils.isNotBlank(updateStudentForm.getUsername())){
-      if (!Objects.equals(student.getAccount().getUsername(), updateStudentForm.getUsername())){
-        Account accountByUsername = accountRepository.findAccountByUsername(updateStudentForm.getUsername());
-        if (accountByUsername != null){
-          throw new BadRequestException("username already exist", ErrorCode.ACCOUNT_ERROR_USERNAME_EXIST);
-        }
-        account.setUsername(updateStudentForm.getUsername());
+    if (!Objects.equals(student.getAccount().getUsername(), updateStudentForm.getUsername())){
+      Boolean existUsername = accountRepository.existsByUsername(updateStudentForm.getUsername());
+      if (existUsername){
+        throw new BadRequestException("Username already exist", ErrorCode.ACCOUNT_ERROR_USERNAME_EXIST);
       }
+      account.setUsername(updateStudentForm.getUsername());
     }
 
-    if (StringUtils.isNotBlank(updateStudentForm.getPhone())){
-      if (!Objects.equals(student.getAccount().getPhone(), updateStudentForm.getPhone()))
+    if (!Objects.equals(student.getAccount().getEmail(), updateStudentForm.getEmail())){
+      Boolean existEmail = accountRepository.existsByEmail(updateStudentForm.getEmail());
+      if (existEmail)
       {
-        Account accountByPhone = accountRepository.findAccountByPhone(updateStudentForm.getPhone());
-        if(accountByPhone!=null)
-        {
-          throw new BadRequestException("phone already exist", ErrorCode.ACCOUNT_ERROR_PHONE_EXIST);
-        }
-        account.setPhone(updateStudentForm.getPhone());
+        throw new BadRequestException("Email already exists", ErrorCode.ACCOUNT_ERROR_EMAIL_EXIST);
       }
+      account.setEmail(updateStudentForm.getEmail());
     }
 
-    if (StringUtils.isNotBlank(updateStudentForm.getEmail())){
-      if (!Objects.equals(student.getAccount().getEmail(), updateStudentForm.getEmail()))
-      {
-        Account accountByEmail = accountRepository.findAccountByEmail(updateStudentForm.getEmail());
-        if(accountByEmail!=null)
-        {
-          throw new BadRequestException("email already exist", ErrorCode.ACCOUNT_ERROR_EMAIL_EXIST);
-        }
-        account.setEmail(updateStudentForm.getEmail());
+    if (!Objects.equals(student.getAccount().getPhone(), updateStudentForm.getPhone())){
+      Boolean existPhone = accountRepository.existsByPhone(updateStudentForm.getPhone());
+      if (existPhone){
+        throw new BadRequestException("phone already exist", ErrorCode.ACCOUNT_ERROR_PHONE_EXIST);
       }
+      account.setPhone(updateStudentForm.getPhone());
     }
 
-    if(StringUtils.isNoneBlank(updateStudentForm.getPassword()))
-    {
+    if (StringUtils.isNoneBlank(updateStudentForm.getPassword())){
       account.setPassword(passwordEncoder.encode(updateStudentForm.getPassword()));
     }
 
     if (StringUtils.isNotBlank(updateStudentForm.getAvatarPath())) {
       if (!updateStudentForm.getAvatarPath().equals(account.getAvatarPath())){
         userBaseApiService.deleteByFilePath(account.getAvatarPath());
+        account.setAvatarPath(updateStudentForm.getAvatarPath());
       }
-      account.setAvatarPath(updateStudentForm.getAvatarPath());
     }
-
     accountMapper.fromUpdateStudentFormToEntity(updateStudentForm, account);
     accountRepository.save(account);
-    apiMessageDto.setMessage("update success");
+    apiMessageDto.setMessage("Update student success");
     return apiMessageDto;
   }
 
@@ -273,6 +248,9 @@ public class StudentController extends ABasicController{
   @Transactional
   public ApiMessageDto<String> deleteStudent(@PathVariable("id") Long id)
   {
+    if (!isAdmin()){
+      throw new UnauthorizationException("User is not an admin");
+    }
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Student student = studentRepository.findById(id).orElseThrow(()
     -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
@@ -280,14 +258,23 @@ public class StudentController extends ABasicController{
     Account account = accountRepository.findById(student.getAccount().getId()).orElseThrow(()
     -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
 
-    if (account.getIsSuperAdmin()){
-      apiMessageDto.setResult(false);
-      apiMessageDto.setMessage("Not allow delete super admin");
-      apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_NOT_ALLOW_DELETE_SUPPER_ADMIN);
-      return apiMessageDto;
+    if (Objects.equals(account.getKind(), ITDreamConstant.USER_KIND_ADMIN)){
+      throw new BadRequestException("Not allow delete admin", ErrorCode.ACCOUNT_ERROR_NOT_ALLOW_DELETE_ADMIN);
+    }
+    userBaseApiService.deleteByFilePath(student.getAccount().getAvatarPath());
+    List<Achievement> achievements = achievementRepository.findAllByStudentId(id);
+    for (Achievement ac : achievements) {
+      if (StringUtils.isNotBlank(ac.getFilePath())) {
+        userBaseApiService.deleteByFilePath(ac.getFilePath());
+      }
     }
 
-    userBaseApiService.deleteByFilePath(student.getAccount().getAvatarPath());
+    List<StudentTaskQuestionProgress> taskQuestionProgresses = studentTaskQuestionProgressRepository.findAllByStudentId(id);
+    for (StudentTaskQuestionProgress studentTaskQuestionProgress: taskQuestionProgresses){
+      if (studentTaskQuestionProgress.getAnswer().matches(ITDreamConstant.FILE_PATH_PATTERN)){
+        userBaseApiService.deleteByFilePath(studentTaskQuestionProgress.getAnswer());
+      }
+    }
     studentTaskQuestionProgressRepository.deleteAllByStudentId(id);
     studentSubTaskProgressRepository.deleteAllByStudentId(id);
 
@@ -305,6 +292,8 @@ public class StudentController extends ABasicController{
       }
       simulationRepository.save(simulation);
     }
+    reviewSubmissionRepository.deleteByStudentId(id);
+    achievementRepository.deleteByStudentId(id);
     studentRepository.delete(student);
     accountRepository.delete(account);
     apiMessageDto.setMessage("Delete student success");
@@ -321,38 +310,43 @@ public class StudentController extends ABasicController{
         () -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
     ProfileStudentDto studentDto = studentMapper.fromStudentToProfileDto(student);
     apiMessageDto.setData(studentDto);
-    apiMessageDto.setMessage("Get profile success");
+    apiMessageDto.setMessage("Get profile student success");
     return apiMessageDto;
   }
 
   @PutMapping(value = "/client_update", produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize("hasRole('ST_U_U')")
-  public ApiMessageDto<String> updateProfileForStudent(@Valid @RequestBody UpdateProfileStudentForm updateStudentForm, BindingResult bindingResult){
+  public ApiMessageDto<String> updateProfileForStudent(@Valid @RequestBody UpdateProfileStudentForm updateStudentForm, BindingResult bindingResult) {
     ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
     Account currentAccount = accountRepository.findById(getCurrentUser()).orElseThrow(() ->
         new NotFoundException("account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
     Student currentUser = studentRepository.findById(currentAccount.getId()).orElseThrow(() ->
         new NotFoundException("student not found", ErrorCode.USER_ERROR_NOT_FOUND));
 
-    if (StringUtils.isNotBlank(updateStudentForm.getUsername())){
-      if (!Objects.equals(currentAccount.getUsername(), updateStudentForm.getUsername())){
-        Account accountByUsername = accountRepository.findAccountByUsername(updateStudentForm.getUsername());
-        if (accountByUsername != null){
-          throw new BadRequestException("username already exists", ErrorCode.ACCOUNT_ERROR_USERNAME_EXIST);
-        }
-        currentAccount.setUsername(updateStudentForm.getUsername());
+    if (!Objects.equals(currentAccount.getUsername(), updateStudentForm.getUsername())) {
+      Boolean existUsername = accountRepository.existsByUsername(updateStudentForm.getUsername());
+      if (existUsername){
+        throw new BadRequestException("Username already exists", ErrorCode.ACCOUNT_ERROR_USERNAME_EXIST);
       }
+      currentAccount.setUsername(updateStudentForm.getUsername());
+    }
+
+    if (!Objects.equals(currentAccount.getPhone(), updateStudentForm.getPhone())){
+      Boolean existPhone = accountRepository.existsByPhone(updateStudentForm.getPhone());
+      if (existPhone){
+        throw new BadRequestException("Phone already exist", ErrorCode.ACCOUNT_ERROR_PHONE_EXIST);
+      }
+      currentAccount.setPhone(updateStudentForm.getPhone());
     }
 
     if (StringUtils.isNotBlank(updateStudentForm.getAvatarPath())) {
       if (!updateStudentForm.getAvatarPath().equals(currentAccount.getAvatarPath())){
         userBaseApiService.deleteByFilePath(currentAccount.getAvatarPath());
+        currentAccount.setAvatarPath(updateStudentForm.getAvatarPath());
       }
-      currentAccount.setAvatarPath(updateStudentForm.getAvatarPath());
     }
 
     accountMapper.fromUpdateProfileStudentFormToEntity(updateStudentForm, currentAccount);
-    studentMapper.fromUpdateProfileStudentFormToEntity(updateStudentForm, currentUser);
     currentUser.setAccount(currentAccount);
     accountRepository.save(currentAccount);
     studentRepository.save(currentUser);
@@ -366,41 +360,37 @@ public class StudentController extends ABasicController{
     String[] hash = AESUtils.decrypt(verifyUserForm.getIdHash(),true).split(";",2);
     Long id = ConvertUtils.convertStringToLong(hash[0]);
     if(id <= 0){
-      throw new BadRequestException("incorrect hash verification", ErrorCode.ACCOUNT_ERROR_INCORRECT_HASH_VERIFICATION);
+      throw new BadRequestException("Incorrect hash verification", ErrorCode.ACCOUNT_ERROR_INCORRECT_HASH_VERIFICATION);
     }
 
-    Account account = accountRepository.findById(id).orElse(null);
-    if (account == null ) {
-      throw new NotFoundException("account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
+    Account account = accountRepository.findById(id).orElseThrow(()
+    -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
+
+    if (!Objects.equals(ITDreamConstant.STATUS_PENDING, account.getStatus())){
+      throw new BadRequestException("Student cannot be verified", ErrorCode.USER_ERROR_VERIFY_FAILED);
     }
 
-    if (!Objects.equals(UserBaseConstant.STATUS_PENDING, account.getStatus())){
-      throw new BadRequestException("student cannot be verified", ErrorCode.USER_ERROR_VERIFY_FAILED);
-    }
-
-    if(account.getAttemptCode() >= UserBaseConstant.MAX_ATTEMPT_FORGET_PWD){
-      account.setStatus(UserBaseConstant.STATUS_LOCK);
-      throw new BadRequestException("account has been locked", ErrorCode.ACCOUNT_ERROR_LOCKED);
+    if(account.getAttemptCode() >= ITDreamConstant.MAX_ATTEMPT_FORGET_PWD){
+      account.setStatus(ITDreamConstant.STATUS_LOCK);
+      accountRepository.save(account);
+      throw new BadRequestException("Account has been locked", ErrorCode.ACCOUNT_ERROR_LOCKED);
     }
 
     if(!account.getResetPwdCode().equals(verifyUserForm.getOtp()) ||
-        (new Date().getTime() - account.getResetPwdTime().getTime() >= UserBaseConstant.MAX_TIME_FORGET_PWD)){
+        (new Date().getTime() - account.getResetPwdTime().getTime() >= ITDreamConstant.MAX_TIME_FORGET_PWD)){
 
-      //tang so lan
-      account.setAttemptCode(account.getAttemptCode()+1);
+      //Tăng số lần thêm 1
+      account.setAttemptCode(account.getAttemptCode() + 1);
       accountRepository.save(account);
-
-      apiMessageDto.setResult(false);
-      apiMessageDto.setCode(ErrorCode.ACCOUNT_ERROR_OPT_INVALID);
-      return apiMessageDto;
+      throw new BadRequestException("OTP invalid", ErrorCode.ACCOUNT_ERROR_OPT_INVALID);
     }
 
     account.setResetPwdTime(null);
     account.setResetPwdCode(null);
     account.setAttemptCode(null);
-    account.setStatus(UserBaseConstant.STATUS_ACTIVE);
+    account.setStatus(ITDreamConstant.STATUS_ACTIVE);
     accountRepository.save(account);
-    apiMessageDto.setMessage("verify account student success");
+    apiMessageDto.setMessage("Verify account student success");
     return apiMessageDto;
   }
 
@@ -410,7 +400,7 @@ public class StudentController extends ABasicController{
     ApiMessageDto<ResponseListDto<List<ProfileStudentDto>>> apiMessageDto = new ApiMessageDto<>();
     ResponseListDto<List<ProfileStudentDto>> responseListDto = new ResponseListDto<>();
     Long totalTasks = taskRepository.countBySimulationId(simulationId);
-    Page<Student> students = studentRepository.findStudentsCompletedSimulation(simulationId, UserBaseConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, totalTasks, pageable);
+    Page<Student> students = studentRepository.findStudentsCompletedSimulation(simulationId, ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, totalTasks, pageable);
     List<ProfileStudentDto> studentDtos = studentMapper.fromStudentToProfileDtoList(students.getContent());
     Map<String, Boolean> reviewedMap = createReviewedMapBySimulation(simulationId);
     setIsReviewedByMap(studentDtos, reviewedMap);
