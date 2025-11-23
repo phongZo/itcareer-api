@@ -4,8 +4,6 @@ import com.base.auth.model.Task;
 import java.util.List;
 import java.util.Optional;
 import javax.transaction.Transactional;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -41,13 +39,11 @@ public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificat
 
   void deleteAllByParentId(Long id);
 
-  Boolean existsByTitleAndParentId(String title, Long parentId);
 
   Optional<Task> findByIdAndKind(Long parentId, Integer taskKindTask);
 
   Boolean existsByNameAndKindAndSimulationId(String name, Integer taskKindTask, Long simulationId);
 
-  Boolean existsByTitleAndKindAndSimulationId(String title, Integer taskKindTask, Long simulationId);
 
   List<Task> findAllByParentId(Long id);
 
@@ -61,11 +57,9 @@ public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificat
 
   Long countBySimulationId(Long simulationId);
 
-  Boolean existsByTitleAndSimulationId(String title, Long simulationId);
-
-  Boolean existsByNameAndSimulationId(String name, Long simulationId);
-
   Boolean existsByTitleAndKindAndParentIdAndSimulationId(String title, Integer taskKindSubtask, Long parentId, Long simulationId);
 
   boolean existsByKindAndParentId(Integer taskKindTask, Long parentId);
+
+  Long countByKindAndSimulationId(Integer taskKindTask, Long id);
 }
