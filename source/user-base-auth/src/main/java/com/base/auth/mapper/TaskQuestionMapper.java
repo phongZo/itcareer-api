@@ -46,6 +46,7 @@ public interface TaskQuestionMapper {
 
   @Mapping(source = "id", target = "id")
   @Mapping(source = "question", target = "question")
+  @Mapping(source = "questionType", target = "questionType")
   @Mapping(source = "options", target = "options")
   @Mapping(source = "task", target = "task", qualifiedByName = "fromEntityToTaskStudentDto")
   @BeanMapping(ignoreByDefault = true)

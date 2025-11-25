@@ -59,7 +59,7 @@ public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificat
 
   Boolean existsByTitleAndKindAndParentIdAndSimulationId(String title, Integer taskKindSubtask, Long parentId, Long simulationId);
 
-  boolean existsByKindAndParentId(Integer taskKindTask, Long parentId);
-
   Long countByKindAndSimulationId(Integer taskKindTask, Long id);
+
+  boolean existsByKindAndId(Integer taskKindTask, Long parentId);
 }
