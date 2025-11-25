@@ -101,7 +101,7 @@ public class TaskController extends ABasicController{
       if (createTaskForm.getParentId() == null) {
         throw new BadRequestException("Subtask must include parent", ErrorCode.TASK_ERROR_PARENT);
       }
-      boolean checkKindTask = taskRepository.existsByKindAndParentId(ITDreamConstant.TASK_KIND_TASK, createTaskForm.getParentId());
+      boolean checkKindTask = taskRepository.existsByKindAndId(ITDreamConstant.TASK_KIND_TASK, createTaskForm.getParentId());
       if (!checkKindTask){
         throw new BadRequestException("Kind of parent cannot be a task", ErrorCode.TASK_ERROR_PARENT_NOT_KIND_TASK);
       }
