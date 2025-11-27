@@ -168,8 +168,8 @@ public class SimulationController extends ABasicController{
     List<SimulationDisplayDto> simulationDtos =simulationMapper.fromEntityToSimulationDisplayDtoList(simulations.getContent());
     for (SimulationDisplayDto simulationDto : simulationDtos){
       Long countTask = taskRepository.countByKindAndSimulationId(ITDreamConstant.TASK_KIND_TASK,simulationDto.getId());
-      Long countProgress = studentSubTaskProgressRepository.countByStateAndStudentIdAndTaskSimulationId(
-          ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, getCurrentUser(), simulationDto.getId());
+      Long countProgress = studentSubTaskProgressRepository.countByStateAndStudentIdAndTaskSimulationIdAndTaskKind(
+          ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, getCurrentUser(), simulationDto.getId(), ITDreamConstant.TASK_KIND_TASK);
       if (countTask > 0){
         Float progress = ((countProgress * 1F) / countTask) * 100;
         simulationDto.setPercent(progress);
