@@ -173,6 +173,7 @@ public class StudentSubTaskProgressController extends ABasicController{
         -> new NotFoundException("Student subtask progress not found", ErrorCode.STUDENT_SUBTASK_PROGRESS_ERROR_NOT_FOUND));
     studentSubTaskProgress.setCurrentAttempt(studentSubTaskProgress.getCurrentAttempt() + 1);
     studentSubTaskProgress.setErrorCount(ITDreamConstant.RESTART_ERROR_COUNT);
+    studentSubTaskProgress.setState(ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_IN_PROGRESS);
     studentSubTaskProgress.setStatus(ITDreamConstant.STATUS_ACTIVE);
     studentTaskQuestionProgressRepository.deleteAllByStudentSubTaskProgressId(studentSubTaskProgress.getId());
     studentSubTaskProgressRepository.save(studentSubTaskProgress);
