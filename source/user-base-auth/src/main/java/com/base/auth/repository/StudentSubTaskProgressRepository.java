@@ -41,4 +41,17 @@ public interface StudentSubTaskProgressRepository extends JpaRepository<StudentS
   boolean existsByStudentIdAndTaskSimulationId(long studentId, Long simulationId);
 
   Long countByStateAndStudentIdAndTaskSimulationId(Integer state, long studentId, Long simulationId);
+
+  @Query("SELECT COUNT(sstp) " +
+      "FROM StudentSubTaskProgress sstp " +
+      "JOIN sstp.task t " +
+      "WHERE sstp.student.id = :studentId " +
+      "AND t.simulation.id = :simulationId " +
+      "AND sstp.state = :state " +
+      "AND t.kind = :kind")
+  Long countByStateAndStudentIdAndTaskSimulationIdAndTaskKind(
+      @Param("state") Integer state,
+      @Param("studentId") Long studentId,
+      @Param("simulationId") Long simulationId,
+      @Param("kind") Integer kind);
 }
