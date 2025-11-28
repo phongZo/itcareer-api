@@ -293,11 +293,7 @@ public class AccountController extends ABasicController{
         account.setResetPwdCode(null);
         account.setAttemptCode(null);
         account.setPassword(passwordEncoder.encode(forgetForm.getNewPassword()));
-        if (Objects.equals(account.getKind(), ITDreamConstant.USER_KIND_EDUCATOR)){
-            account.setStatus(ITDreamConstant.STATUS_WAITING_APPROVE);
-        } else {
-            account.setStatus(ITDreamConstant.STATUS_ACTIVE);
-        }
+        account.setStatus(ITDreamConstant.STATUS_ACTIVE);
         accountRepository.save(account);
         apiMessageDto.setMessage("Change password success.");
         return apiMessageDto;
