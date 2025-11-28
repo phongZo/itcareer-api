@@ -107,6 +107,10 @@ public class TaskQuestionController extends ABasicController{
     }
     Task task = taskRepository.findById(createTaskQuestionForm.getTaskId()).orElseThrow(()
     -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
+    // Không cho tạo câu hỏi trong task
+    if (Objects.equals(task.getKind(), ITDreamConstant.TASK_KIND_TASK)){
+      throw new BadRequestException("Cannot create a task question within the task", ErrorCode.TASK_QUESTION_ERROR_NOT_CREATE);
+    }
     Simulation simulation = task.getSimulation();
     if (simulation == null){
       throw new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND);
