@@ -86,6 +86,7 @@ public class ErrorCode {
     public static final String TASK_ERROR_PARENT_NOT_FOUND = "TASK-ERROR-0004";
     public static final String TASK_ERROR_PARENT_NOT_KIND_TASK = "TASK-ERROR-0005";
     public static final String TASK_ERROR_FAIL = "TASK-ERROR-0006";
+    public static final String TASK_ERROR_NAME = "TASK-ERROR-0007";
 
     /**
      * Starting error code TaskQuestion

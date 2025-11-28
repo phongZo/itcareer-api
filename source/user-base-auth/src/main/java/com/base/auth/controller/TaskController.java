@@ -101,9 +101,12 @@ public class TaskController extends ABasicController{
       if (createTaskForm.getParentId() == null) {
         throw new BadRequestException("Subtask must include parent", ErrorCode.TASK_ERROR_PARENT);
       }
-      boolean checkKindTask = taskRepository.existsByKindAndId(ITDreamConstant.TASK_KIND_TASK, createTaskForm.getParentId());
-      if (!checkKindTask){
+      Task existTask = taskRepository.findByKindAndId(ITDreamConstant.TASK_KIND_TASK, createTaskForm.getParentId());
+      if (existTask == null){
         throw new BadRequestException("Kind of parent cannot be a task", ErrorCode.TASK_ERROR_PARENT_NOT_KIND_TASK);
+      }
+      if (!Objects.equals(existTask.getName(), createTaskForm.getName())){
+        throw new BadRequestException("Name subtask must be the same as name task", ErrorCode.TASK_ERROR_NAME);
       }
       // 1 simulation không thể tồn tại 2 subtask trong cùng 1 task có title giống nhau
       // Nhưng có thể tồn tại 2 subtask có title giống nhau nhưng phải khác task
