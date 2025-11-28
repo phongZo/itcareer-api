@@ -54,4 +54,7 @@ public interface StudentSubTaskProgressRepository extends JpaRepository<StudentS
       @Param("studentId") Long studentId,
       @Param("simulationId") Long simulationId,
       @Param("kind") Integer kind);
+
+
+  Long countByStateAndStudentIdAndTaskKindAndTaskParentId(Integer progress, long currentUser, Integer taskKindSubtask, Long taskId);
 }

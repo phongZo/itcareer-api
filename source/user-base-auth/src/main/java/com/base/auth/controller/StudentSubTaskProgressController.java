@@ -15,7 +15,6 @@ import com.base.auth.model.Student;
 import com.base.auth.model.StudentSubTaskProgress;
 import com.base.auth.model.StudentTaskQuestionProgress;
 import com.base.auth.model.Task;
-import com.base.auth.model.TaskQuestion;
 import com.base.auth.repository.AchievementRepository;
 import com.base.auth.repository.SimulationRepository;
 import com.base.auth.repository.StudentRepository;
@@ -83,6 +82,13 @@ public class StudentSubTaskProgressController extends ABasicController{
     if (simulation == null){
       throw new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND);
     }
+    // Tiến trình khi truy cập vào task
+    if (Objects.equals(task.getKind(), ITDreamConstant.TASK_KIND_TASK)){
+      apiMessageDto.setMessage("Get task success");
+      return apiMessageDto;
+    }
+
+    // Tiến trình khi truy cập vào subtask
     boolean existTaskQuestion = taskQuestionRepository.existsByTaskId(task.getId());
     StudentSubTaskProgress existStudentSubTaskProgress = studentSubTaskProgressRepository.findByTaskIdAndStudentId(
         task.getId(), getCurrentUser()).orElse(null);
@@ -90,9 +96,9 @@ public class StudentSubTaskProgressController extends ABasicController{
       if (!existTaskQuestion){
         existStudentSubTaskProgress.setState(ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED);
       }
-      apiMessageDto.setData(studentSubTaskProgressMapper.fromEntityToStudentSubTaskProgressDisplayDto(existStudentSubTaskProgress));
       existStudentSubTaskProgress.setCurrentAttempt(existStudentSubTaskProgress.getCurrentAttempt() + 1);
       studentSubTaskProgressRepository.save(existStudentSubTaskProgress);
+      apiMessageDto.setData(studentSubTaskProgressMapper.fromEntityToStudentSubTaskProgressDisplayDto(existStudentSubTaskProgress));
       apiMessageDto.setMessage("Get student subtask progress success");
     } else {
       StudentSubTaskProgress studentSubTaskProgress = new StudentSubTaskProgress();
@@ -122,40 +128,62 @@ public class StudentSubTaskProgressController extends ABasicController{
     }
     Task task = taskRepository.findById(requestStudentSubTaskProgressForm.getTaskId()).orElseThrow(()
     -> new NotFoundException("Task not found", ErrorCode.TASK_ERROR_NOT_FOUND));
+
     StudentSubTaskProgress studentSubTaskProgress = studentSubTaskProgressRepository.findByTaskIdAndStudentId(task.getId(), getCurrentUser()).orElseThrow(()
-    -> new NotFoundException("Student subtask progress not found", ErrorCode.STUDENT_SUBTASK_PROGRESS_ERROR_NOT_FOUND));
+    -> new NotFoundException("Student subtask progress not found",
+        ErrorCode.STUDENT_SUBTASK_PROGRESS_ERROR_NOT_FOUND));
+
     int count = studentTaskQuestionProgressRepository.countCorrectByStudentSubTaskProgressId(studentSubTaskProgress.getId());
     if (count != task.getTotalQuestion()){
       throw new BadRequestException("Student subtask progress cannot be completed", ErrorCode.STUDENT_SUBTASK_PROGRESS_ERROR_NOT_COMPLETED);
     }
+
     studentSubTaskProgress.setState(ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED);
     studentSubTaskProgress.setErrorCount(ITDreamConstant.RESTART_ERROR_COUNT);
-    StudentTaskQuestionProgress studentTaskQuestionProgress = studentTaskQuestionProgressRepository.findFirstByStudentSubTaskProgressId(studentSubTaskProgress.getId()).orElse(null);
+
+    StudentTaskQuestionProgress studentTaskQuestionProgress = studentTaskQuestionProgressRepository
+        .findFirstByStudentSubTaskProgressId(studentSubTaskProgress.getId()).orElse(null);
+
     if (studentTaskQuestionProgress != null && Objects.equals(studentTaskQuestionProgress.getTaskQuestion().getQuestionType(), ITDreamConstant.QUESTION_TYPE_MULTIPLE_CHOICE)){
       studentTaskQuestionProgressRepository.deleteAllByStudentSubTaskProgressId(studentSubTaskProgress.getId());
     }
     studentSubTaskProgressRepository.save(studentSubTaskProgress);
-    Long countTask = taskRepository.countBySimulationId(task.getSimulation().getId());
+
+    // Đếm số lượng subtask coi có phải là hoàn thành được subtask cuối trong task hay không
+    Long countSubtask = taskRepository.countByKindAndParentId(ITDreamConstant.TASK_KIND_SUBTASK, task.getId());
+    Long countProgressInTask = studentSubTaskProgressRepository.countByStateAndStudentIdAndTaskKindAndTaskParentId(
+        ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, getCurrentUser(), ITDreamConstant.TASK_KIND_SUBTASK, task.getId());
+    // Đếm số lượng subtask trong simulation coi có phải là hoàn thành được subtask cuối trong simulation hay không
+    Long countSubtaskInSimulation = taskRepository.countByKindAndSimulationId(ITDreamConstant.TASK_KIND_SUBTASK ,task.getSimulation().getId());
+    // Đếm số lượng tất cả tiến trình đã được hoàn thành trong simulation hiện tại
     Long countStudentSubTaskProgress = studentSubTaskProgressRepository.countByStateAndStudentIdAndTaskSimulationId(
         ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, getCurrentUser(), task.getSimulation().getId());
-    if (Objects.equals(countTask, countStudentSubTaskProgress)){
-      Student student = studentRepository.findById(getCurrentUser()).orElseThrow(()
-      -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
-      boolean existAchievement = achievementRepository.existsByStudentIdAndSimulationId(student.getId(), task.getSimulation().getId());
-      if (!existAchievement){
-        Achievement achievement = new Achievement();
-        achievement.setSimulation(task.getSimulation());
-        achievement.setStudent(student);
-        achievementRepository.save(achievement);
 
-        AchievementDisplayDto achievementDisplayDto = new AchievementDisplayDto();
-        achievementDisplayDto.setId(achievement.getId());
-        achievementDisplayDto.setUsername(student.getAccount().getUsername());
-        achievementDisplayDto.setSimulationName(task.getSimulation().getTitle());
-        apiMessageDto.setData(achievementDisplayDto);
+    if (Objects.equals(countSubtask, countProgressInTask)){
+      if (!Objects.equals(countSubtaskInSimulation, countStudentSubTaskProgress)){
+        apiMessageDto.setMessage("Complete task");
+        return apiMessageDto;
+      } else {
+        Student student = studentRepository.findById(getCurrentUser()).orElseThrow(()
+            -> new NotFoundException("Student not found", ErrorCode.USER_ERROR_NOT_FOUND));
+        boolean existAchievement = achievementRepository.existsByStudentIdAndSimulationId(student.getId(), task.getSimulation().getId());
+        if (!existAchievement){
+          Achievement achievement = new Achievement();
+          achievement.setSimulation(task.getSimulation());
+          achievement.setStudent(student);
+          achievementRepository.save(achievement);
+
+          AchievementDisplayDto achievementDisplayDto = new AchievementDisplayDto();
+          achievementDisplayDto.setId(achievement.getId());
+          achievementDisplayDto.setUsername(student.getAccount().getUsername());
+          achievementDisplayDto.setSimulationName(task.getSimulation().getTitle());
+          apiMessageDto.setData(achievementDisplayDto);
+          apiMessageDto.setMessage("Complete simulation");
+          return apiMessageDto;
+        }
       }
     }
-    apiMessageDto.setMessage("Complete student subtask progress");
+    apiMessageDto.setMessage("Complete subtask progress");
     return apiMessageDto;
   }
 
