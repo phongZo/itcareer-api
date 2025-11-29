@@ -54,6 +54,7 @@ public interface SimulationMapper {
   @Mapping(source = "participantQuantity", target = "participantQuantity")
   @Mapping(source = "imagePath", target = "imagePath")
   @Mapping(source = "avgRating", target = "avgRating")
+  @Mapping(source = "status", target = "status")
   @Mapping(source = "educator", target = "educator", qualifiedByName = "fromEducatorToProfileDto")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToSimulationDisplayDto")

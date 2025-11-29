@@ -256,8 +256,10 @@ public class EducatorController extends ABasicController{
     Educator educator = educatorRepository.findById(id).orElseThrow(()
         -> new NotFoundException("Educator not found", ErrorCode.USER_ERROR_NOT_FOUND));
 
-    Account account = accountRepository.findById(educator.getAccount().getId()).orElseThrow(()
-        -> new NotFoundException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND));
+    Account account = educator.getAccount();
+    if (account == null){
+      throw new BadRequestException("Account not found", ErrorCode.ACCOUNT_ERROR_NOT_FOUND);
+    }
 
     if (Objects.equals(account.getKind(), ITDreamConstant.USER_KIND_ADMIN)){
       throw new BadRequestException("Not allow delete admin", ErrorCode.ACCOUNT_ERROR_NOT_ALLOW_DELETE_ADMIN);
