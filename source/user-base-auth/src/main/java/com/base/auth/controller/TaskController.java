@@ -101,13 +101,6 @@ public class TaskController extends ABasicController{
       if (createTaskForm.getParentId() == null) {
         throw new BadRequestException("Subtask must include parent", ErrorCode.TASK_ERROR_PARENT);
       }
-      Task existTask = taskRepository.findByKindAndId(ITDreamConstant.TASK_KIND_TASK, createTaskForm.getParentId());
-      if (existTask == null){
-        throw new BadRequestException("Kind of parent cannot be a task", ErrorCode.TASK_ERROR_PARENT_NOT_KIND_TASK);
-      }
-      if (!Objects.equals(existTask.getName(), createTaskForm.getName())){
-        throw new BadRequestException("Name subtask must be the same as name task", ErrorCode.TASK_ERROR_NAME);
-      }
       // 1 simulation không thể tồn tại 2 subtask trong cùng 1 task có title giống nhau
       // Nhưng có thể tồn tại 2 subtask có title giống nhau nhưng phải khác task
       Boolean existSubtask = taskRepository.existsByTitleAndKindAndParentIdAndSimulationId(createTaskForm.getTitle(), ITDreamConstant.TASK_KIND_SUBTASK, createTaskForm.getParentId(), createTaskForm.getSimulationId());
@@ -120,6 +113,9 @@ public class TaskController extends ABasicController{
     if (Objects.equals(createTaskForm.getKind(), ITDreamConstant.TASK_KIND_SUBTASK)){
       Task parentTask = taskRepository.findByIdAndKind(createTaskForm.getParentId(), ITDreamConstant.TASK_KIND_TASK)
           .orElseThrow(() -> new NotFoundException("Task parent not found", ErrorCode.TASK_ERROR_PARENT_NOT_FOUND));
+      if (!Objects.equals(parentTask.getName(), createTaskForm.getName())){
+        throw new BadRequestException("Name subtask must be the same as name task", ErrorCode.TASK_ERROR_NAME);
+      }
       task.setParent(parentTask);
     }
     if (StringUtils.isNotBlank(createTaskForm.getVideoPath())){
@@ -287,6 +283,9 @@ public class TaskController extends ABasicController{
       -> new NotFoundException("Task parent not found", ErrorCode.TASK_ERROR_NOT_FOUND));
       if (!Objects.equals(parent.getKind(), ITDreamConstant.TASK_KIND_TASK)){
         throw new BadRequestException("Kind of parent cannot be a task", ErrorCode.TASK_ERROR_PARENT_NOT_KIND_TASK);
+      }
+      if (!Objects.equals(parent.getName(), updateTaskForm.getName())){
+        throw new BadRequestException("Name subtask must be the same as name task", ErrorCode.TASK_ERROR_NAME);
       }
       task.setParent(parent);
     }
