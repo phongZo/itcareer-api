@@ -16,6 +16,7 @@ public class SimulationClientDto {
   private String videoPath;
   private Float avgRating;
   private Integer participantQuantity;
+  private Float percent;
   private SpecializationAutoCompleteDto specialization;
   private ProfileEducatorDto educator;
 }
