@@ -4,7 +4,6 @@ import com.base.auth.constant.ITDreamConstant;
 import com.base.auth.dto.ApiMessageDto;
 import com.base.auth.dto.ErrorCode;
 import com.base.auth.dto.reviewSubmission.ReviewSubmissionClientDto;
-import com.base.auth.dto.reviewSubmission.ReviewSubmissionDto;
 import com.base.auth.exception.BadRequestException;
 import com.base.auth.exception.NotFoundException;
 import com.base.auth.form.notification.CreateNotificationForm;
@@ -91,7 +90,7 @@ public class ReviewSubmissionController extends ABasicController{
     if (existReviewSubmission){
       throw new BadRequestException("Review submission already exist", ErrorCode.REVIEW_SUBMISSION_ERROR_EXIST);
     }
-    Long totalTasks = taskRepository.countBySimulationId(simulation.getId());
+    Long totalTasks = taskRepository.countByKindAndSimulationId(ITDreamConstant.TASK_KIND_SUBTASK,simulation.getId());
     Long completedTasks = studentSubTaskProgressRepository.countByStateAndStudentIdAndTaskSimulationId(
         ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, student.getId(),
         simulation.getId());
