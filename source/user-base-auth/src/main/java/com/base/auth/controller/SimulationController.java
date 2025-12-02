@@ -210,6 +210,14 @@ public class SimulationController extends ABasicController{
     Simulation simulation = simulationRepository.findById(id).orElseThrow(()
         -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
     SimulationClientDto simulationDto = simulationMapper.fromEntityToSimulationClientDto(simulation);
+    Long countTask = taskRepository.countByKindAndSimulationId(ITDreamConstant.TASK_KIND_SUBTASK,simulationDto.getId());
+    Long countProgress = studentSubTaskProgressRepository.countByStateAndStudentIdAndTaskSimulationId(
+        ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, getCurrentUser(),
+        simulationDto.getId());
+    if (countTask > 0){
+      Float progress = ((countProgress * 1F) / countTask) * 100;
+      simulationDto.setPercent(progress);
+    }
     apiMessageDto.setData(simulationDto);
     apiMessageDto.setMessage("Get success");
     return apiMessageDto;
