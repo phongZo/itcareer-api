@@ -70,7 +70,6 @@ public interface SimulationMapper {
   @Mapping(source = "videoPath", target = "videoPath")
   @Mapping(source = "avgRating", target = "avgRating")
   @Mapping(source = "participantQuantity", target = "participantQuantity")
-  @Mapping(source = "percent", target = "percent")
   @Mapping(source = "specialization", target = "specialization", qualifiedByName = "fromEntityToSpecializationAutoCompleteDto")
   @Mapping(source = "educator", target = "educator", qualifiedByName = "fromEducatorToProfileDto")
   @BeanMapping(ignoreByDefault = true)
