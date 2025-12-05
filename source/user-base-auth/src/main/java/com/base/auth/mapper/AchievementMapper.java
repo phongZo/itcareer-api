@@ -14,7 +14,7 @@ import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE,
     nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
-    uses = {SimulationMapper.class, StudentMapper.class})
+    uses = {SimulationMapper.class, StudentMapper.class, AccountMapper.class})
 public interface AchievementMapper {
   @Mapping(source = "id", target = "id")
   @Mapping(source = "filePath", target = "filePath")
@@ -28,6 +28,7 @@ public interface AchievementMapper {
 
   @Mapping(source = "id", target = "id")
   @Mapping(source = "filePath", target = "filePath")
+  @Mapping(source = "student.account.username", target = "studentName")
   @Mapping(source = "simulation", target = "simulation", qualifiedByName = "fromEntityToSimulationDisplayDto")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToAchievementStudentDto")

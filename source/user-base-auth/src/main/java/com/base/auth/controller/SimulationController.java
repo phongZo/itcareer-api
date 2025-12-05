@@ -366,6 +366,7 @@ public class SimulationController extends ABasicController{
       throw new BadRequestException("Simulation cannot approve", ErrorCode.SIMULATION_ERROR_APPROVE);
     }
     simulation.setStatus(ITDreamConstant.STATUS_ACTIVE);
+    simulation.setNotice(null);
     simulationRepository.save(simulation);
     apiMessageDto.setMessage("Approve simulation success");
     return apiMessageDto;
@@ -380,9 +381,31 @@ public class SimulationController extends ABasicController{
     if (!Objects.equals(ITDreamConstant.STATUS_WAITING_APPROVE, simulation.getStatus())){
       throw new BadRequestException("Simulation cannot approve", ErrorCode.SIMULATION_ERROR_APPROVE);
     }
-    simulation.setStatus(ITDreamConstant.STATUS_REJECT);
-    simulationRepository.save(simulation);
+    simulation.setNotice(requestSimulationIdForm.getNotice());
     apiMessageDto.setMessage("Reject simulation success");
+    return apiMessageDto;
+  }
+
+  @DeleteMapping(value = "/educator-delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("hasRole('SI_ED_D')")
+  public ApiMessageDto<String> deleteByEducator(@PathVariable("id") Long id){
+    ApiMessageDto<String> apiMessageDto = new ApiMessageDto<>();
+    Simulation simulation = simulationRepository.findById(id).orElseThrow(()
+        -> new NotFoundException("Simulation not found", ErrorCode.SIMULATION_ERROR_NOT_FOUND));
+    if (!Objects.equals(ITDreamConstant.STATUS_WAITING_APPROVE, simulation.getStatus())){
+      throw new BadRequestException("Simulation cannot be deleted", ErrorCode.SIMULATION_ERROR_NOT_DELETE);
+    }
+    List<Task> tasks = taskRepository.findAllBySimulationId(id);
+    for (Task task : tasks){
+      deleteTaskFiles(task);
+    }
+    userBaseApiService.deleteByFilePath(simulation.getImagePath());
+    userBaseApiService.deleteByFilePath(simulation.getVideoPath());
+    taskQuestionRepository.deleteAllBySimulationId(id);
+    taskRepository.deleteAllSubTaskBySimulationId(id);
+    taskRepository.deleteAllTaskBySimulationId(id);
+    simulationRepository.delete(simulation);
+    apiMessageDto.setMessage("Delete simulation success");
     return apiMessageDto;
   }
 

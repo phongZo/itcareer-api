@@ -13,6 +13,7 @@ public class SimulationDisplayDto {
   private String imagePath;
   private Float avgRating;
   private Float percent;
+  private String notice;
   private int status;
   private ProfileEducatorDto educator;
 }
