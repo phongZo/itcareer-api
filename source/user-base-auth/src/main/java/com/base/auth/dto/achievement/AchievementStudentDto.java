@@ -7,5 +7,6 @@ import lombok.Data;
 public class AchievementStudentDto {
   private Long id;
   private String filePath;
+  private String studentName;
   private SimulationDisplayDto simulation;
 }

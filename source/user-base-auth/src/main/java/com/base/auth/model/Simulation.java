@@ -36,6 +36,8 @@ public class Simulation extends Auditable<String>{
   private Integer state = ITDreamConstant.STATE_SIMULATION_INIT;
   private Float avgRating = 0F;
   private Integer participantQuantity = 0;
+  @Column(columnDefinition = "TEXT")
+  private String notice;
   @ManyToOne
   @JoinColumn(name = "specialization_id")
   private Specialization specialization;
