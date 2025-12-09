@@ -290,6 +290,7 @@ public class TaskController extends ABasicController{
       task.setParent(parent);
     }
 
+    taskMapper.fromUpdateTaskFormToEntity(updateTaskForm, task);
     if (StringUtils.isNotBlank(updateTaskForm.getVideoPath())){
       if (StringUtils.isNotBlank(task.getVideoPath())){
         if (!Objects.equals(task.getVideoPath(), updateTaskForm.getVideoPath())){
@@ -325,7 +326,6 @@ public class TaskController extends ABasicController{
       task.setFilePath(updateTaskForm.getFilePath());
     }
 
-    taskMapper.fromUpdateTaskFormToEntity(updateTaskForm, task);
     taskRepository.save(task);
 
     if (Objects.equals(ITDreamConstant.STATUS_ACTIVE, task.getSimulation().getStatus())){
