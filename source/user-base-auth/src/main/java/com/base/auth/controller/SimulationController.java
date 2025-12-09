@@ -259,6 +259,7 @@ public class SimulationController extends ABasicController{
       simulation.setSpecialization(specialization);
     }
 
+    simulationMapper.fromUpdateSimulationFormToEntity(updateSimulationForm, simulation);
     if (StringUtils.isNotBlank(updateSimulationForm.getVideoPath())){
       if (StringUtils.isNotBlank(simulation.getVideoPath())){
         if (!Objects.equals(simulation.getVideoPath(), updateSimulationForm.getVideoPath())){
@@ -287,7 +288,6 @@ public class SimulationController extends ABasicController{
       simulation.setImagePath(updateSimulationForm.getImagePath());
     }
 
-    simulationMapper.fromUpdateSimulationFormToEntity(updateSimulationForm, simulation);
     simulation.setStatus(ITDreamConstant.STATUS_WAITING_APPROVE);
     simulationRepository.save(simulation);
     apiMessageDto.setMessage("Update success. Please wait for approval");

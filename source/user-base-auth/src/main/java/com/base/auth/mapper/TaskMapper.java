@@ -30,6 +30,7 @@ public interface TaskMapper {
   @Mapping(source = "kind", target = "kind")
   @Mapping(source = "imagePath", target = "imagePath")
   @Mapping(source = "filePath", target = "filePath")
+  @Mapping(source = "videoPath", target = "videoPath")
   @BeanMapping(ignoreByDefault = true)
   Task fromCreateTaskFormToEntity(CreateTaskForm createTaskForm);
 
@@ -109,6 +110,9 @@ public interface TaskMapper {
   @Mapping(source = "title", target = "title")
   @Mapping(source = "introduction", target = "introduction")
   @Mapping(source = "content", target = "content")
+  @Mapping(source = "imagePath", target = "imagePath")
+  @Mapping(source = "filePath", target = "filePath")
+  @Mapping(source = "videoPath", target = "videoPath")
   @BeanMapping(ignoreByDefault = true)
   void fromUpdateTaskFormToEntity(UpdateTaskForm updateTaskForm, @MappingTarget Task task);
 }
