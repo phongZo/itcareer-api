@@ -1,5 +1,6 @@
 package com.base.auth.dto.task;
 
+import com.base.auth.model.Task;
 import lombok.Data;
 
 @Data
@@ -16,4 +17,5 @@ public class TaskEducatorDto {
   private Integer kind;
   private Integer maxErrors;
   private Integer totalQuestion;
+  private Task parent;
 }

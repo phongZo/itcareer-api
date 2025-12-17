@@ -89,6 +89,7 @@ public interface TaskMapper {
   @Mapping(source = "videoPath", target = "videoPath")
   @Mapping(source = "maxErrors", target = "maxErrors")
   @Mapping(source = "totalQuestion", target = "totalQuestion")
+  @Mapping(source = "parent", target = "parent", qualifiedByName = "fromEntityToParentTaskDto")
   @BeanMapping(ignoreByDefault = true)
   @Named("fromEntityToTaskEducatorDto")
   TaskEducatorDto fromEntityToTaskEducatorDto(Task task);
