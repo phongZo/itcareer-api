@@ -382,6 +382,7 @@ public class SimulationController extends ABasicController{
       throw new BadRequestException("Simulation cannot approve", ErrorCode.SIMULATION_ERROR_APPROVE);
     }
     simulation.setNotice(requestSimulationIdForm.getNotice());
+    simulationRepository.save(simulation);
     apiMessageDto.setMessage("Reject simulation success");
     return apiMessageDto;
   }

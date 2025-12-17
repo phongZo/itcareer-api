@@ -399,8 +399,7 @@ public class StudentController extends ABasicController{
   public ApiMessageDto<ResponseListDto<List<ProfileStudentDto>>> getListStudentComplete(@RequestParam("simulationId") Long simulationId, Pageable pageable){
     ApiMessageDto<ResponseListDto<List<ProfileStudentDto>>> apiMessageDto = new ApiMessageDto<>();
     ResponseListDto<List<ProfileStudentDto>> responseListDto = new ResponseListDto<>();
-    Long totalTasks = taskRepository.countBySimulationId(simulationId);
-    Page<Student> students = studentRepository.findStudentsCompletedSimulation(simulationId, ITDreamConstant.STATE_STUDENT_SUBTASK_PROGRESS_COMPLETED, totalTasks, pageable);
+    Page<Student> students = achievementRepository.findCompletedStudents(simulationId, pageable);
     List<ProfileStudentDto> studentDtos = studentMapper.fromStudentToProfileDtoList(students.getContent());
     Map<String, Boolean> reviewedMap = createReviewedMapBySimulation(simulationId);
     setIsReviewedByMap(studentDtos, reviewedMap);
