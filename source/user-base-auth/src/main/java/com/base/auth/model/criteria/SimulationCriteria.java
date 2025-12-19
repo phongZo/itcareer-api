@@ -21,6 +21,7 @@ public class SimulationCriteria {
   private Long specializationId;
   private Long educatorId;
   private Integer level;
+  private Integer status;
 
   public Specification<Simulation> getSpecification() {
     return new Specification<Simulation>() {
@@ -47,6 +48,10 @@ public class SimulationCriteria {
         if (getEducatorId() != null){
           Join<Simulation, Educator> educatorJoin = root.join("educator", JoinType.INNER);
           predicates.add(cb.equal(educatorJoin.get("id"), getEducatorId()));
+        }
+
+        if (getStatus() != null){
+          predicates.add(cb.equal(root.get("status"), getStatus()));
         }
         return cb.and(predicates.toArray(new Predicate[predicates.size()]));
       }
